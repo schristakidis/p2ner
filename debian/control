@@ -1,0 +1,21 @@
+Source: p2ner
+Section: net
+Priority: optional
+Maintainer: Loris Corazza (loox) <loox@ece.upatras.gr>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.3.1
+
+Package: p2ner
+Architecture: all
+Homepage: http://upg.iamnothere.org:88/
+Depends: ${misc:Depends}, 
+         python-twisted,
+         python-construct,
+         python-bitarray,
+         python-matplotlib,
+         python-numpy,
+         vlc,
+         x264
+Description: P2ner is a client for peer-to-peer Live streaming.
+ P2ner is the client for peer-to-peer Live streaming.
+

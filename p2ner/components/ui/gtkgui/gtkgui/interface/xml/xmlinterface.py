@@ -1,0 +1,177 @@
+from cPickle import loads,dumps
+from twisted.web.xmlrpc import Proxy
+from twisted.internet import reactor
+from p2ner.abstract.interface import Interface
+
+class Interface(Interface): 
+    def initInterface(self, *args, **kwargs):
+        self.parent=self.root
+        
+    def setUrl(self,url):
+        self.proxy = Proxy(url)
+        
+    def getStreams(self):
+        d = self.proxy.callRemote('getProducingStreams')
+        d.addCallback(self.loadStreams)
+        d.addCallback(self.parent.updateRegStreams)
+        d.addErrback(self.failedXMLRPC)
+        
+        d = self.proxy.callRemote('getRegisteredStreams')
+        d.addCallback(self.loadStreams)
+        d.addCallback(self.parent.updateSubStreams)
+        d.addErrback(self.failedXMLRPC)
+        
+    def loadStreams(self,streams):
+        return [loads(s) for s in streams]
+     
+        
+    def contactServers(self,servers):
+        for s in servers:
+            d = self.proxy.callRemote('contactServer',s)
+            d.addCallback(self.returnContents)
+            d.addErrback(self.failedXMLRPC)
+
+    def returnContents(self,stream):
+        streams=stream[0]
+        server=stream[1]
+        s=streams
+        if streams!=-1:
+            s=[loads(s) for s in streams]
+        self.parent.getStream(s,server)
+        
+    def subscribeStream(self,id,ip,port,outputMethod):
+        d = self.proxy.callRemote('subscribeStream',id,ip,port,outputMethod)
+        d.addCallback(self.returnSubStream)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def returnSubStream(self,stream):
+        s=stream[0]
+        id=stream[1]
+        if s!=-1:
+            s=loads(s)
+        self.parent.succesfulSubscription(s,id)
+            
+    def stopProducing(self,id,repub):
+        d = self.proxy.callRemote('stopProducing',id,repub)
+        d.addCallback(self.parent.stopProducing)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def unregisterStream(self,id):
+        d=self.proxy.callRemote('unregisterStream',id)
+        d.addCallback(self.parent.unregisterStream)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def startProducing(self,id,type):
+        d = self.proxy.callRemote('startProducing',id)
+        #d.addCallback(self.parent.changeStreamStatus,id,type)
+        d.addErrback(self.failedXMLRPC)
+        
+    def startRemoteProducer(self,id,type):
+        d = self.proxy.callRemote('startRemoteProducer',id)
+        #d.addCallback(self.parent.changeStreamStatus,id,type)
+        d.addErrback(self.failedXMLRPC)
+        
+    def registerStream(self,settings,inputMethod,outputMethod):   
+        d = self.proxy.callRemote('registerStream', dumps(settings),dumps(inputMethod),dumps(outputMethod))
+        #d.addCallback(self.loadStreams)
+        #d.addCallback(self.parent.registerStream)
+        d.addErrback(self.failedXMLRPC)
+        
+    def quiting(self,r):
+        d = self.proxy.callRemote('quiting')
+        d.addCallback(self.quit)
+        d.addErrback(self.quit)
+        
+    def quit(self,d):
+        reactor.stop()
+        
+    def send(self,rcom,arg,lcom):
+        if arg:
+            d = self.proxy.callRemote(rcom,arg)
+            d.addCallback(lcom)
+        else:
+            d = self.proxy.callRemote(rcom)  #only for logger
+            d.addCallback(self.loadRecords)
+            d.addCallback(lcom)
+        d.addErrback(self.failedXMLRPC)
+        
+    def loadRecords(self,records):
+        return [loads(r) for r in records]
+        
+        
+    def requestFiles(self,rcom,arg,lcom):
+        d=self.proxy.callRemote(rcom,arg)
+        d.addCallback(self.loadRecords)
+        d.addCallback(lcom)
+        d.addErrback(self.failedXMLRPC)
+        
+    def getComponentsInterfaces(self,comp):
+        d=self.proxy.callRemote('getComponentsInterfaces',comp)
+        d.addCallback(self.loadComponents)
+        d.addErrback(self.failedXMLRPC)
+        
+    def loadComponents(self,comp):
+        interfaces=loads(comp[1])
+        self.preferences.setComponent(comp[0],interfaces)
+        
+    def copyConfig(self):
+        d=self.proxy.callRemote('copyConfig')
+        d.addCallback(self.preferences.getConfig)
+        d.addErrback(self.failedXMLRPC)  
+        
+    def sendRemoteConfig(self,file,chFile):
+        d=self.proxy.callRemote('getRemoteConfig',file,chFile)
+        d.addCallback(self.quiting)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def startConverting(self,gui,dir,filename,videorate,subs,subsFile,subsEnc):
+        d=self.proxy.callRemote('startConverting',dir,filename,videorate,subs,subsFile,subsEnc)
+        d.addCallback(self.getConvertedId,gui)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def getConvertedId(self,id,gui):
+        gui.getConverterId(id)
+        
+    def getConverterStatus(self,gui,id):
+        d=self.proxy.callRemote('getConverterStatus',id)
+        d.addCallback(self.setStatus,gui)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def setStatus(self,status,gui):
+        gui.setStatus(status)
+        
+    def abortConverter(self,id):
+        d=self.proxy.callRemote('abortConverter',id)
+        d.addErrback(self.failedXMLRPC) 
+    
+    def getAvailableStatistics(self,func):
+        d=self.proxy.callRemote('getStatistics')
+        d.addCallback(self.returnStatistics,func)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def returnStatistics(self,stats,func):
+        func(stats)
+        
+    def getStatValues(self,func,stats):
+        d=self.proxy.callRemote('getStatValues',stats)
+        d.addCallback(self.returnStatValues,func)
+        d.addErrback(self.failedXMLRPC) 
+    
+    def returnStatValues(self,stats,func):
+        func(stats)
+        
+    def startMeasurement(self,ip,func):
+        func=func.getResults
+        d=self.proxy.callRemote('startBWMeasurement',ip)
+        d.addCallback(func)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def setBW(self,bw):
+        d=self.proxy.callRemote('setBW',bw)
+        d.addErrback(self.failedXMLRPC) 
+       
+    def failedXMLRPC(self,f):
+        print 'failed xmlrpc call'
+        print f
+            
+        

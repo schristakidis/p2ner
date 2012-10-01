@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="2.22"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkHBox" id="componentsFrame">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkTable" id="table1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="n_rows">4</property>
+        <property name="n_columns">3</property>
+        <property name="column_spacing">20</property>
+        <property name="row_spacing">13</property>
+        <child>
+          <object class="GtkLabel" id="label1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Input</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Output</property>
+          </object>
+          <packing>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label3">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Scheduler</property>
+          </object>
+          <packing>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label4">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Overlay</property>
+          </object>
+          <packing>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="dinputButton">
+            <property name="label" translatable="yes">Make Default</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <signal name="clicked" handler="on_cdefaultButton_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="doutputButton">
+            <property name="label" translatable="yes">Make Default</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <signal name="clicked" handler="on_cdefaultButton_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="dschedulerButton">
+            <property name="label" translatable="yes">Make Default</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <signal name="clicked" handler="on_cdefaultButton_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="doverlayButton">
+            <property name="label" translatable="yes">Make Default</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <signal name="clicked" handler="on_cdefaultButton_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="dinputCombo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="doutputCombo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="dschedulerCombo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="doverlayCombo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="x_options"></property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+  </object>
+</interface>

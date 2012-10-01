@@ -1,0 +1,4 @@
+
+    [p2ner.components.pipeelement]
+    UDPBandwidthElement = udpbandwidthelement:UDPBandwidthElement
+    

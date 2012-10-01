@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=P2ner
+GenericName=P2ner Client
+X-GNOME-FullName=P2ner P2P Client
+Comment=Share streams over Internet
+TryExec=p2nerClient
+Exec=p2nerClient %U
+Terminal=false
+Icon=p2ner
+Type=Application
+Categories=Network;P2P;GTK;
+StartupNotify=true
+

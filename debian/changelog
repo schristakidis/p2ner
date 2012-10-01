@@ -1,0 +1,5 @@
+p2ner (0.4.9-r394) unstable; urgency=low
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Loris Corazza (loox) <loox@ece.upatras.gr>  Sun, 03 Jun 2012 12:58:46 +0300

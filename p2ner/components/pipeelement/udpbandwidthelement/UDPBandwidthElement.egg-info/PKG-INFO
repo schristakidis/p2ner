@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: UDPBandwidthElement
+Version: 0.1
+Summary: P2ner UDP bandwidth control pipeline element
+Home-page: UNKNOWN
+Author: Loris Corazza
+Author-email: loox@ece.upatras.gr
+License: UNKNOWN
+Description: P2ner UDP bandwidth control pipeline element
+Platform: UNKNOWN

@@ -1,0 +1,73 @@
+# -*- coding: utf-8 -*-
+
+from p2ner.abstract.pipeelement import PipeElement
+import sys, socket
+from twisted.internet import reactor, defer
+from twisted.internet.protocol import DatagramProtocol
+import time
+
+class UDPPortElement(PipeElement, DatagramProtocol):
+    
+    def initElement(self, port=50000, interface='', to='port', **kwargs):
+        self.port = port
+        self.exPort=port
+        self.interface = interface
+        self.to = to
+        self.log.info('UDPPortElement component loaded')
+        
+    def getExPort(self,d):
+        return self.exPort
+    
+    def listen(self, d):
+        if "listener" in self:
+            return
+   
+        self.listener = reactor.listenUDP(self.port, self) #, interface=self.interface)
+        self.log.info('start listening to port:%d',self.port)
+        
+        print 'listening to port  ',self.port
+        
+        if sys.platform == 'win32':
+            sockhandler = self.listener.getHandle()
+            sockhandler.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 131071)
+            sockhandler.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 131071)
+                
+    def datagramReceived(self, data, (host, port)):
+        recTime = time.time()
+        d = self.forwardprev("receive", (host, port), recTime)
+        #reactor.callLater(0, d.callback, data)
+        d.callback(data)
+        
+    def send(self, res, msg, data, peer):
+        to=self.to
+
+        if peer.useLocalIp:
+            ip=peer.lip
+            to='l'+to
+        else:
+            ip=peer.ip
+            
+        #print 'send to:',ip,to,getattr(peer, to)
+        if isinstance(res, (list, tuple)):
+            for r in res:
+                self.sockwrite(r, ip, getattr(peer, to))
+        else:
+            self.sockwrite(res, ip, getattr(peer, to))
+        return res
+    
+    def sockwrite(self, data, host, port):
+        if len(data):
+            self.listener.write(data, (host, port))
+        return data
+
+    def cleanUp(self, d=None):
+        if "listener" in self:
+            self.listener.stopListening()
+            
+    def doStop(self, d=None):
+        self.log.debug('stop listening to port %d',self.port)
+        print self.port
+        self.listener.stopListening()
+        
+
+        

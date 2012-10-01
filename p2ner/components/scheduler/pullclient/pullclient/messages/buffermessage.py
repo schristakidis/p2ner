@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+
+from p2ner.base.ControlMessage import ControlMessage
+from p2ner.base.Consts import MessageCodes as MSG
+from construct import Container
+
+class BufferMessage(ControlMessage):
+    type = "buffermessage"
+    code = MSG.BUFFER
+    ack = False
+    
+    def trigger(self, message):
+        if message.streamid == self.stream.id:
+            return True
+        return False
+
+    def action(self, message, peer):
+        #print "===================================================="
+        #print message
+        #print "----------------------------------------------------"
+        #TODO: LPB resynch if D(LPB) is wide
+        #while self.buffer.lpb < message.buffer.lpb: 
+        #    self.scheduler.shift()
+        sid = self.stream.id
+        if sid not in peer.s:
+            peer.s[sid] = {}
+        if "buffer" in peer.s[sid]:
+            if message.buffer.lpb > peer.s[sid]["buffer"].lpb:
+                peer.s[sid]["buffer"] = message.buffer
+        else:
+            peer.s[sid]["buffer"] = message.buffer
+        #self.log.debug('buffer:%s',str(message.buffer))
+        if isinstance(message.request, list):
+            peer.s[sid]["request"] = message.request
+            #self.log.debug('requests:%s',str(message.request))
+        #print "RUNNING", self.scheduler.running
+        if not self.scheduler.running:
+            #"RESTART SCHEDULER"
+            #self.log.debug('received buffer message from %s and should start scheduler',peer)
+            self.scheduler.running = True
+            self.scheduler.produceBlock()
+
+    @classmethod
+    def send(cls, sid, buffer, req, peer, out):
+        if not req:
+            req=None
+        c = Container(streamid=sid, buffer=buffer, request=req)
+        out.send(cls, c, peer)
+        

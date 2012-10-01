@@ -1,0 +1,4 @@
+
+    [p2ner.components.messageparser]
+    ConstructMessage = constructmessage:ConstructMessage
+    

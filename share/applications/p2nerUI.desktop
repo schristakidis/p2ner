@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=P2ner RUI
+GenericName=P2ner Remote UI
+X-GNOME-FullName=P2ner P2P Client - Remote UI
+Comment=Share streams over Internet from remote
+TryExec=p2nerGui
+Exec=p2nerGui %U
+Terminal=false
+Icon=p2ner
+Type=Application
+Categories=Network;P2P;GTK;
+StartupNotify=true
+

@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+
+%:
+	dh $@ --with python2
+
+override_dh_python2:
+	dh_python2 --no-guessing-deps
+
+override_dh_auto_build:
+	python setupcomponents.py build
+
+override_dh_auto_install:
+	python setupcomponents.py install --root=$(CURDIR)/debian/p2ner --install-layout=deb
+	set -ex; 
+	cp -r share $(CURDIR)/debian/p2ner/usr/
