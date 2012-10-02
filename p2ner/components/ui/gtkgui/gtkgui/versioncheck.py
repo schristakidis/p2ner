@@ -37,7 +37,7 @@ def compareVersion(entry):
     if StrictVersion(v)>StrictVersion(VERSION):
         print 'should update'
         msg='There is an updated version of P2ner\n'
-        msg +='You can download version '+str(v)+' from http://upg.iamnothere.org:8181/projects/p-2ner/files'
+        msg +='You can download version '+str(v)+' http://nam.ece.upatras.gr/p2ner/projects/p-2ner/files'
         displayMessage(msg)
     else:
         print 'you are good'
@@ -56,7 +56,8 @@ def err(error):
     print error
 
 def getVersion():
-    page='http://upg.iamnothere.org:8181/projects/p-2ner/news.atom'
+    page='http://nam.ece.upatras.gr/p2ner/projects/p-2ner/news.atom'
+    #page='http://upg.iamnothere.org:8181/projects/p-2ner/news.atom'
     d=getPage(page)
     d.addCallback(readPage)
     d.addErrback(err)
