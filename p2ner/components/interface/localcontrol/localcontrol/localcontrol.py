@@ -148,6 +148,20 @@ class localControl(Interface):
         reactor.callLater(0.3,self.netChecker.check)
         return
         
+    def newChatMessage(self,id,message,peer):
+        self.controlUI.chatClientUI.newChatMessage(id,message,peer)
+        
+    def newChatter(self,id,username,new):
+        self.controlUI.chatClientUI.newChatter(id,username,new)
+        
+    def sendChatMessage(self,id,message,peer):
+        self.chatClient.sendChatMessage(id,message,peer)
+        
+    def joinChatRoom(self,id,username,server):
+        self.chatClient.joinChatRoom(id,username,server)
+    
+    def leaveChatRoom(self,id,username,server):
+        self.chatClient.leaveChatRoom(id,username,server)
         
 
  

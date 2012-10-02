@@ -24,6 +24,7 @@ from versioncheck import getVersion as checkVersion
 from measureupload import MeasureUpload
 from networkGui import NetworkGui
 from p2ner.core.components import loadComponent
+from chatClientUI import ChatClient
 
 
 streamListStore=[('streamID',int),('ip',str),('port',int),('title',str),('author',str),('type',str),('live',bool),('startTime',str),('startable',bool),('republish',bool),('password',bool),('subscribed',bool)]
@@ -203,6 +204,13 @@ class clientGui(UI):
 		menu_item.show()
 		viewMenu.append(menu_item)
 		
+		##create chat entry
+		if not self.remote:
+			menu_item=gtk.MenuItem('Chat')
+			menu_item.connect('activate',self.on_chatMenuItem_activate)
+			menu_item.show()
+			viewMenu.append(menu_item)
+		
 		menu_item=gtk.MenuItem('Statitics')
 		menu_item.connect('activate',self.on_statsMenuItem_activate)
 		menu_item.show()
@@ -249,6 +257,13 @@ class clientGui(UI):
 			
 	def on_statsMenuItem_activate(self,widget):
 		statsGui(self.interface,self.remote)
+		
+	def on_chatMenuItem_activate(self,widget):
+		try:
+			self.chatClientUI.show()
+		except:
+			self.chatClientUI=ChatClient(self)
+			
 			
 	def on_consoleMenuItem_activate(self,widget):
 		l = {'p2ner':self.root}
@@ -313,6 +328,11 @@ class clientGui(UI):
 	def on_ui_destroy(self,widget,data=None):
 		if self.logger:
 			self.logger.stop()
+		
+		try:
+			self.chatClientUI.on_ui_destroy()
+		except:
+			pass
 		
 		if not self.remote:
 			self.interface.exiting()
@@ -852,8 +872,14 @@ class clientGui(UI):
 	def logNGui(self,text):
 		self.nGui.addText(text)
 		
-
-		
+	def getStreamsIds(self):
+		colid=self.getColumnByName('streamID')
+		colip=self.getColumnByName('ip')
+		colport=self.getColumnByName('port')
+		colsub=self.getColumnByName('subscribed')
+		st=[(s[colid],s[colip],s[colport]) for s in self.streamsModel if s[colsub]]
+		st +=[(s[colid],s[colip],s[colport]) for s in self.publishModel]
+		return st
 		
 def startGui():
 	clientGui()

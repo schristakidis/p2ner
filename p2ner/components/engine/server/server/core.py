@@ -32,6 +32,7 @@ class Server(Engine):
         self.bandwidthServer=loadComponent('plugin','TCPBWServer')()
         self.bandwidthServer.startListening()
         self.controlPipe.call('listen')
+        self.chatServer=loadComponent('plugin','ChatServer')(_parent=self)
         #self.startweb()
         
     def startweb(self):
@@ -70,7 +71,7 @@ class Server(Engine):
         self.overlays[stream.id]=ov(_parent=self, *a, **k)
         self.log.info('new stream %s',stream)
         StreamIdMessage.send(stream.id, stream.streamHash(), producer, self.controlPipe)
-
+        self.chatServer.newRoom(stream.id)
         
     def sendContents(self,peer):
         #s=[ov.stream for ov in self.overlays]
@@ -82,6 +83,7 @@ class Server(Engine):
             ov=self.overlays.pop(id)
             ov.removes()
             self.log.info('unregistering stream:%s',ov.stream)
+            self.chatServer.removeRoom(id)
         except:
             self.log.error("could not unregister stream:%d because it doesn't exist",id)
             #raise ValueError("could not unregister stream because it doesn't exist")

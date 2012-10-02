@@ -47,3 +47,5 @@ class MessageCodes(object):
     STARTH=58
     UPNP=59
     REGISTER=60
+    CHATTER_MSG=61
+    CHAT_MSG=62

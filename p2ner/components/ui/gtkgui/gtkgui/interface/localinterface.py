@@ -80,3 +80,12 @@ class Interface(Interface):
     def checkNetwork(self):
         self.root.interface.checkNetwork()
         
+    def sendChatMessage(self,id,message,peer):
+        self.root.interface.sendChatMessage(id,message,peer)
+        
+    def joinChatRoom(self,id,username,server):
+        self.root.interface.joinChatRoom(id,username,server)
+    
+    def leaveChatRoom(self,id,username,server):
+        self.root.interface.leaveChatRoom(id,username,server)
+        
