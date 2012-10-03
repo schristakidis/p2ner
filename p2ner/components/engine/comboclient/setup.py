@@ -28,7 +28,8 @@ setup(
     entry_points={
                   'p2ner.components.engine':'%s=%s:%s' %((__component_name__, __component_name__.lower(), __component_name__)),
                   'console_scripts':['p2nerClient=%s:start%s' %((__component_name__.lower(), __component_name__)),
-                                              'p2nerDaemon=%s:startDaemon%s' %((__component_name__.lower(), __component_name__))]
+                                              'p2nerDaemon=%s:startDaemon%s' %((__component_name__.lower(), __component_name__)),
+                                              'p2nerBasicNet=%s:startBasicNetClient'%((__component_name__.lower(),))]
                   }
       )
 

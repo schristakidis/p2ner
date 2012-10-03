@@ -14,7 +14,13 @@ cd =  os.path.dirname( os.path.realpath( __file__ ) )
 COMPONENTS_DIR = os.path.join(cd, "p2ner", "components") 
 HOME_DIR=os.path.join(os.path.expanduser("~"),'bin')
 
+scripts=False
 c=executable+' setup.py'
+if 'scripts' in argv:
+    argv.remove('scripts')
+    if '-s' not in argv:
+        scripts=True
+        
 for s in argv[1:]:
     c=c+" "+s
 os.system(c)
@@ -25,8 +31,8 @@ for ct in _entry_points:
     for p in directories:
         cpath = os.path.join(d, p)
         c = "cd " + cpath + " && " + executable + " setup.py " + argv[1] 
-        #if len(argv)>2 and argv[2]=='scripts':
-        #    c=c+ ' -s  '+ HOME_DIR
+        if scripts:
+           c=c+ ' -s  '+ HOME_DIR
         for s in argv[1:]:
             c=c+" "+s
         os.system(c)

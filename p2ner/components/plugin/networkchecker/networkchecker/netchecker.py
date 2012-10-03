@@ -53,7 +53,12 @@ class NetworkChecker(Namespace):
         self.hpunching=False
         self.upnp=False
         self.difnat=False
-        self.checkNet()
+        
+        if not self.root.basic:
+            self.checkNet()
+        else:
+            self.defaultNetConfig()
+            
         
     def checkNet(self):
         #self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
@@ -215,6 +220,14 @@ class NetworkChecker(Namespace):
         self.root.interface.networkStatus(True)
         return
         
+    def defaultNetConfig(self):
+        self.externalIp=self.localIp
+        self.extControlPort=self.controlPort
+        self.extDataPort=self.dataPort
+        self.root.controlPipe.call('listen')
+        self.root.trafficPipe.call('listen')
+        return
+    
     def checkStun(self):
         print 'checking stunnnnnnnnnnnnnnnnnnnnnnnnn'
         if self.difnat:

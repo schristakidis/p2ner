@@ -23,19 +23,23 @@ class Client(Engine):
         self.streamListeners=[]
         self.waitingReply=[]
         self.converters={}
-        self.holePuncher=loadComponent('plugin','HolePuncher')(_parent=self)
-        self.netChecker=loadComponent('plugin','NetworkChecker')(_parent=self)
-        self.rProducerInf=loadComponent('plugin','RemoteProducerController')(_parent=self)
-        self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
-        reactor.callLater(0.2,self.interface.checkNetwork)
         
+        if 'basic' in kwargs and kwargs['basic']:
+            self.basic=True
+        else:
+            self.basic=False
+            self.holePuncher=loadComponent('plugin','HolePuncher')(_parent=self)
+            self.rProducerInf=loadComponent('plugin','RemoteProducerController')(_parent=self)
+            self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
+            
+        self.netChecker=loadComponent('plugin','NetworkChecker')(_parent=self)
+        reactor.callLater(0.2,self.interface.checkNetwork)
 
-                
-    def registerStream(self,stream,input,output):
-        print output['comp']
-        p=stream.getServer()
-        server=Peer(p[0],p[1])
-        server.dataPort=int(p[1])+1
+    def checkNatPeer(self):
+        if self.basic:
+            self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
+            self.dataPort=self.root.trafficPipe.getElement(name="UDPPortElement").port
+            return None,self.dataPort
         
         if self.netChecker.upnp: 
             port=self.netChecker.upnpDataPort
@@ -45,6 +49,16 @@ class Client(Engine):
         p=None
         if self.netChecker.nat:
             p=Peer(self.netChecker.localIp,self.netChecker.controlPort,self.netChecker.dataPort)
+        
+        return p,port
+                
+    def registerStream(self,stream,input,output):
+        print output['comp']
+        p=stream.getServer()
+        server=Peer(p[0],p[1])
+        server.dataPort=int(p[1])+1
+                
+        p,port=self.checkNatPeer()
         
         bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw, p,server, self.controlPipe)
@@ -118,14 +132,9 @@ class Client(Engine):
         server=Peer(ip,port)
         server.dataPort=int(port)+1
         self.log.debug('sending client started message to %s',server)
-        if self.netChecker.upnp:
-            port=self.netChecker.upnpDataPort
-        else:
-            port=self.netChecker.extDataPort
-            
-        p=None
-        if self.netChecker.nat:
-            p=Peer(self.netChecker.localIp,self.netChecker.controlPort,self.netChecker.dataPort)
+        
+        p,port=self.checkNatPeer()
+
         bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw,p,server, self.controlPipe)
         self.log.debug('sending request stream message to %s',server)
@@ -211,6 +220,12 @@ def startClient():
     P2NER = Client(_parent=None,UI=('GtkGui',[],{}))
 
     reactor.run()   
+    
+def startBasicNetClient():
+    from twisted.internet import reactor
+    P2NER = Client(_parent=None,UI=('GtkGui',[],{}),basic=True)
+
+    reactor.run()  
     
 def startDaemonClient():
     from twisted.internet import reactor
