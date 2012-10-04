@@ -1,0 +1,34 @@
+ Copyright (C) 2012 Loris Corazza, Sakis Christakidis
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+    For more information on P2NER peer to peer client, please see the 
+project on University of Patras website here: 
+http://nam.ece.upatras.gr/p2ner/
+
+    Dependency Modules
+
+  VLC media player - For video transcoding and display, download here: http://www.videolan.org
+
+  Twisted - for networking and event driven tasks, download here: http://twistedmatrix.com
+
+  bitarray - for binary encoding/decoding, download here: http://pypi.python.org/pypi/bitarray/
+
+  construct - for binary encoding/decoding, download here: http://pypi.python.org/pypi/construct
+
+  matplotlib - for live statistics visualization, download here: http://matplotlib.org/
+
+  SciPy - for various mathematical functions used across the code, download here: http://www.scipy.org/
+
+  PyGTK - For User interface, should already be present in your system.
+
