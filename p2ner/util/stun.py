@@ -1,4 +1,6 @@
 #coding=utf-8
+#This is a fork of https://github.com/jtriley/pystun originally by jtiley and release under MIT license
+
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
