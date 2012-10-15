@@ -16,14 +16,21 @@
 
 from construct import *
 from p2ner.base.Buffer import Buffer
+from bitarray import __version__ as __bitarray_version__ 
+bitarray_version = tuple(int(i) for i in __bitarray_version__.split('.'))
 from bitarray import bitarray
 
 class BitarrayAdapter(Adapter):
     def _encode(self, obj, ctx):
-        return obj.tostring()
+        if bitarray_version < (0,4,0):
+            return obj.tostring()
+        return obj.tobytes()
     def _decode(self,  obj,  ctx):
         r = bitarray()
-        r.fromstring(obj)
+	if bitarray_version < (0,4,0):
+            r.fromstring(obj)
+        else:
+            r.frombytes(obj)
         return r[:ctx.buffersize]
 
 class BufferAdapter(Adapter):
@@ -45,12 +52,18 @@ class RequestAdapter(Adapter):
         r = bitarray('0'*buffersize)
         for b in obj:
                 r[lpb-b] = True
-        return r.tostring()
+        if bitarray_version < (0,4,0):
+            return r.tostring()
+        else:
+            return r.tobytes()
     def _decode(self,  obj,  ctx):
         lpb = ctx["buffer"].lpb
         buffersize = ctx["buffer"].buffersize
         r = bitarray()
-        r.fromstring(obj)
+        if bitarray_version < (0,4,0):
+            r.fromstring(obj)
+        else:
+            r.frombytes(obj)
         ret = []
         for i in range(buffersize):
             if r[i]:
