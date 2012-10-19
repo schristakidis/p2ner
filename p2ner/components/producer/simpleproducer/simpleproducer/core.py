@@ -22,6 +22,7 @@ from messages.messageobjects import  ServerLPBMessage
 from messages.peerlistmessage import PeerListMessage
 from messages.retransmitmessage import RetransmitMessage
 from p2ner.base.Peer import Peer
+from p2ner.core.statsFunctions import setLPB, counter
 
 
 class SimpleProducer(Scheduler):
@@ -90,9 +91,11 @@ class SimpleProducer(Scheduler):
                     self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
                     d.addCallback(self.sendblock, lpb, peer)
         outID = self.buffer.shift()
+        setLPB(self, self.buffer.lpb)
         #self.log.debug('%s',self.buffer)
         outdata = self.trafficPipe.call("popblockdata", self, outID)
         outdata.addCallback(self.output.write)
+        counter(self, "sent_block")
         
     def sendblock(self, r, bid, peer):
         return self.trafficPipe.call("sendblock", self, bid, peer)

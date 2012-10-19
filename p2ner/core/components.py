@@ -12,6 +12,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+"""This module provides the helper functions to manage, plug and configure P2NER components"""
 
 from pkg_resources import iter_entry_points, working_set, Environment
 import os, sys
@@ -29,7 +30,8 @@ _entry_points = {
     'interface'     :   'p2ner.%s.interface',
     "input"         :   "p2ner.%s.input",
     "output"        :   "p2ner.%s.output",
-    "plugin"        :   "p2ner.%s.plugin"
+    "plugin"        :   "p2ner.%s.plugin",
+    "stats"         :   "p2ner.%s.stats"
 }
 
 COMPONENTS_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -42,6 +44,14 @@ for name in pkg_env:
 sys.path.append(  COMPONENTS_DIR)  
 
 def getComponents(ctype):
+    """Get all the components of a given type
+    
+    :param ctype: the component's type
+    :type ctype: string
+    :returns: {"ComponentName":ComponentClass,...}
+    :rtype: dict
+    
+    """
     ret = {}
     if ctype not in _entry_points:
         return ret
@@ -50,6 +60,14 @@ def getComponents(ctype):
     return ret
 
 def getComponentsInterfaces(ctype):
+    """Get component's interface from a given component type
+    
+    :param ctype: the component's type
+    :type ctype: string
+    :returns: {"ComponentName":ComponentClass,...}
+    :rtype: dict
+    
+    """
     ret = {}
     if ctype not in _entry_points:
         return ret
@@ -58,6 +76,16 @@ def getComponentsInterfaces(ctype):
     return ret
 
 def loadComponent(ctype, cname):
+    """Load a component's class
+    
+    :param ctype: the component's type
+    :type ctype: string
+    :param cname: the component's name
+    :type cname: string
+    :returns: Instantiable class
+    :rtype: Class
+    
+    """
     ret = []
     if ctype not in _entry_points:
         print "CTYPE???"
@@ -75,6 +103,15 @@ def loadComponent(ctype, cname):
     return ret
 
 def getComponentConfig(ctype, cname):
+    """Load a component's config
+    
+    :param ctype: the component's type
+    :type ctype: string
+    :param cname: the component's name
+    :type cname: string
+    :returns: the component's config
+    
+    """
     ret = []
     if ctype not in _entry_points:
         print "CTYPE???"

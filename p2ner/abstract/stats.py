@@ -17,16 +17,44 @@
 from p2ner.core.namespace import Namespace, initNS
 from abc import abstractmethod
 
-class Plugin(Namespace):
+class Stats(Namespace):
 
     @initNS
     def __init__(self, *args, **kwargs):
-        self.initPlugin(*args, **kwargs)
+        self.initStats(*args, **kwargs)
     
     @abstractmethod
-    def initPlugin(self, *args, **kwargs):
+    def initStats(self, *args, **kwargs):
         pass
     
     @abstractmethod
     def cleanUp(self):
+        pass
+        
+    @abstractmethod
+    def setLPB(self, lpb):
+        pass
+    
+    @abstractmethod
+    def addKey(self, key, initValue=None):
+        pass
+        
+    @abstractmethod
+    def setKey(self, key, value):
+        pass
+    
+    @abstractmethod
+    def incrementKey(self, key, by=1):
+        pass
+        
+    @abstractmethod
+    def getKey(self, key):
+        pass
+        
+    @abstractmethod
+    def hasKey(self, key):
+        pass
+    
+    @abstractmethod
+    def dumpKeys(self):
         pass

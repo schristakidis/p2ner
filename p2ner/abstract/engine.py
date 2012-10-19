@@ -46,7 +46,8 @@ class Engine(Namespace):
         
         self.streams = []
         self.producingStreams = []
-       
+        self.__stats__ = None
+        
         ##INTERFACE
         interface=defaultInterface
         if "interface" in kwargs:
@@ -67,6 +68,9 @@ class Engine(Namespace):
         self.logger=loadComponent('plugin',c)(**k)
         self.log=self.logger.getLoggerChild('base',interface=self.interface)
 
+        ##TEMPORARY LOAD STATS
+        self.__stats__ = loadComponent("stats", "FileStats")(_parent=self)
+        
         self.controlPipe=Pipeline(_parent=self)
         
         self.log.debug('trying to load pipeline element messageparser')

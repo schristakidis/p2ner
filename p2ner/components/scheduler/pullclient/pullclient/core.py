@@ -26,6 +26,7 @@ from messages.lpbmsg import LPBMessage
 from messages.messageobjects import ClientStoppedMessage
 from messages.retransmitmessage import RetransmitMessage
 from block import Block
+from p2ner.core.statsFunctions import counter, setLPB
 
 EXPIRE_TIME = 0.5
 
@@ -64,6 +65,7 @@ class PullClient(Scheduler):
         bid, peer = req
         #self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
+        counter(self, "blocksent")
         
     def getRequestedBID(self):
         #print "GETREQUESTEDBID"
@@ -172,6 +174,7 @@ class PullClient(Scheduler):
     def shift(self, norequests = False):
         n = self.overlay.getNeighbours()
         outID = self.buffer.shift()
+        setLPB(self, self.buffer.lpb)
 
         if not norequests:
             #send buffers
