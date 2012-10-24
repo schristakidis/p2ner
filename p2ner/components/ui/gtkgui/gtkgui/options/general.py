@@ -44,7 +44,8 @@ class generalFrame(genericFrame):
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'optGeneral.glade'))
         """
-        self.builder.add_from_string(resource_string(__name__, 'general.glade'))
+
+        self.builder.add_from_string(resource_string(__name__, 'optGeneral.glade'))
         self.builder.connect_signals(self)
         
         self.frame=self.builder.get_object('generalFrame')
