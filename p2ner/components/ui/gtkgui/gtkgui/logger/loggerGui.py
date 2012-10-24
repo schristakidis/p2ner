@@ -19,6 +19,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from twisted.internet import task
+from pkg_resources import resource_string
 
 levels = {
     "info": 1,
@@ -93,12 +94,14 @@ class LoggerGui(object):
     def createGui(self):     
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'logger.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'logger.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'logger.glade'))    
         self.builder.connect_signals(self)
         
         self.ui=self.builder.get_object('ui')

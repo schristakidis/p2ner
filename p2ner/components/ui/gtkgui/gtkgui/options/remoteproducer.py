@@ -26,6 +26,7 @@ import gobject
 from generic import genericFrame
 import p2ner.util.config as config
 from p2ner.util.utilities import get_user_data_dir
+from pkg_resources import resource_string
 
 ENCODINGS={'Greek':'ISO-8859-7',
                       'Universal':'UTF-8',
@@ -36,12 +37,14 @@ class remoteproducerFrame(genericFrame):
         self.parent=parent
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'optRemote.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'optRemote.glade'))
-        
+        """ 
+        self.builder.add_from_string(resource_string(__name__, 'optRemote.glade'))
         self.builder.connect_signals(self)
         
         self.frame=self.builder.get_object('remoteProducerFrame')

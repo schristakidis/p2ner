@@ -18,7 +18,7 @@ import gtk
 import gobject
 import os.path,sys
 from twisted.internet import reactor,task
-
+from pkg_resources import resource_string
 
 class ConverterGui(object):
     def __init__(self,parent,settings):
@@ -30,12 +30,14 @@ class ConverterGui(object):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'converter.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'converter.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'converter.glade'))
         self.builder.connect_signals(self)
         
         filename=self.settings['filename']

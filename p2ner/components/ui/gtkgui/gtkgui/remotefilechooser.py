@@ -17,6 +17,7 @@ from twisted.internet import reactor
 import pygtk
 pygtk.require('2.0')
 import gtk
+from pkg_resources import resource_string
 
 folderxpm = [
     "17 16 7 1",
@@ -82,12 +83,14 @@ class RemoteFileChooser(object):
         # Create a new window
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'remoteFileChooser.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'remoteFileChooser.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'remoteFileChooser.glade'))
         self.builder.connect_signals(self)
         #self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         #self.window.set_modal(True)

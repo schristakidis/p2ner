@@ -22,7 +22,7 @@ import hashlib
 from time import localtime,mktime
 from datetime import datetime
 from calendarGui import CalendarGui
-
+from pkg_resources import resource_string
 
 
 
@@ -37,12 +37,14 @@ class SettingsGui(object):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'settingsGui.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'settingsGui.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'settingsGui.glade'))
         self.builder.connect_signals(self)
         
         self.ui=self.builder.get_object('ui')

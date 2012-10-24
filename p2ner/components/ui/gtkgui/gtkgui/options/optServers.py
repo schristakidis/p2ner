@@ -21,6 +21,7 @@ import gobject
 import p2ner.util.config as config
 from helper import validateIp,validatePort
 from generic import genericFrame
+from pkg_resources import resource_string
 
 class serversFrame(genericFrame):
     
@@ -30,12 +31,14 @@ class serversFrame(genericFrame):
         self.ipBack=('f',0)
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'optServers.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'optServers.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'optServers.glade'))
         self.builder.connect_signals(self)
 
         self.serversTreeview = self.builder.get_object("serversTreeview")

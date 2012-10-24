@@ -23,6 +23,7 @@ from helper import validateIp,validatePort
 from generic import genericFrame
 from gtkgui.remotefilechooser import RemoteFileChooser
 from p2ner.util.readChannelXML import readChannels
+from pkg_resources import resource_string
 
 class dvbFrame(genericFrame):
     
@@ -32,12 +33,14 @@ class dvbFrame(genericFrame):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'dvbFrame.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'dvbFrame.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'dvbFrame.glade'))
         self.builder.connect_signals(self)
         
         self.channelsTreeview = self.builder.get_object("channelsTreeview")

@@ -35,6 +35,7 @@ from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Navig
 #from scipy import interpolate
 from pylab import setp
 from p2ner.util.utilities import get_user_data_dir
+from pkg_resources import resource_string
 
 class PlotGui(object):
     def get_bg_bbox(self):
@@ -50,12 +51,14 @@ class PlotGui(object):
     
         path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'plot.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'plot.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'plot.glade'))
         self.builder.connect_signals(self)
             
         self.ui=self.builder.get_object('ui')

@@ -25,17 +25,20 @@ import gtk
 import gobject
 from generic import genericFrame
 import p2ner.util.config as config
+from pkg_resources import resource_string
 
 class upnpFrame(genericFrame):
     def __init__(self,parent=None):
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'optUPNP.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'optUPNP.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'optUPNP.glade'))
         self.builder.connect_signals(self)
         
         self.frame=self.builder.get_object('upnpFrame')

@@ -18,7 +18,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
-
+from pkg_resources import resource_string
 
 class NetworkGui(object):
     def __init__(self,parent):
@@ -26,12 +26,14 @@ class NetworkGui(object):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'networkGui.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'networkGui.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'networkGui.glade'))
         self.builder.connect_signals(self)
             
         self.tview=self.builder.get_object('textview')    

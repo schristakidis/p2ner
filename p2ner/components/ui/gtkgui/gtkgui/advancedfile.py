@@ -23,7 +23,7 @@ import getpass
 from settings import SettingsGui
 from converter import ConverterGui
 from remotefilechooser import RemoteFileChooser
-
+from pkg_resources import resource_string
 
 class FileGui(object):
     
@@ -33,12 +33,14 @@ class FileGui(object):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'advancedFile.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'advancedFile.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'advanceFile.glade'))
         self.builder.connect_signals(self)
         
         self.fileEntry=self.builder.get_object('fileEntry')

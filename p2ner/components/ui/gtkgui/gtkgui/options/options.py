@@ -36,7 +36,7 @@ from remoteproducer import remoteproducerFrame
 from subOpt import *
 from p2ner.abstract.ui import UI
 from p2ner.util.utilities import compareIP,getIP
-
+from pkg_resources import resource_string
 
 
 class optionsGui(UI):
@@ -56,12 +56,14 @@ class optionsGui(UI):
     def makeUI(self):
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'options.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'options.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'options.glade'))
         self.builder.connect_signals(self)
         
         optionsModel=gtk.TreeStore(str)

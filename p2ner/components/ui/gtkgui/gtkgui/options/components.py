@@ -25,7 +25,7 @@ import gtk
 import gobject
 import p2ner.util.config as config
 from generic import genericFrame
-
+from pkg_resources import resource_string
 
 class componentsFrame(genericFrame):
     def __init__(self,parent):
@@ -33,12 +33,14 @@ class componentsFrame(genericFrame):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'optComponents.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'optComponents.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'optComponents.glade'))
         self.builder.connect_signals(self)
         
         self.frame=self.builder.get_object('componentsFrame')

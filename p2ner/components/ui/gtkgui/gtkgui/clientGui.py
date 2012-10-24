@@ -39,7 +39,7 @@ from measureupload import MeasureUpload
 from networkGui import NetworkGui
 from p2ner.core.components import loadComponent
 from chatClientUI import ChatClient
-
+from pkg_resources import resource_string
 
 streamListStore=[('streamID',int),('ip',str),('port',int),('title',str),('author',str),('type',str),('live',bool),('startTime',str),('startable',bool),('republish',bool),('password',bool),('subscribed',bool)]
 
@@ -69,12 +69,14 @@ class clientGui(UI):
 		self.knownStreams={}
 		path = os.path.realpath(os.path.dirname(sys.argv[0])) 
 		self.builder = gtk.Builder()
+		"""
 		try:
 			self.builder.add_from_file(os.path.join(path,'clientall.glade'))
 		except:
 			path = os.path.dirname( os.path.realpath( __file__ ) )
 			self.builder.add_from_file(os.path.join(path, 'clientall.glade'))
-
+		"""
+		self.builder.add_from_string(resource_string(__name__, 'clientall.glade'))
 		self.builder.connect_signals(self)
 		
 		self.serversButtonClicked=False

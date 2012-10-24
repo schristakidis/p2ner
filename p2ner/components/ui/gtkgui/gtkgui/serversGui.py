@@ -24,6 +24,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from helper import validateIp,validatePort
+from pkg_resources import resource_string
 
 class serversGUI(object):
     
@@ -34,12 +35,14 @@ class serversGUI(object):
     
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'serversGui.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'serversGui.glade'))
-        
+        """
+        self.builder.add_from_string(resource_string(__name__, 'serversGui.glade'))
         self.builder.connect_signals(self)
 
         self.serversTreeview = self.builder.get_object("serversTreeview")
@@ -137,12 +140,14 @@ class AddServerGui(object):
         self.parent=parent
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path, 'addServer.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'addServer.glade'))
-            
+        """
+        self.builder.add_from_string(resource_string(__name__, 'addServer.glade'))
         self.builder.connect_signals(self)
         
         self.serversTreeview = self.builder.get_object("addServerView")

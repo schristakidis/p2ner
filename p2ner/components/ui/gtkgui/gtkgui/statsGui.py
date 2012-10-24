@@ -25,6 +25,7 @@ import gtk
 from remotefilechooser import RemoteFileChooser
 from p2ner.util.utilities import get_user_data_dir
 from plot import PlotGui
+from pkg_resources import resource_string
 
 class statsGui(object):
     def __init__(self,interface=None,remote=False):
@@ -36,12 +37,14 @@ class statsGui(object):
         
         path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
+        """
         try:
             self.builder.add_from_file(os.path.join(path,'stats.glade'))
         except:
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'stats.glade'))
-
+        """
+        self.builder.add_from_string(resource_string(__name__, 'stats.glade'))
         self.builder.connect_signals(self)
         
         self.ui = self.builder.get_object("ui")
