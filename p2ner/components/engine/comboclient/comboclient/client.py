@@ -43,6 +43,7 @@ class Client(Engine):
         else:
             self.basic=False
             self.holePuncher=loadComponent('plugin','HolePuncher')(_parent=self)
+            self.useHolePunching=True
             self.rProducerInf=loadComponent('plugin','RemoteProducerController')(_parent=self)
             self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
             
@@ -63,14 +64,15 @@ class Client(Engine):
         p=None
         if self.netChecker.nat:
             p=Peer(self.netChecker.localIp,self.netChecker.controlPort,self.netChecker.dataPort)
-        
+            if not self.netChecker.upnp:
+                p.hpunch=True
         return p,port
                 
     def registerStream(self,stream,input,output):
         print output['comp']
         p=stream.getServer()
         server=Peer(p[0],p[1])
-        server.dataPort=int(p[1])+1
+        #server.dataPort=int(p[1])+1
                 
         p,port=self.checkNatPeer()
         
@@ -95,7 +97,7 @@ class Client(Engine):
         if input:
             k['input']=(input['component'],[],{'input':input})
         if output:
-            k['output']=(output['comp'],[],{})#{'output':output['kwargs']})
+            k['output']=(output['comp'],[],{'output':output['kwargs']})
         
         self.producingStreams.append(streamComponent( _parent=self,**k))
         
@@ -144,7 +146,7 @@ class Client(Engine):
         
         self.waitingReply.append(id)
         server=Peer(ip,port)
-        server.dataPort=int(port)+1
+        #server.dataPort=int(port)+1
         self.log.debug('sending client started message to %s',server)
         
         p,port=self.checkNatPeer()

@@ -20,7 +20,7 @@ from messages.publishstream import PublishStreamMessage
 from messages.startstopclient import ClientStartedMessage
 from messages.checkcontents import CheckContentsMessage
 from messages.messageobjects import StreamIdMessage,ContentsMessage
-from messages.pingmessage import KeepAliveMessage
+from messages.pingmessage import KeepAliveMessage,AskServerPunchMessage
 from hashlib import md5
 from time import localtime
 
@@ -35,7 +35,7 @@ class Server(Engine):
         self.messages.append(ClientStartedMessage())
         self.messages.append(CheckContentsMessage())
         self.messages.append(KeepAliveMessage())
-        
+        self.messages.append(AskServerPunchMessage())
     
     def initEngine(self, *args, **kwargs):
         self.sanityCheck(["control", "controlPipe"])

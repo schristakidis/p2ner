@@ -32,6 +32,7 @@ class ClientStartedMessage(ControlMessage):
             peer.lip=message.peer.ip
             peer.lport=message.peer.port
             peer.ldataPort=message.peer.dataPort
+            peer.hpunch=message.peer.hpunch
         
         print 'received client started message from ',peer,' bw:',message.bw
      

@@ -29,11 +29,13 @@ class PeerAdapter(Adapter):
                 lip=obj.lip
                 lport=obj.lport
                 ldataport=obj.ldataPort
+                hpunch=obj.hpunch
             else:
                 lip='0.0.0.0'
                 lport=0
                 ldataport=0
-            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport)
+                hpunch=False
+            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=False)
 
     def _decode(self,  obj,  ctx):
         p=Peer(obj.IP,  obj.port,  obj.dataport)
@@ -42,10 +44,12 @@ class PeerAdapter(Adapter):
             p.lip=None
             p.lport=None
             p.ldataPort=None
+            p.hpunch=False
         else:
             p.lip=obj.LIP
             p.lport=obj.lport
             p.ldataPort=obj.ldataport
+            p.hpunch=obj.hpunch
         return p
     
 PeerStruct = Struct( "peer", 
@@ -56,6 +60,7 @@ PeerStruct = Struct( "peer",
                    IpAddressAdapter(Bytes("LIP",  4)),
                    UBInt16("lport"),
                    UBInt16("ldataport"),
+                   Flag("hpunch")
                    )
 
 if __name__ == "__main__":

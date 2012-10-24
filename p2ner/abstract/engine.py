@@ -44,6 +44,7 @@ class Engine(Namespace):
     @initNS
     def __init__(self, *args, **kwargs):
         
+        self.useHolePunching=False
         self.streams = []
         self.producingStreams = []
         self.__stats__ = None

@@ -55,6 +55,14 @@ class UDPPortElement(PipeElement, DatagramProtocol):
     def send(self, res, msg, data, peer):
         to=self.to
 
+        useLocalIp=False
+        try: #for the server
+            if self.root.netChecker.nat and peer.ip==self.root.netChecker.externalIp:
+                useLocalIp=True
+                peer.useLocalIp=True
+        except:
+            pass    
+        
         if peer.useLocalIp:
             ip=peer.lip
             to='l'+to

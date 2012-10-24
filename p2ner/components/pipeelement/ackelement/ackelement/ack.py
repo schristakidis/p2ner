@@ -69,6 +69,7 @@ class AckElement(PipeElement):
                 d = self.cache[header.seq]['d']
                 p = self.cache[header.seq]['peer']
                 del(self.cache[header.seq])
+
                 d.errback(defer.failure.Failure(MessageSent(p)))
                 self.breakCall()
         elif header.ack:

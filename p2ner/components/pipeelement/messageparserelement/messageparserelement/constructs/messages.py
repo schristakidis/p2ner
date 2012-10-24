@@ -86,6 +86,17 @@ RegisterMessage=Struct("registermessage",
                        Optional(PeerAdapter(PeerStruct)),  
                        )
 
+PeerMessage=Struct("peermessage",
+                   PeerAdapter(PeerStruct),
+                   )
+
+OverlayMessage=Struct("overlaymessage",
+                       UBInt16("streamid"), 
+                       UBInt16("port"), 
+                       UBInt16('bw'),
+                       Optional(PeerAdapter(PeerStruct)),  
+                       )
+
 class RawMessage(object):
     
     @staticmethod
@@ -108,7 +119,9 @@ MSG_TYPES = {
              "rawmessage": RawMessage,
              "retransmitmessage": RetransmitMessage,
              "rttmessage" : RttMessage,
-             "registermessage" : RegisterMessage
+             "registermessage" : RegisterMessage,
+             "peermessage" :PeerMessage,
+             "overlaymessage": OverlayMessage
              }
 
 

@@ -59,6 +59,7 @@ class CBlock(object):
         if self.fragments.has_key(fragment.fragmentid):
             print 'duplicate fragmentttttt ', self.block['blockid'], fragment.fragmentid
             dup=True
+            return False
         else:
             self.fragments[fragment.fragmentid] = (encodedfragment, fragment, peer)
         ret = self.complete

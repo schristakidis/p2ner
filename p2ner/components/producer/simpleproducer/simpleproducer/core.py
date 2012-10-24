@@ -19,7 +19,6 @@ from random import choice
 from p2ner.abstract.scheduler import Scheduler
 from p2ner.base.Buffer import Buffer
 from messages.messageobjects import  ServerLPBMessage
-from messages.peerlistmessage import PeerListMessage
 from messages.retransmitmessage import RetransmitMessage
 from p2ner.base.Peer import Peer
 from p2ner.core.statsFunctions import setLPB, counter
@@ -29,7 +28,6 @@ class SimpleProducer(Scheduler):
     
     def registerMessages(self):
         self.messages = []
-        self.messages.append(PeerListMessage())
         self.messages.append(RetransmitMessage())
         
     

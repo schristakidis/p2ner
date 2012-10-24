@@ -44,6 +44,18 @@ def probe_rec(f,func=None,*args):
         return False
     if f.check(MessageError):
         return True
+
+def probe_all(f,suc_func=None,err_func=None,*args):
+    f.trap(MessageSent,MessageError)
+    if f.check(MessageSent):
+        if suc_func:
+                suc_func(f.value.peer,*args)
+        return False
+    if f.check(MessageError):
+        if err_func:
+                err_func(f.value.peer,*args)
+        return False
+
     
 def trap_sent(f):
     f.trap(MessageSent,MessageError)

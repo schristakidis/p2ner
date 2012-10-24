@@ -63,3 +63,8 @@ class MessageCodes(object):
     REGISTER=60
     CHATTER_MSG=61
     CHAT_MSG=62
+    PUNCH_SERVER=63
+    START_PUNCH=64
+    ADD_NEIGH=65
+    REMOVE_NEIGH=66
+    ADD_PRODUCER=67

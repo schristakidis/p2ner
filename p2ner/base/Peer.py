@@ -37,7 +37,7 @@ def findLocalPeer(ip, port=-1, dataPort=-1):
     '''
     returns peer(s) following the specified criteria        
     '''
-    l = [p for p in Peer._peerPool.values() if p.useLocalIp and p.lip==ip]
+    l = [p for p in Peer._peerPool.values() if  p.lip==ip] #p.useLocalIp and
     if port == -1:
         l = [p for p in l if  p.ldataPort==dataPort]
         if l:
@@ -91,10 +91,17 @@ class Peer(object):
             else:
                 obj.dataPort = 0
 
-            obj.lip=None
+            obj.lip= None
             obj.lport=None
             obj.ldataPort=None
             obj.useLocalIp=False
+            obj.hpunch=False
+            obj.conOk=False
+            obj.lastSend=0
+            obj.portOk=False
+            obj.dataPortOk=False
+            obj.conProb=False
+            obj.learnedFrom=None
         return obj
 
 
@@ -118,6 +125,8 @@ class Peer(object):
 
     def __repr__(self):
         ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort) ])])
+        if self.lip:
+            ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch) ])])
         return ret
     
     def getIP(self):

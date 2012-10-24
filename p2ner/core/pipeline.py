@@ -31,6 +31,7 @@ class Pipeline(Namespace):
         self.pipePort=None
         for el in reversed(elements):
             self.insert(el)
+                        
             
     @property
     def len(self):
@@ -148,6 +149,15 @@ class Pipeline(Namespace):
             raise IndexError
         
     def send(self, msg, content, peer):
+        if issubclass(msg, ControlMessage) and self.useHolePunching:
+            d = self._call("send",msg, content, peer)
+            self.root.holePuncher.check(msg,content,peer,d,self)
+            return d
+        else:
+            return self._send(msg, content, peer)
+            
+                
+    def _send(self, msg, content, peer,d=None):
         if issubclass(msg, ControlMessage):
             content.header = Container()
             content.header.code = msg.code
@@ -158,10 +168,12 @@ class Pipeline(Namespace):
                 content.header.port = self.pipePort
             else:
                 content.header.port = 0
-            #print content
-        d = self.call("send", msg, content, peer)
-        return d
-        
+        if not d:
+            d = self.call("send",msg, content, peer)
+            return d
+        else:
+            reactor.callLater(0, d.callback, "")
+            
     def registerProducer(self, scheduler):
         d = self.call("registerScheduler", scheduler)
         return d
@@ -194,6 +206,23 @@ class Pipeline(Namespace):
         reactor.callLater(0, d.callback, "")
         return d
 
+    def _call(self, FUNC, *args, **kwargs):
+        el = getattr(self, '__first')
+        d = defer.Deferred()
+        res = None
+        if 'res' in kwargs:
+            res = kwargs.pop("res")
+        while el:
+            try:
+                meth = getattr(el, FUNC, False)
+            except:
+                meth=False
+            if callable(meth):
+                d.addCallback(meth, *args, **kwargs)
+            el = el.next
+        d.addErrback(errtrap)
+        return d
+    
     def printall(self):
         i=0
         next = getattr(self, '__first')

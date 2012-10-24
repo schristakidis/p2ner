@@ -15,15 +15,16 @@
 
 
 from p2ner.abstract.overlay import Overlay
-from messages.peerlistmessage import PeerListMessage
-from messages.peerremovemessage import PeerRemoveMessage
+from messages.peerlistmessage import AddProducerMessage
+from messages.peerremovemessage import ClientStoppedMessage
+from twisted.internet import reactor
 
 class CentralClient(Overlay):
     
     def registerMessages(self):
         self.messages = []
-        self.messages.append(PeerListMessage())
-        self.messages.append(PeerRemoveMessage())
+        self.messages.append(AddProducerMessage())
+        self.messages.append(ClientStoppedMessage())
     
     def initOverlay(self):
         self.log.info('initing producer overlay')
@@ -41,6 +42,8 @@ class CentralClient(Overlay):
                 peer.useLocalIp=True
             self.neighbours.append(peer)
             self.log.info('adding %s to neighborhood',peer)
+            if  self.scheduler.loopingCall.running:
+                reactor.callLater(0.1, self.scheduler.sendLPB, peer)
         else:
             self.log.error("%s  yet in overlay" ,peer)
             raise ValueError("%s peer yet in overlay" % str(peer))
@@ -49,6 +52,7 @@ class CentralClient(Overlay):
         try:
             self.neighbours.remove(peer)
             self.log.info('removing %s from neighborhood',peer)
+            print 'removing from producer neighborhood ',peer
         except:
             self.log.error('%s is not a neighbor',peer)
                     

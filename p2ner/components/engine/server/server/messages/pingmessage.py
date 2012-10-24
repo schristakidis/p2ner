@@ -1,4 +1,4 @@
-from p2ner.base.ControlMessage import ControlMessage
+from p2ner.base.ControlMessage import ControlMessage,BaseControlMessage,trap_sent
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,8 @@ from p2ner.base.ControlMessage import ControlMessage
 
 from p2ner.base.Consts import MessageCodes as MSG
 from twisted.internet import reactor
+from construct import Container
+
 
 
 class KeepAliveMessage(ControlMessage):
@@ -30,3 +32,31 @@ class KeepAliveMessage(ControlMessage):
         return True  
     
 
+class AskServerPunchMessage(ControlMessage):
+    type = "peermessage"
+    code = MSG.PUNCH_SERVER
+    ack = True
+    
+    
+    def trigger(self, message):
+        return True
+    
+    def action(self, message, peer):
+        print 'receive message from ',peer,' to help punching with ',message.peer
+        StartPunchingMessage.send(peer,message.peer,self.root.controlPipe)
+        return True    
+    
+    
+    
+class StartPunchingMessage(BaseControlMessage):
+    type = "peermessage"
+    code = MSG.START_PUNCH
+    ack = True
+        
+    
+    @classmethod
+    def send(cls, peer , server, out):
+        d=out.send(cls, Container(peer=peer), server)
+        d.addErrback(trap_sent)
+        return d
+    

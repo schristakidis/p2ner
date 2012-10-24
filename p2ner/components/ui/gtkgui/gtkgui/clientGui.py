@@ -485,9 +485,9 @@ class clientGui(UI):
 				return
 			else:
 				output=output['default']
-				
+			
 		st=self.preferences.getSettings('Output')[output]
-
+		
 		out={}
 		out['comp']=output
 		out['kwargs']=st
