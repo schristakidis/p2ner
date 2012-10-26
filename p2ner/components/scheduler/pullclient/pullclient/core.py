@@ -23,7 +23,6 @@ from p2ner.base.Buffer import Buffer
 from p2ner.base.BufferList import getMostDeprivedReq
 from messages.buffermessage import BufferMessage
 from messages.lpbmsg import LPBMessage
-from messages.messageobjects import ClientStoppedMessage
 from messages.retransmitmessage import RetransmitMessage
 from block import Block
 from p2ner.core.statsFunctions import counter, setLPB
@@ -94,11 +93,6 @@ class PullClient(Scheduler):
         
     def stop(self):
         self.log.info('scheduler is stopping')
-        self.log.debug('sending clientStopped message to %s',self.server)
-        ClientStoppedMessage.send(self.stream.id, self.server, self.controlPipe)
-        for n in self.overlay.getNeighbours():
-            self.log.debug('sending clientStopped message to %s',n)
-            ClientStoppedMessage.send(self.stream.id, n, self.controlPipe)
         #reactor.callLater(0, self.stream.stop)
         try:
             self.loopingCall.stop()
