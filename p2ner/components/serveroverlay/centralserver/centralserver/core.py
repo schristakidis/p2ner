@@ -17,7 +17,7 @@
 from twisted.internet import reactor
 from p2ner.abstract.overlay import Overlay
 from p2ner.base.Stream import Stream
-from messages.requeststream import RequestStreamMessage, RequestNeighboursMessage
+from messages.requeststream import RequestStreamMessage
 from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage, StartRemoteMessage
 from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage
 from messages.startstopclient import ClientStoppedMessage
@@ -31,7 +31,6 @@ class CentralServer(Overlay):
         self.messagess.append(RequestStreamMessage())
         self.messagess.append(ServerStartedMessage())
         self.messagess.append(ServerStoppedMessage())
-        self.messagess.append(RequestNeighboursMessage())
         self.messagess.append(StartRemoteMessage())
         self.messagess.append(ClientStoppedMessage())
     
@@ -72,7 +71,7 @@ class CentralServer(Overlay):
                 self.log.debug('adding %s to the neighborhood of %s',peer,p)
                 self.neighbourhoods[p].append(peer)
                 self.log.debug('sending peerlist message to %s containing %s',p,peer)
-                PeerListMessage.send(self.stream.id, [peer], p, self.controlPipe)
+                #PeerListMessage.send(self.stream.id, [peer], p, self.controlPipe)
             self.neighbourhoods[peer] = newPeerNeighs
             self.log.debug('sending peerlist message to %s containg %s',peer,str(newPeerNeighs))
             PeerListMessage.send(self.stream.id, newPeerNeighs, peer, self.controlPipe)
@@ -82,21 +81,22 @@ class CentralServer(Overlay):
         self.capConnections()
         #self.updateProducerNeighbourhood()
         self.log.debug('sending peerList message to producer %s:%s',self.producer,peer)
-        PeerListProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
+        #PeerListProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
         PeerListProducerMessage.send(self.stream.id, [self.producer],peer, self.controlPipe)
     
     def removeNeighbour(self, peer):
         if peer in self.neighbourhoods:
             for p in self.neighbourhoods[peer]:
-                self.log.debug('sending peerRemove message for %s to %s',peer,p)
-                PeerRemoveMessage.send(self.stream.id, [peer], p, self.controlPipe)
+                #self.log.debug('sending peerRemove message for %s to %s',peer,p)
+                #PeerRemoveMessage.send(self.stream.id, [peer], p, self.controlPipe)
                 self.log.debug('removing %s from the neighborhood of %s',peer,p)
                 self.neighbourhoods[p].remove(peer)
-            self.log.debug('sending peerRemove message for %s to producer %s',peer,self.producer)
-            PeerRemoveProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
+            #self.log.debug('sending peerRemove message for %s to producer %s',peer,self.producer)
+            #PeerRemoveProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
             #if peer in self.producerNeighbours:
             #    print 'removing peer rom neigbourood'
             #   self.producerNeighbours.remove(peer)
+            print 'removing ',peer
             self.log.debug('removing %s',peer)
             del self.neighbourhoods[peer]
             return True

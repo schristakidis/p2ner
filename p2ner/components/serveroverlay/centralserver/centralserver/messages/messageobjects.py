@@ -40,11 +40,12 @@ class PeerListMessage(BaseControlMessage):
         msg = Container(streamid = sid, peer = peerlist)
         return out.send(cls, msg, peer).addErrback(trap_sent)
 
+
 class PeerListProducerMessage(PeerListMessage):
     type = "peerlistmessage"
     code = MSG.SEND_IP_LIST_PRODUCER
     ack = True
-    
+
 
 class PeerRemoveMessage(BaseControlMessage):
     type = "peerlistmessage"
