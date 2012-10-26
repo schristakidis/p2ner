@@ -146,7 +146,7 @@ class RemoteProducerUI(UI):
         input=self.settings.pop('input')
         output={}
         output['comp']='NullOutput'
-        
+        output['kwargs']=None
         
         d = self.proxy.callRemote('registerStream', dumps(self.settings),dumps(input),dumps(output))
         d.addCallback(self.subscribeStream,self.server,port)

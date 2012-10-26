@@ -246,6 +246,19 @@ def findNextConsecutivePorts(port,IF=''):
                 port=port+2
     return port
 
+def findNextUDPPort(port,IF=''):
+    import socket
+    port=port+2
+    while 1:
+            try:
+                sock1 = socket.socket(socket.AF_INET,socket.SOCK_DGRAM, 0)
+                sock1.bind((IF, port))
+                sock1.close()
+                break
+            except socket.error:
+                port=port+2
+    return port
+
 def findNextTCPPort(port,IF=''):
     import socket
     while 1:

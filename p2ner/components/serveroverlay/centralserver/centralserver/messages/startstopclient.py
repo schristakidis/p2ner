@@ -35,5 +35,7 @@ class ClientStoppedMessage(ControlMessage):
                     found=True
                     break
             if not found:
+                print 'removing ',peer,' from known peers'
+                print self.knownPeers
                 self.log.debug('remove %s from known peers',peer)
                 self.knownPeers.remove(peer)

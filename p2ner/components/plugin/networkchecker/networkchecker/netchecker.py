@@ -1,4 +1,3 @@
-from p2ner.core.namespace import Namespace, initNS
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ from p2ner.core.namespace import Namespace, initNS
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from p2ner.core.namespace import Namespace, initNS
 import p2ner.util.utilities as util
 from twisted.internet import reactor,defer
 import p2ner.util.config as config
@@ -20,7 +20,7 @@ from p2ner.core.components import loadComponent
 from p2ner.base.Peer import Peer
 from p2ner.util.stun import get_ip_info
 from twisted.internet.threads import deferToThread
-from p2ner.util.utilities import findNextConsecutivePorts
+from p2ner.util.utilities import findNextConsecutivePorts,findNextUDPPort
 
 class NetworkChecker(Namespace):
     @initNS
@@ -100,7 +100,7 @@ class NetworkChecker(Namespace):
             print 'global internet:'
             self.log.debug('peer is not behind nat')
             self.extDataPort=self.dataPort
-            self.root.trafficPipe.call('listen')
+            #self.root.trafficPipe.call('listen')
             self.networkOk()
             return
         
@@ -137,7 +137,7 @@ class NetworkChecker(Namespace):
             self.log.error("nat type doesn't match for control and data port")
             self.difnat=True
             
-        self.root.trafficPipe.call('listen')
+        #self.root.trafficPipe.call('listen')
         
         self.log.debug('peer is  behind nat')
         print 'peer is behind nat'
@@ -176,6 +176,30 @@ class NetworkChecker(Namespace):
            
     def upnpDiscoverySuccesful(self):
             reactor.callLater(0.2,self.upnpDevice.addPortMapping,self.controlPort,self.controlPort)
+        
+    def changeLocalPort(self,port,extPort):
+        if port!=extPort:
+            print 'problem in nextchecker changeLocalPort ',port,extPort
+            self.log.error( 'problem in nextchecker changeLocalPort %d %d ',(port,extPort))
+            return port+2
+        elif port==self.controlPort:
+            port=findNextUDPPort(port)
+            self.controlPort=port
+            self.root.controlPipe.call('cleanUp')
+            self.log.warning('problem detected in UPNP. Changing local control port to %s',self.controlPort)
+            self.root.controlPipe.getElement(name="UDPPortElement").port=self.controlPort
+            return port
+        elif port==self.dataPort:
+            port=findNextUDPPort(port)
+            self.dataPort=port
+            self.root.trafficPipe.call('cleanUp')
+            self.log.warning('problem detected in UPNP. Changing local data port to %s',self.dataPort)
+            self.root.trafficPipe.getElement(name="UDPPortElement").port=self.dataPort
+            return port
+        else:
+            print 'problem in nextchecker changeLocalPort. Unkown Port ',port,self.controlPort,self.dataPort
+            self.log.error('problem in nextchecker changeLocalPort. Unkown Port %d %d %',(port,self.controlPort,self.dataPort))
+            return port+2
         
     def portForwarded(self,port,exPort):
         if port==self.controlPort:

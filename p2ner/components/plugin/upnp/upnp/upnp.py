@@ -62,12 +62,14 @@ class UPNP(object):
                  self.forwardFailed(port,exPort)
             elif d[0]==3:
                 self.log.warning('port %s is forwarded for peer %s',str(exPort),str(d[1]))
-                self.log.info('trying to forward ports %d,%d',port,exPort+2)
-                self.addPortMapping(port, exPort+2)
+                nextPort=self.parent.changeLocalPort(port,exPort)
+                self.log.info('trying to forward ports %d,%d',nextPort,nextPort)
+                self.addPortMapping(nextPort, nextPort)
             else:
                 self.log.warning('port %s is forwarded to port %s',str(exPort),str(d[1]))
-                self.log.info('trying to forward ports %d,%d',port,exPort+2)
-                self.addPortMapping(port, exPort+2)
+                nextPort=self.parent.changeLocalPort(port,exPort)
+                self.log.info('trying to forward ports %d,%d',nextPort,nextPort)
+                self.addPortMapping(nextPort, nextPort)
         else:
             reactor.callLater(1,self.addPortMapping,port,exPort)
             
