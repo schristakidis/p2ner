@@ -233,7 +233,43 @@ class Client(Engine):
         
 def startClient():
     from twisted.internet import reactor
-    P2NER = Client(_parent=None,UI=('GtkGui',[],{}))
+    import sys,getopt
+    try:
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:dv:P:h',['basic','port=','daemon','vizir=','vizirPort=','help'])
+    except getopt.GetoptError as err:
+        usage(err=err)
+        
+    basic=False
+    interface='LocalControl'
+    port=50000
+    vizir=False
+    vPort=9000
+    for opt,a in optlist:
+        if opt in ('-b','--basic'):
+            basic=True
+        elif opt in ('-p','--port'):
+            port=int(a)
+        elif opt in ('-d','--daemon'):
+            interface='XMLRPCControlUI'
+        elif opt in ('-v','--vizir'):
+            vizir=True
+            interface='XMLRPCControlUI'
+            vIP=a
+        elif opt in ('-P','--vizirPort'):
+            vPort=int(a)
+        elif opt in ('-h','--help'):
+            usage()
+    if interface=='XMLRPCControlUI':
+        gui=None
+        if vizir:
+            kwargs={'vizir':vizir,'vizirIP':vIP,'vizirPort':vPort}
+        else:
+            kwargs={}
+    else:
+        gui=('GtkGui',[],{})
+        kwargs={}
+        
+    P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port)
 
     reactor.run()   
     
@@ -245,9 +281,55 @@ def startBasicNetClient():
     
 def startDaemonClient():
     from twisted.internet import reactor
-    P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],{}))
+    import sys,getopt
+    try:
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:v:P:h',['basic','port=','vizir=','vizirPort=','help'])
+    except getopt.GetoptError as err:
+        usage(err=err,daemon=True)
+        
+    basic=False
+    port=50000
+    vizir=False
+    vPort=9000
+    for opt,a in optlist:
+        if opt in ('-b','--basic'):
+            basic=True
+        elif opt in ('-p','--port'):
+            port=int(a)
+        elif opt in ('-v','--vizir'):
+            vizir=True
+            vIP=a
+        elif opt in ('-P','--vizirPort'):
+            vPort=int(a)
+        elif opt in ('-h','--help'):
+            usage(daemon=True)
+    
+    if vizir:
+        kwargs={'vizir':True,'vizirIP':vIP,'vizirPort':vPort}
+    else:
+        kwargs={}
+    P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),basic=basic,port=port)
     reactor.run()   
     
+def usage(err=None,daemon=False):
+    import sys
+    if err:
+        print str(err)
+    print ' -------------------------------------------------------------------------'
+    if not daemon:
+        print ' Run P2ner Client'
+    else:
+        print ' Run P2ner Daemon'
+    print ' '
+    print ' -b, --basic  :run with basic network configuration'
+    print ' -p, --port port :define port'
+    if not daemon:
+        print ' -d, --daemon :run p2ner daemon with XMLRPC interface'
+    print ' -v, --vizir [ip] :run daemon with XMLRPC and vizir interface and connect to ip'
+    print ' -P, --vizirPort port :set the vizir controller port'
+    print ' -h, --help :print help'
+    print ' -------------------------------------------------------------------------'
+    sys.exit(' ')
     
 if __name__ == "__main__":
     startClient()

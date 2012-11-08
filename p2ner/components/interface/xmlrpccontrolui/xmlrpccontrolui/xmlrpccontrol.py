@@ -24,25 +24,46 @@ import p2ner.util.config as config
 from random import uniform
 from twisted.internet.threads import deferToThread
 from p2ner.util.utilities import findNextTCPPort
-
+from twisted.web.xmlrpc import Proxy
 
 class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     
-    def initInterface(self):
+    def initInterface(self,*args,**kwargs):
         xmlrpc.XMLRPC.__init__(self)
         self.dContactServers={}
         self.dSubStream={}
         self.dStopProducing={}
         self.dUnregisterStream={}
-      
-        
+        if 'vizir' in kwargs.keys() and kwargs['vizir']:
+            print 'should register to ',kwargs['vizirIP'],kwargs['vizirPort']
+            url="http://"+kwargs['vizirIP']+':'+str(kwargs['vizirPort'])+"/XMLRPC"
+            self.proxy=Proxy(url)
+        else:
+            self.proxy=None
+            
     def start(self):
         self.logger=InterfaceLog()
         print 'start listening xmlrpc'
         p=findNextTCPPort(9090)
         print p
         reactor.listenTCP(p, server.Site(self))
-        #deferToThread(self.netChecker.check)
+        if self.proxy:
+            self.getIp(p)
+       
+    def getIp(self,port):
+        try:   
+            if self.basic:
+                ip=self.netChecker.localIp
+            else:
+                ip=self.netChecker.externalIp
+        except KeyError:
+            reactor.callLater(1,self.getIp,port)
+            return
+        
+        self.register(ip,port)
+        
+    def register(self,ip,port):
+        self.proxy.callRemote('connect',ip,port)
         
     def xmlrpc_connect(self):
         return True

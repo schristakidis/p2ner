@@ -92,7 +92,9 @@ class Engine(Namespace):
             control = kwargs["control"]
         c, a, k = control
         p=50028
-       
+        if "port" in kwargs:
+            p=kwargs["port"]
+            
         port, IF = p, ""
         if "port" in k:
             port=k["port"]
@@ -156,7 +158,7 @@ class Engine(Namespace):
         #self.trafficPipe.call('listen')
         
     def enableUI(self,**kwargs):
-        if 'UI' not in kwargs:
+        if 'UI' not in kwargs or not kwargs['UI']:
             return
         
         controlUI=kwargs['UI']
