@@ -1,0 +1,35 @@
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+                    Version 2, December 2004
+
+ Copyright (C) 2010 Takanori Suzuki
+
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+
+            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. You just DO WHAT THE FUCK YOU WANT TO.
+
+
+Sample:
+
+>>> from ZabbixSender.ZabbixSender import ZabbixSender
+>>> sender = ZabbixSender(u'127.0.0.1')
+>>> sender.AddData(host = u'HostA', key = u'AppX_Logger', value = u'send data 1')
+{u'data': [{u'host': u'HostA', u'value': u'send data 1', u'key': u'AppX_Logger'}], u'request': u'sender data'}
+>>> sender.AddData(host = u'HostA', key = u'AppX_Logger', value = u'send data 2')
+{u'data': [{u'host': u'HostA', u'value': u'send data 1', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 2', u'key': u'AppX_Logger'}], u'request': u'sender data'}
+>>> sender.AddData(host = u'HostA', key = u'AppX_Logger', value = u'send data 3')
+{u'data': [{u'host': u'HostA', u'value': u'send data 1', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 2', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 3', u'key': u'AppX_Logger'}], u'request': u'sender data'}
+>>> import time
+>>> sender.AddData(host = u'HostA', key = u'AppX_Logger', value = u'send data 4', clock = time.mktime((2011,6,1,0,0,0,0,0,0)))
+{u'data': [{u'host': u'HostA', u'value': u'send data 1', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 2', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 3', u'key': u'AppX_Logger'}, {u'host': u'HostA', u'value': u'send data 4', u'key': u'AppX_Logger', u'clock': 1306854000.0}], u'request': u'sender data'}
+>>> res = sender.Send()
+>>> sender.ClearData()
+{u'data': [], u'request': u'sender data'}
+>>> print res
+ZBXDW{
+        "response":"success",
+        "info":"Processed 4 Failed 0 Total 4 Seconds spent 0.043256"}

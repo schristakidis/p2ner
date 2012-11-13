@@ -178,6 +178,8 @@
 
     The file stun.py (p2ner/utils/stun.py) is a fork of https://github.com/jtriley/pystun originally by jtiley and release under MIT license
 
+    ---
+
     The file vlc.py (p2ner/utils/vlc.py) is Python ctypes bindings for VLC
     Copyright (C) 2009-2010 the VideoLAN team
     Authors: Olivier Aubert <olivier.aubert at liris.cnrs.fr>
@@ -196,4 +198,11 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
-
+    
+    ---
+    
+    The file ZabbixSender.py (p2ner/components/stats/zabbixstats/zabbixstats/ZabbixSender/ZabbixSender.py) is Copyright (C) 2010 Takanori Suzuki
+    Released under WTFPL
+    See p2ner/components/stats/zabbixstats/zabbixstats/ZabbixSender/README and https://github.com/BlueSkyDetector/code-snippet/tree/master/ZabbixSender
+    
+    

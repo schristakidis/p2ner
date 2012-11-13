@@ -35,8 +35,8 @@ def setLPB(caller, lpb):
     setLPB(self, 231)
     
     """
-    if caller.__stats__:
-        caller.__stats__.setLPB(lpb)
+    for s in caller.__stats__:
+        s.setLPB(lpb)
     
 
 def counter(caller, _name):
@@ -57,11 +57,11 @@ def counter(caller, _name):
     counter(self, "myCounter")
     
     """
-    if caller.__stats__:
+    for s in caller.__stats__:
         try:
-            caller.__stats__.incrementKey(_name)
+            s.incrementKey(_name)
         except:
-            caller.__stats__.addKey(_name, 1)
+            s.addKey(_name, 1)
     
 def setValue(caller, _name, value):
     """set a stats key to a given value
@@ -83,11 +83,11 @@ def setValue(caller, _name, value):
     setValue(self, "myCounter", 244)
     
     """
-    if caller.__stats__:
+    for s in caller.__stats__:
         try:
-            caller.__stats__.setKey(_name, value)
+            s.setKey(_name, value)
         except:
-            caller.__stats__.addKey(_name, value)
+            s.addKey(_name, value)
     
 #def valuecounter(caller, _name, _value, ret):
 #    """increment a counter
@@ -159,11 +159,11 @@ def incrementValuecounter(caller, _name, incr):
     incrementValuecounter(self, "myCounter", 23)
     
     """
-    if caller.__stats__:
+    for s in caller.__stats__:
         try:
-            caller.__stats__.incrementKey(_name, incr)
+            s.incrementKey(_name, incr)
         except:
-            caller.__stats__.addKey(_name, incr)
+            s.addKey(_name, incr)
     
 #def ratio(caller, _name, _up, _down):
 #    """increment a counter
@@ -241,6 +241,6 @@ def dumpStats(caller):
     
     """
     ret = {}
-    if caller.__stats__:
-        ret = caller.__stats__.dumpKeys()
+    for s in caller.__stats__:
+        ret = s.dumpKeys()
     return ret

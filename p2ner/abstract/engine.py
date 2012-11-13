@@ -47,7 +47,7 @@ class Engine(Namespace):
         self.useHolePunching=False
         self.streams = []
         self.producingStreams = []
-        self.__stats__ = None
+        self.__stats__ = []
         
         ##INTERFACE
         interface=defaultInterface
@@ -70,7 +70,7 @@ class Engine(Namespace):
         self.log=self.logger.getLoggerChild('base',interface=self.interface)
 
         ##TEMPORARY LOAD STATS
-        self.__stats__ = loadComponent("stats", "FileStats")(_parent=self)
+        self.__stats__.append(loadComponent("stats", "FileStats")(_parent=self))
         
         self.controlPipe=Pipeline(_parent=self)
         
