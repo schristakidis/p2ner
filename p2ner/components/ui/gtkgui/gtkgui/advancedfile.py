@@ -24,10 +24,11 @@ from settings import SettingsGui
 from converter import ConverterGui
 from remotefilechooser import RemoteFileChooser
 from pkg_resources import resource_string
+from p2ner.abstract.ui import UI
 
-class FileGui(object):
+class FileGui(UI):
     
-    def __init__(self,parent):
+    def initUI(self,parent):
         self.parent=parent
        
         
@@ -40,7 +41,7 @@ class FileGui(object):
             path = os.path.dirname( os.path.realpath( __file__ ) )
             self.builder.add_from_file(os.path.join(path, 'advancedFile.glade'))
         """
-        self.builder.add_from_string(resource_string(__name__, 'advanceFile.glade'))
+        self.builder.add_from_string(resource_string(__name__, 'advancedFile.glade'))
         self.builder.connect_signals(self)
         
         self.fileEntry=self.builder.get_object('fileEntry')
@@ -56,13 +57,13 @@ class FileGui(object):
         self.ui.show()
         
     def on_openFile_clicked(self,widget,data=None):
-        if self.parent.parent.remote:
+        if self.remote:
             self.browseRemoteFile()
         else:
             self.browseLocalFile()
             
     def browseRemoteFile(self):
-        RemoteFileChooser(self.browseFinished,self.parent.parent.interface)
+        RemoteFileChooser(self.browseFinished,self.interface)
                
     def browseLocalFile(self):
         filter=gtk.FileFilter()
@@ -114,13 +115,13 @@ class FileGui(object):
             self.convertedButton.set_active(False)
 
     def on_openSubs_clicked(self,widget):
-        if self.parent.parent.remote:
+        if self.remote:
             self.browseRemoteSub()
         else:
             self.browseLocalSub()
             
     def browseRemoteSub(self):
-        RemoteFileChooser(self.browseFinishedSub,self.parent.parent.interface)
+        RemoteFileChooser(self.browseFinishedSub,self.interface)
         
     def browseLocalSub(self):
         """
@@ -163,7 +164,7 @@ class FileGui(object):
             self.subsEntry.set_text(filename)
             
     def constructEncodings(self):
-        self.enc=self.parent.parent.preferences.getSubEncodings()
+        self.enc=self.preferences.getSubEncodings()
          
         subsBox=self.builder.get_object('encodingBox')
         self.subsCombo = gtk.combo_box_new_text()

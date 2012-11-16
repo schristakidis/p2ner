@@ -263,10 +263,11 @@ class optionsGui(UI):
         reactor.callLater(0,self.interface.copyConfig)
         
     def getConfig(self,file):
+        print 'eeeeee'
         config.create_remote_config(file[0],file[1],True)
         self.makeUI()
         
-    def saveRemoteConfig(self):
+    def saveRemoteConfig(self,quit=True):
         filename=config.check_config()
         f=open(filename,'rb')
         b=f.readlines()
@@ -275,7 +276,7 @@ class optionsGui(UI):
         f=open(filename,'rb')
         r=f.readlines()
         f.close()
-        self.interface.sendRemoteConfig(b,r)
+        self.interface.sendRemoteConfig(b,r,quit)
         
     
     def writeBW(self,bw):

@@ -25,10 +25,10 @@ from converter import ConverterGui
 from remotefilechooser import RemoteFileChooser
 from advancedfile import FileGui
 from pkg_resources import resource_string
+from p2ner.abstract.ui import UI
 
-class ProducerGui(object):
-    
-    def __init__(self,parent):
+class ProducerGui(UI):
+    def initUI(self,parent):
         self.parent=parent
         self.gotSettings=False
         self.source='webcam'
@@ -60,8 +60,9 @@ class ProducerGui(object):
      
         servListstore=gtk.ListStore(str)
 
-        for s in self.servers.keys():
-            servListstore.append([s])
+        if self.servers:
+            for s in self.servers.keys():
+                servListstore.append([s])
         
         
         self.ipCombo = gtk.ComboBoxEntry(servListstore, 0)
@@ -72,16 +73,8 @@ class ProducerGui(object):
         self.ipCombo.show()  
 
 
-        dip=self.parent.preferences.getDefaultServer()
-        i=0
-        found=0
-        for k,v in self.servers.items():
-            if dip==k:
-                    found=i
-            i+=1
-            
         if self.servers:
-            self.ipCombo.set_active(found)
+            self.ipCombo.set_active(self.getDefaultServer())
         
         streamBox=self.builder.get_object('streamBox')
         self.streamCombo=gtk.combo_box_new_text()
@@ -98,7 +91,7 @@ class ProducerGui(object):
         self.channelsCombo=gtk.combo_box_new_text()
         channelsBox.pack_start(self.channelsCombo,True,True,0)
        
-        self.channels=self.parent.preferences.getChannels()
+        self.channels=self.getChannels()
         
         if self.channels:
             for ch in self.channels:
@@ -115,9 +108,22 @@ class ProducerGui(object):
         
         self.builder.get_object('author').set_text(getpass.getuser())
       
-        
+     
+    def getDefaultServer(self):
+        dip=self.preferences.getDefaultServer()
+        i=0
+        found=0
+        for k,v in self.servers.items():
+            if dip==k:
+                    found=i
+            i+=1 
+        return found
+    
+    def getChannels(self):
+        return self.preferences.getChannels()
+    
     def getServers(self):
-        srv=self.parent.preferences.getServers()
+        srv=self.preferences.getServers()
         servers={}
         for s in srv:
             if not servers.has_key(s[0]):
@@ -172,20 +178,20 @@ class ProducerGui(object):
                     model.append([ip])
                 else:
                     self.servers[ip].append(port)
-                self.parent.preferences.addServer(ip,port)
+                self.preferences.addServer(ip,port)
             else:
                 print 'not saving'
         else:
             print 'not valid'
             
     def on_browse_button_clicked(self,widget,data=None):
-        if self.parent.remote:
+        if self.remote:
             self.browseRemote()
         else:
             self.browseLocal()
             
     def browseRemote(self):
-        RemoteFileChooser(self.browseFinished,self.parent.interface)
+        RemoteFileChooser(self.browseFinished,self.interface)
             
     def browseLocal(self):
         filter=gtk.FileFilter()
@@ -250,7 +256,7 @@ class ProducerGui(object):
             self.source='tv'
             
     def on_settingsButton_clicked(self,widget):
-        SettingsGui(self,True)
+        SettingsGui(self,True,_parent=self)
             
     def setSettings(self,settings):
         self.gotSettings=True
@@ -259,14 +265,14 @@ class ProducerGui(object):
     def on_defaultButton_clicked(self,widget):
         ip=self.ipCombo.child.get_text()
         if validateIp(ip):
-            self.parent.preferences.setDefaultServer(ip)
+            self.preferences.setDefaultServer(ip)
         
     def on_registerButton_clicked(self,widget):
         if not self.gotSettings:
-            s=SettingsGui(self,False)
+            s=SettingsGui(self,False,_parent=self)
             self.settings=s.getSettings()
             if not self.settings:
-                SettingsGui(self,True)
+                SettingsGui(self,True,_parent=self)
                 return
         
         self.settings['input']['advanced']=self.advSettings    
@@ -301,7 +307,7 @@ class ProducerGui(object):
 
     def on_advancedButton_toggled(self,widget):
         if widget.get_active():
-            FileGui(self)
+            FileGui(self,_parent=self)
             
     def setAdvancedSettings(self,advSettings):
         self.builder.get_object('advancedButton').set_active(False)

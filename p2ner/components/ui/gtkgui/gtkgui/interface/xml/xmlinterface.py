@@ -1,4 +1,3 @@
-from cPickle import loads,dumps
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ from cPickle import loads,dumps
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from cPickle import loads,dumps
 from twisted.web.xmlrpc import Proxy
 from twisted.internet import reactor
 from p2ner.abstract.interface import Interface
@@ -133,9 +133,10 @@ class Interface(Interface):
         d.addCallback(self.preferences.getConfig)
         d.addErrback(self.failedXMLRPC)  
         
-    def sendRemoteConfig(self,file,chFile):
+    def sendRemoteConfig(self,file,chFile,quit):
         d=self.proxy.callRemote('getRemoteConfig',file,chFile)
-        d.addCallback(self.quiting)
+        if quit:
+            d.addCallback(self.quiting)
         d.addErrback(self.failedXMLRPC) 
         
     def startConverting(self,gui,dir,filename,videorate,subs,subsFile,subsEnc):

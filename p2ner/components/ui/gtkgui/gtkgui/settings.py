@@ -23,12 +23,12 @@ from time import localtime,mktime
 from datetime import datetime
 from calendarGui import CalendarGui
 from pkg_resources import resource_string
+from p2ner.abstract.ui import UI
 
 
-
-class SettingsGui(object):
+class SettingsGui(UI):
     
-    def __init__(self,parent=None,show=True):
+    def initUI(self,parent=None,show=True):
         self.parent=parent
         self.parametres={}
         self.time=datetime.today()
@@ -84,8 +84,9 @@ class SettingsGui(object):
             self.ui.show()
 
     def getSchedulers(self):
-        schedulers=self.parent.parent.preferences.getAllComponents('scheduler')
-        self.schedulerSpecs=self.parent.parent.preferences.getSettings('Scheduler')
+        schedulers=self.preferences.getAllComponents('scheduler')
+        #schedulers=self.parent.parent.preferences.getAllComponents('scheduler')
+        self.schedulerSpecs=self.preferences.getSettings('Scheduler')
           
         found=False
         i=0
@@ -101,9 +102,9 @@ class SettingsGui(object):
         self.schedulerCombobox.set_active(found)
         
     def getOverlays(self):
-        overlays=self.parent.parent.preferences.getAllComponents('overlay')
-        self.overlaySpecs=self.parent.parent.preferences.getSettings('Overlay')
-        
+        overlays=self.preferences.getAllComponents('overlay')
+        self.overlaySpecs=self.preferences.getSettings('Overlay')
+
         found=False
         i=0
         self.table['overlay']={}
@@ -118,8 +119,8 @@ class SettingsGui(object):
         self.overlayCombobox.set_active(found)
         
     def getInputs(self): 
-        inputs=self.parent.parent.preferences.getAllComponents('input')
-        self.inputSpecs=self.parent.parent.preferences.getSettings('Input')
+        inputs=self.preferences.getAllComponents('input')
+        self.inputSpecs=self.preferences.getSettings('Input')
         
         found=False
         i=0
@@ -235,7 +236,7 @@ class SettingsGui(object):
     def on_saveButton_clicked(self,widget):
         if self.read_parametres():
             self.updateSettings()
-            self.parent.parent.preferences.saveSettings()
+            self.preferences.saveSettings()
             
     def on_ui_destroy(self,widget):
         self.ui.destroy()
@@ -255,9 +256,9 @@ class SettingsGui(object):
         self.parent.setSettings(self.parametres)
         
     def updateSettings(self,save=False):
-        self.parent.parent.preferences.updateSettings('Input',self.inputSpecs)
-        self.parent.parent.preferences.updateSettings('Scheduler',self.schedulerSpecs)
-        self.parent.parent.preferences.updateSettings('Overlay',self.overlaySpecs)
+        self.preferences.updateSettings('Input',self.inputSpecs)
+        self.preferences.updateSettings('Scheduler',self.schedulerSpecs)
+        self.preferences.updateSettings('Overlay',self.overlaySpecs)
                 
     def getSettings(self):
         if not self.read_parametres():
