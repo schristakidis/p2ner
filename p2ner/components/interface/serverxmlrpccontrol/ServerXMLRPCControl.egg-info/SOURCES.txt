@@ -1,9 +1,0 @@
-setup.py
-ServerXMLRPCControl.egg-info/PKG-INFO
-ServerXMLRPCControl.egg-info/SOURCES.txt
-ServerXMLRPCControl.egg-info/dependency_links.txt
-ServerXMLRPCControl.egg-info/entry_points.txt
-ServerXMLRPCControl.egg-info/requires.txt
-ServerXMLRPCControl.egg-info/top_level.txt
-serverxmlrpccontrol/__init__.py
-serverxmlrpccontrol/serverxmlrpccontrol.py
