@@ -263,7 +263,6 @@ class optionsGui(UI):
         reactor.callLater(0,self.interface.copyConfig)
         
     def getConfig(self,file):
-        print 'eeeeee'
         config.create_remote_config(file[0],file[1],True)
         self.makeUI()
         

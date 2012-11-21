@@ -16,9 +16,9 @@
 
 from setuptools import setup
 
-__component_name__ = "RandomInput"
-__author__ = "Loris Corazza"
-__author_email__ = "loox@ece.upatras.gr"
+__component_name__ = "ServerXMLRPCControl"
+__author__ = "Sakis Christakidis"
+__author_email__ = "schristakidis@ece.upatras.gr"
 __version__ = "0.1"
 __url__ = "http://nam.ece.upatras.gr/p2ner/"
 __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License."""
-__description__ = "P2ner random input component"
+__description__ = "P2ner server xmlrpc control interface"
 __long_description__ = """"""
 __pkg_data__ = {} #__component_name__.lower(): ["template/*", "data/*"]}
 
@@ -45,14 +45,13 @@ setup(
     url=__url__,
     license=__license__,
     long_description=__long_description__ if __long_description__ else __description__,
-
+    install_requires = ['p2ner>=0.3'],
+    
     packages=[__component_name__.lower()],
     package_data = __pkg_data__,
 
     entry_points="""
-    [p2ner.components.input]
+    [p2ner.components.interface]
     %s = %s:%s
-    [p2ner.interface.input]
-    %s = %s:%s
-    """% ((__component_name__, __component_name__.lower(), __component_name__, __component_name__, __component_name__.lower(), "INTERFACE")))
-
+    """ % ((__component_name__, __component_name__.lower(), __component_name__))
+)

@@ -74,7 +74,7 @@ class localControl(Interface):
     def returnUnregisterStream(self,id):
         self.controlUI.unregisterStream(id)
             
-    def returnProducedStream(self,stream):
+    def returnProducedStream(self,stream,hash=None):
         if stream==-1:
             self.log.info('could not register stream')
         self.controlUI.registerStream([stream])

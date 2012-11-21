@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="controlcenter">
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkVBox" id="vbox1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkToolbar" id="toolbar1">
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkToolButton" id="startNclients">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_markup">Start Clients</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Start Clients</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-play</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="stopNclients">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_markup">Stop Clients</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Stop Clients</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-stop</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="setUploadBW">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_markup">Set Upload Bandwidth</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Set Upload Bandwidth</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-forward</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="startProducer">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_markup">Start Producer</property>
+                <property name="use_action_appearance">False</property>
+                <property name="label" translatable="yes">Start Producer</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-record</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <child>
+              <object class="GtkTreeView" id="clientView">
+                <property name="width_request">640</property>
+                <property name="height_request">480</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStatusbar" id="statusbar1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="spacing">2</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

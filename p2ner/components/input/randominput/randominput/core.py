@@ -21,7 +21,13 @@ class RandomInput(Input):
     
     def initInput(self, *args, **kwargs):
         print self.stream
-        blocksize = int(self.stream.bitRate/self.stream.blocksSec/8.0)
+        self.input=kwargs['input']
+        self.videoRate=self.input['videoRate']*1024
+        blockSec=self.stream.scheduler['blocksec']
+        print 'rate:',self.videoRate
+        print 'NB:',blockSec
+        blocksize = int(self.videoRate/blockSec/8.0)
+        print 'block size:',blocksize
         b = ""              
         for i in xrange(blocksize):
             b+=chr(random.randint(0,255))
@@ -34,5 +40,8 @@ class RandomInput(Input):
         pass
         
     def isRunning(self):
+        return True
+    
+    def stop(self):
         return True
     

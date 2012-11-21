@@ -1,4 +1,3 @@
-import os, sys
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import os, sys
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import os, sys
 import os.path
 import pygtk
 pygtk.require("2.0")
@@ -164,7 +164,7 @@ class ProducerGui(UI):
     def port_changed_cb(self,entry):
         print entry.get_text()        
         
-    def on_ui_destroy(self,widget):
+    def on_ui_destroy(self,widget=None):
         self.ui.destroy()
         
     def on_saveButton_clicked(self,widget):
@@ -295,14 +295,16 @@ class ProducerGui(UI):
             if not self.builder.get_object('addressBox').get_text():
                 return
         self.settings['server']=(self.ipCombo.child.get_text(),self.portCombo.child.get_text())
-
-        self.ui.destroy()
-        
-        
+           
         if self.source=='file' and self.advSettings and self.advSettings['offline']:
+            self.on_ui_destroy()
             ConverterGui(self.parent,self.settings)
-        else:        
-            self.parent.registerStreamSettings(self.settings)
+        else:   
+            self.registerStreamSettings()
+            
+    def registerStreamSettings(self):     
+        self.on_ui_destroy()
+        self.parent.registerStreamSettings(self.settings)
 
 
     def on_advancedButton_toggled(self,widget):

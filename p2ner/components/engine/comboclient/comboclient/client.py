@@ -229,7 +229,6 @@ class Client(Engine):
         
     def setBW(self,bw):
         self.trafficPipe.call('setBW',bw)
-
         
 def startClient():
     from twisted.internet import reactor

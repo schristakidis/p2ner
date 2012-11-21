@@ -102,12 +102,60 @@ class Server(Engine):
             self.log.error("could not unregister stream:%d because it doesn't exist",id)
             #raise ValueError("could not unregister stream because it doesn't exist")
 
-
-    
+    def restartServer(self):
+        for ov in self.overlays.values():
+            ov.removes()
+            self.log.info('unregistering stream:%s',ov.stream)
+            self.chatServer.removeRoom(id)
+        self.overlays={}  
+        print 'server restarted'
+            
 def startServer():
-    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":16000}),logger=('Logger',{'name':'p2nerServer'}),interface=('NullControl',[],{}))
     from twisted.internet import reactor
+    import sys,getopt
+    try:
+        optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:h',['port=','vizir=','vizirPort=','help'])
+    except getopt.GetoptError as err:
+        usage(err=err)
+        
+   
+    interface='NullControl'
+    port=16000
+    vizir=False
+    vPort=9000
+    for opt,a in optlist:
+        if opt in ('-p','--port'):
+            port=int(a)
+        elif opt in ('-v','--vizir'):
+            vizir=True
+            interface='ServerXMLRPCControl'
+            vIP=a
+        elif opt in ('-P','--vizirPort'):
+            vPort=int(a)
+        elif opt in ('-h','--help'):
+            usage()
+            
+    if interface=='ServerXMLRPCControl':
+        kwargs={'vizir':vizir,'vizirIP':vIP,'vizirPort':vPort}
+    else:
+        kwargs={}
+
+    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":port}),logger=('Logger',{'name':'p2nerServer'}),interface=(interface,[],kwargs))
     reactor.run()
+    
+def usage(err=None):
+    import sys
+    if err:
+        print str(err)
+    print ' -------------------------------------------------------------------------'
+    print ' Run P2ner Server'
+    print ' '
+    print ' -p, --port port :define port'
+    print ' -v, --vizir [ip] :run server with XMLRPC and vizir interface and connect to ip'
+    print ' -P, --vizirPort port :set the vizir controller port'
+    print ' -h, --help :print help'
+    print ' -------------------------------------------------------------------------'
+    sys.exit(' ')
     
 if __name__ == "__main__":
     startServer()

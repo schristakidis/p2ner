@@ -55,7 +55,11 @@ class RemoteProducerInterface(Interface,xmlrpc.XMLRPC):
     def xmlrpc_getContents(self):
         self.channels=get_channels()
         videos=os.listdir(self.dir)
-        return videos,self.channels.keys()
+        if self.channels:
+            ret=self.channels.keys()
+        else:
+            ret=[]
+        return videos,ret
     
     def xmlrpc_registerStream(self,stream,input=None,output=None):
         if self.pd:

@@ -498,8 +498,8 @@ class clientGui(UI):
 		
 	def succesfulSubscription(self,stream,id):		
 		if stream==-1:
-			#m='failed to subscribe stream with id:%d'%id
-			#self.newMessage(m,20)
+			m='failed to subscribe stream with id:%d'%id
+			self.newMessage(m,20)
 			return
 		id=stream.id
 		self.knownStreams[id]['subscribed']=True
@@ -750,7 +750,8 @@ class clientGui(UI):
 			return
 		
 		if streams[0]==-1:
-			#print 'could not register stream'
+			m='failed to register stream'
+			self.newMessage(m,20)
 			return
 		
 		self.builder.get_object('publishExpander').set_visible(True)

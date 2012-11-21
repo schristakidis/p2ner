@@ -19,8 +19,11 @@ from p2ner.abstract.interface import Interface
 
 class Interface(Interface): 
     def initInterface(self, *args, **kwargs):
-        self.parent=self.root
-        
+        if args and args[0]:
+            self.parent=args[0]
+        else:
+            self.parent=self.root
+
     def setUrl(self,url):
         self.proxy = Proxy(url)
         
@@ -38,7 +41,6 @@ class Interface(Interface):
     def loadStreams(self,streams):
         return [loads(s) for s in streams]
      
-        
     def contactServers(self,servers):
         for s in servers:
             d = self.proxy.callRemote('contactServer',s)
@@ -54,7 +56,7 @@ class Interface(Interface):
         self.parent.getStream(s,server)
         
     def subscribeStream(self,id,ip,port,outputMethod):
-        d = self.proxy.callRemote('subscribeStream',id,ip,port,outputMethod)
+        d = self.proxy.callRemote('subscribeStream',id,ip,port,dumps(outputMethod))
         d.addCallback(self.returnSubStream)
         d.addErrback(self.failedXMLRPC) 
         
@@ -65,6 +67,11 @@ class Interface(Interface):
             s=loads(s)
         self.parent.succesfulSubscription(s,id)
             
+    def returnPublishStream(self,stream):
+        if stream!=-1:
+            stream=loads(stream)
+        self.parent.registerStream([stream])
+        
     def stopProducing(self,id,repub):
         d = self.proxy.callRemote('stopProducing',id,repub)
         d.addCallback(self.parent.stopProducing)
@@ -87,8 +94,7 @@ class Interface(Interface):
         
     def registerStream(self,settings,inputMethod,outputMethod):   
         d = self.proxy.callRemote('registerStream', dumps(settings),dumps(inputMethod),dumps(outputMethod))
-        #d.addCallback(self.loadStreams)
-        #d.addCallback(self.parent.registerStream)
+        d.addCallback(self.returnPublishStream)
         d.addErrback(self.failedXMLRPC)
         
     def quiting(self,r):
@@ -185,6 +191,15 @@ class Interface(Interface):
         d=self.proxy.callRemote('setBW',bw)
         d.addErrback(self.failedXMLRPC) 
        
+    def getBW(self):
+        d=self.proxy.callRemote('getBW')
+        d.addCallback(self.parent.checkBW)
+        d.addErrback(self.failedXMLRPC) 
+        
+    def restartServer(self):
+        d=self.proxy.callRemote('restartServer')
+        d.addErrback(self.failedXMLRPC) 
+        
     def failedXMLRPC(self,f):
         print 'failed xmlrpc call'
         print f

@@ -1,4 +1,3 @@
-from client import Client as ComboClient
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ from client import Client as ComboClient
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from client import Client as ComboClient
 from client import startClient as startComboClient
 from client import startDaemonClient as startDaemonComboClient
 from client import startBasicNetClient 

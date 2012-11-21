@@ -114,7 +114,7 @@ class RemoteProducerUI(UI):
         self.ui.destroy()
         
     def on_settingsButton_clicked(self,widget):
-        SettingsGui(self,True)
+        SettingsGui(self,True,_parent=self)
         
     def setSettings(self,settings):
         self.gotSettings=True
@@ -123,10 +123,10 @@ class RemoteProducerUI(UI):
         
     def registerStream(self,type,stream):
         if not self.gotSettings:
-            s=SettingsGui(self,False)
+            s=SettingsGui(self,False,_parent=self)
             self.settings=s.getSettings()
             if not self.settings:
-                SettingsGui(self,True)
+                SettingsGui(self,True,_parent=self)
                 return
         
         self.settings['input']['advanced']=False 

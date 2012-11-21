@@ -42,13 +42,13 @@ class StreamIdMessage(ControlMessage):
         self.root.sidListeners.remove(self)
         self.stream.id = message.streamid
         self.root.newStream(self.stream,self.inMethod,self.outMethod)
-        self.interface.returnProducedStream(self.stream)
+        self.interface.returnProducedStream(self.stream,self.hash)
 
     def checkResponse(self,peer=None):
         self.log.debug('failed to receive stream id message')
         m=self.root.sidListeners.index(self)
         self.root.sidListeners.remove(self)
-        self.interface.returnProducedStream(-1)
+        self.interface.returnProducedStream(-1,self.hash)
             
             
 class ContentsMessage(ControlMessage):

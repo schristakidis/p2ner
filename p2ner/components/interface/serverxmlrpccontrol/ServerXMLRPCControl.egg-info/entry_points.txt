@@ -1,0 +1,4 @@
+
+    [p2ner.components.interface]
+    ServerXMLRPCControl = serverxmlrpccontrol:ServerXMLRPCControl
+    

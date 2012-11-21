@@ -80,5 +80,5 @@ class BandwidthElement(PipeElement):
         self.bw =0.9 * self.bw*1024
         print 'setting bw to ',self.bw
         return self.bw
-    
-        
+
+

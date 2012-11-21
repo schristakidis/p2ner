@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+class interface(object):
+    specs={'videoRate':0}
+    
+    specsGui={'videoRate':{'name':'Video Rate','tooltip':'The KBps of the null input'}}
+    
 
-from core import RandomInput
-from interface import interface as INTERFACE
+                      

@@ -246,7 +246,6 @@ class NetworkChecker(Namespace):
             self.root.controlPipe.setPipePort(self.upnpControlPort)
             self.root.holePuncher.holePipe.setPipePort(self.upnpDataPort)
             self.root.trafficPipe.setPipePort(self.upnpDataPort)
-        
         self.log.debug('network is ok')
         if not self.nat:
             self.log.debug('global internet')
@@ -264,6 +263,7 @@ class NetworkChecker(Namespace):
         self.extDataPort=self.dataPort
         self.root.controlPipe.call('listen')
         self.root.trafficPipe.call('listen')
+        self.getFirstRun()
         return
     
     def checkStun(self):

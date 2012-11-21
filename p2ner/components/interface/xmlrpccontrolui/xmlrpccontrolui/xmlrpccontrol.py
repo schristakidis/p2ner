@@ -1,4 +1,3 @@
-from p2ner.abstract.interface import Interface
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ from p2ner.abstract.interface import Interface
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from p2ner.abstract.interface import Interface
 from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
 from cPickle import dumps,loads
@@ -34,6 +34,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         self.dSubStream={}
         self.dStopProducing={}
         self.dUnregisterStream={}
+        self.dRegisterStream={}
         if 'vizir' in kwargs.keys() and kwargs['vizir']:
             print 'should register to ',kwargs['vizirIP'],kwargs['vizirPort']
             url="http://"+kwargs['vizirIP']+':'+str(kwargs['vizirPort'])+"/XMLRPC"
@@ -54,16 +55,23 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         try:   
             if self.basic:
                 ip=self.netChecker.localIp
+                p=self.root.controlPipe.getElement(name="UDPPortElement").port
+                bw=self.root.trafficPipe.getElement(name="BandwidthElement").bw
             else:
                 ip=self.netChecker.externalIp
+                if self.netChecker.upnp: 
+                    p=self.netChecker.upnpControlPort
+                else:
+                    p=self.netChecker.extControlPort
+                bw=self.root.trafficPipe.getElement(name="BandwidthElement").bw
         except KeyError:
             reactor.callLater(1,self.getIp,port)
             return
-        
-        self.register(ip,port)
-        
-    def register(self,ip,port):
-        self.proxy.callRemote('connect',ip,port)
+
+        self.register(ip,port,p,bw)
+
+    def register(self,ip,rpcport,port,bw):
+        self.proxy.callRemote('register',ip,rpcport,port,bw)
         
     def xmlrpc_connect(self):
         return True
@@ -75,14 +83,15 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         print 'trying to register stream'
         s=loads(stream)
         strm=Stream(**s)
-        #d=defer.Deferred()
+        d=defer.Deferred()
         if input:
             input=loads(input)
         if output:
             output=loads(output)
             
+        self.dRegisterStream[strm.streamHash()]=d
         self.root.registerStream(strm,input,output)        
-        return True
+        return d
     
     def xmlrpc_contactServer(self,server):
         print 'should contact:',server
@@ -113,7 +122,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         d=defer.Deferred()
         if not self.dSubStream.has_key(id):
             self.dSubStream[id]=d
-        self.root.subscribeStream(id,ip,port,output)
+        self.root.subscribeStream(id,ip,port,loads(output))
         return d
     
     def xmlrpc_stopProducing(self,id,changeRepub=False):
@@ -152,8 +161,11 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         defer=self.dUnregisterStream.pop(id)
         defer.callback(id)
             
-    def returnProducedStream(self,stream):
-        pass
+    def returnProducedStream(self,stream,hash):
+        d=self.dRegisterStream.pop(hash)
+        if stream!=-1:
+            stream=dumps(stream)
+        d.callback(stream)
            
     def returnContents(self,stream,server):
         d=stream    
@@ -254,7 +266,11 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     def xmlrpc_setBW(self,bw):
         self.root.setBW(bw)
         return 1
-    
+  
+    def xmlrpc_getBW(self):
+        return self.root.trafficPipe.getElement(name="BandwidthElement").bw
+
+
     def networkStatus(self,status):
         pass
     

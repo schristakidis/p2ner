@@ -1,4 +1,3 @@
-class interface(object):
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ class interface(object):
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+class interface(object):
     specs={'videoRate':0,'audio':'pulse','width':360,'height':240}
     
     specsGui={'videoRate':{'name':'Video Rate','tooltip':'The quality of the transcoded video in KBps. 0 for default quality'},
