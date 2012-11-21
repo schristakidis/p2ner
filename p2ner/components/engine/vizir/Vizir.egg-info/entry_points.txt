@@ -1,7 +1,0 @@
-[p2ner.components.engine]
-Vizir=vizir:Vizir
-
-[console_scripts]
-vizirGui = vizir:startVizir
-vizirProxy = vizir:startVizirProxy
-
