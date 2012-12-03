@@ -76,7 +76,7 @@ class dvbFrame(genericFrame):
         if not channels:
             return
         for name in channels.keys():
-            model.append((str(name),str(channels[name]['location']),int(channels[name]['program']),False))
+            model.append((str(name),str(channels[name]['location']),int(channels[name]['program'])))
         
         
 
