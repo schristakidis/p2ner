@@ -10,8 +10,6 @@
       <column type="gint"/>
       <!-- column-name valid -->
       <column type="gboolean"/>
-      <!-- column-name edit -->
-      <column type="gboolean"/>
     </columns>
   </object>
   <object class="GtkVBox" id="ui">

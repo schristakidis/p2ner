@@ -25,7 +25,6 @@ import gtk
 import gobject
 from serversGui import serversGUI
 from producerGui import ProducerGui
-from cPickle import loads,dumps
 from time import strftime,localtime
 from twisted.web.xmlrpc import Proxy
 from logger.loggerGui import Logger
@@ -40,6 +39,7 @@ from networkGui import NetworkGui
 from p2ner.core.components import loadComponent
 from chatClientUI import ChatClient
 from pkg_resources import resource_string
+from p2ner.core.preferences import Preferences 
 
 streamListStore=[('streamID',int),('ip',str),('port',int),('title',str),('author',str),('type',str),('live',bool),('startTime',str),('startable',bool),('republish',bool),('password',bool),('subscribed',bool)]
 
@@ -55,12 +55,16 @@ class clientGui(UI):
 			#self.logger=Logger(self)
 			self.logger=Logger(self)
 		else:
-			from interface.localinterface import Interface
-			self.interface=Interface(_parent=self)
+			#from interface.localinterface import Interface
+			#self.interface=Interface(_parent=self)
+			self.interface=self.root.interface
 			self.logger=Logger(self)
 			self.rProducerViewer=None
 			reactor.callLater(0,self.startUI)
-		
+	
+	def loadPreferences(self):
+		self.preferences=Preferences(remote=True,func=self.startUI,_parent=self)
+		self.preferences.start()
 		
 	def startUI(self):
 		self.lastSelectedId=None
@@ -82,9 +86,8 @@ class clientGui(UI):
 		self.serversButtonClicked=False
 		
 		self.createMenu()
-		self.preferences=optionsGui(_parent=self)#self,self.visibleCollumns)
-		
-	def continueUI(self):
+		self.options=optionsGui(_parent=self)#self,self.visibleCollumns)
+
 		self.streamsTreeview = self.builder.get_object("streamsTreeview")
 		self.streamsModel=gtk.ListStore(*[typ[1] for typ in streamListStore])
 		self.streamsTreeview.set_model(self.streamsModel)
@@ -121,7 +124,7 @@ class clientGui(UI):
 		col=self.getColumnByName('subscribed')
 		self.subModel.set_visible_column(col)
 
-		self.preferences.loadColumnViews()
+		self.options.loadColumnViews()
 		self.bar=self.builder.get_object('statusbar')
 		self.context_id=self.bar.get_context_id('status bar')
 		self.descriptionBox=self.builder.get_object('descriptionBox')
@@ -142,7 +145,7 @@ class clientGui(UI):
 		if self.remote:
 			self.getStreams()
 		else:
-			self.nGui=NetworkGui(self)
+			self.nGui=NetworkGui(_parent=self)
 			if self.preferences.getCheckNetAtStart():
 				self.nGui.show()
 			checkVersion()
@@ -256,7 +259,7 @@ class clientGui(UI):
 		
 	
 	def on_preferencesMenuItem_activate(self,widget):
-		self.preferences.showUI()
+		self.options.showUI()
 		
 	def on_measureUploadMenuItem_activate(self,widget=None):
 		self.measureGui=MeasureUpload(self)
@@ -363,8 +366,8 @@ class clientGui(UI):
 		if self.logger:
 			self.logger.stop()
 			
-		self.preferences.saveRemoteConfig()	
-		#self.interface.quiting()
+		
+		self.interface.quiting()
 		
 		
 	def on_col_toggled(self,widget):
@@ -381,7 +384,7 @@ class clientGui(UI):
 		col.set_visible(widget.active)
 		
 	def on_serversButton_clicked(self,widget):
-		serversGUI(self)
+		serversGUI(self,_parent=self)
 	
 	def on_refreshButton_clicked(self,widget=None):
 		if not self.serversButtonClicked:
@@ -488,7 +491,7 @@ class clientGui(UI):
 			else:
 				output=output['default']
 			
-		st=self.preferences.getSettings('Output')[output]
+		st=self.preferences.getSettings('output',output)
 		
 		out={}
 		out['comp']=output
@@ -739,7 +742,7 @@ class clientGui(UI):
 		if not output['default']:
 			self.newMessage('select default output',20)
 			return
-		st=self.preferences.getSettings('Output')[output['default']]
+		st=self.preferences.getSettings('output',output['default'])
 		out={}
 		out['comp']=output['default']
 		out['kwargs']=st

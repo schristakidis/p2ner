@@ -25,7 +25,6 @@ class MeasureUpload(object):
     def __init__(self,parent):
         self.parent=parent
         
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
         """
         try:

@@ -23,24 +23,14 @@ from twisted.internet import reactor
 pygtk.require("2.0")
 import gtk
 import gobject
-import p2ner.util.config as config
 from generic import genericFrame
 from pkg_resources import resource_string
 
 class viewFrame(genericFrame):
-    def __init__(self,parent):
-        self.parent=parent
-        self.collumns=parent.visibleCollumns
-        
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+    def initUI(self):
+        self.collumns=self.visibleCollumns
+
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path, 'optView.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'optView.glade'))
-        """
         
         self.builder.add_from_string(resource_string(__name__, 'optView.glade'))
         self.builder.connect_signals(self)
@@ -83,7 +73,7 @@ class viewFrame(genericFrame):
         
         if first:
             for name,wig in self.colWig.items():
-                active=config.getVisibility(name)
+                active=self.preferences.getCollumnVisibility(name)
                 wig.set_active(active)
                 if active:
                     showModel.append([name])
@@ -111,6 +101,7 @@ class viewFrame(genericFrame):
         
         self.colWig[v].set_active(False)
         self.hideTree.get_model().append([v])
+        self.preferences.changeVisibility(v,False)
         
     def on_hideTree_row_activated(self,widget,path,col):
         model=widget.get_model()
@@ -119,6 +110,7 @@ class viewFrame(genericFrame):
         
         self.colWig[v].set_active(True)
         self.viewTree.get_model().append([v])
+        self.preferences.changeVisibility(v,True)
         
     def on_showButton_clicked(self,widget):
         if widget.get_label()=='Show':
@@ -138,10 +130,3 @@ class viewFrame(genericFrame):
         
         func(widget,path,0)
         
-    def save(self):
-        for name,wig in self.colWig.items():
-            active=wig.get_active()
-            s='false'
-            if active:
-                s='true'
-            config.config.set('ColumnVisibility',name,s)

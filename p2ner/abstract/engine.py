@@ -24,6 +24,7 @@ from p2ner.core.pipeline import Pipeline
 import sys
 from random import uniform
 from p2ner.util.utilities import findNextConsecutivePorts
+from p2ner.core.preferences import Preferences
 
 defaultControl = ("UDPCM", [], {})
 defaultTraffic = ("UDPDB", [], {})
@@ -69,6 +70,10 @@ class Engine(Namespace):
         self.logger=loadComponent('plugin',c)(**k)
         self.log=self.logger.getLoggerChild('base',interface=self.interface)
 
+        ##Preferences
+        self.preferences=Preferences(_parent=self)
+        self.preferences.start()
+        
         ##TEMPORARY LOAD STATS
         self.__stats__.append(loadComponent("stats", "FileStats")(_parent=self))
         

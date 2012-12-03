@@ -10,8 +10,6 @@
       <column type="gchararray"/>
       <!-- column-name Program -->
       <column type="gint"/>
-      <!-- column-name edit -->
-      <column type="gboolean"/>
     </columns>
   </object>
   <object class="GtkVBox" id="ui">

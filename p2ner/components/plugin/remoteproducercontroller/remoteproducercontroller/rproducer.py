@@ -1,4 +1,3 @@
-from p2ner.abstract.interface import Interface
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,13 @@ from p2ner.abstract.interface import Interface
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from p2ner.abstract.interface import Interface
 from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
 from cPickle import dumps,loads
 from p2ner.base.Stream import Stream
-import p2ner.util.config as config
 from random import uniform
 from hashlib import md5
-from p2ner.util.config import get_channels,getRemotePreferences
 from p2ner.util.utilities import findNextTCPPort
 import os,os.path
 
@@ -29,7 +27,7 @@ class RemoteProducerInterface(Interface,xmlrpc.XMLRPC):
     def initInterface(self):
         xmlrpc.XMLRPC.__init__(self)
         self.dContactServers={}
-        pref=getRemotePreferences()
+        pref=self.preferences.getRemotePreferences()
         
         if not pref['enable']:
             return
@@ -53,7 +51,7 @@ class RemoteProducerInterface(Interface,xmlrpc.XMLRPC):
             return 0
         
     def xmlrpc_getContents(self):
-        self.channels=get_channels()
+        self.channels=self.preferences.getChannels()
         videos=os.listdir(self.dir)
         if self.channels:
             ret=self.channels.keys()

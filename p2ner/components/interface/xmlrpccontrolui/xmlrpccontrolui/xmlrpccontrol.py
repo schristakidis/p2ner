@@ -20,7 +20,6 @@ from p2ner.core.components import getComponentsInterfaces as getCompInt
 from p2ner.base.Stream import Stream
 from interfacelog import InterfaceLog
 import os,os.path,stat,time
-import p2ner.util.config as config
 from random import uniform
 from twisted.internet.threads import deferToThread
 from p2ner.util.utilities import findNextTCPPort
@@ -88,7 +87,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             input=loads(input)
         if output:
             output=loads(output)
-            
+
         self.dRegisterStream[strm.streamHash()]=d
         self.root.registerStream(strm,input,output)        
         return d
@@ -162,7 +161,11 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         defer.callback(id)
             
     def returnProducedStream(self,stream,hash):
-        d=self.dRegisterStream.pop(hash)
+        try:
+            d=self.dRegisterStream.pop(hash)
+        except:
+            return
+        
         if stream!=-1:
             stream=dumps(stream)
         d.callback(stream)
@@ -215,20 +218,19 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         return (comp,c)
         
     def xmlrpc_copyConfig(self):
-        filename=config.check_config()
+        filename,chFilename=self.preferences.getConfigFiles()
         f=open(filename,'rb')
         b=f.readlines()
         f.close()
-        filename=config.check_chConfig()
-        f=open(filename,'rb')
+        f=open(chFilename,'rb')
         r=f.readlines()
         f.close()
         if not r:
             r=-1
         return (b,r)
     
-    def xmlrpc_getRemoteConfig(self,file,chFile):
-        config.create_remote_config(file,chFile,False)
+    def xmlrpc_saveRemoteConfig(self,file,chFile):
+        self.preferences.saveFromRemoteConfig(file,chFile)
         return 0
 
     def xmlrpc_startConverting(self,dir,filename,videorate,subs,subsFile,subsEnc):

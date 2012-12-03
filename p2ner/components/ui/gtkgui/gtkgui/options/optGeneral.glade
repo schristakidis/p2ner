@@ -20,6 +20,7 @@
             <property name="use_action_appearance">False</property>
             <property name="image_position">right</property>
             <property name="draw_indicator">True</property>
+            <signal name="toggled" handler="on_checkNetGui_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -35,6 +36,7 @@
             <property name="receives_default">False</property>
             <property name="use_action_appearance">False</property>
             <property name="draw_indicator">True</property>
+            <signal name="toggled" handler="on_checkButton_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>

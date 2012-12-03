@@ -97,7 +97,7 @@ class Interface(Interface):
         d.addCallback(self.returnPublishStream)
         d.addErrback(self.failedXMLRPC)
         
-    def quiting(self,r):
+    def quiting(self):
         d = self.proxy.callRemote('quiting')
         d.addCallback(self.quit)
         d.addErrback(self.quit)
@@ -140,7 +140,7 @@ class Interface(Interface):
         d.addErrback(self.failedXMLRPC)  
         
     def sendRemoteConfig(self,file,chFile,quit):
-        d=self.proxy.callRemote('getRemoteConfig',file,chFile)
+        d=self.proxy.callRemote('saveRemoteConfig',file,chFile)
         if quit:
             d.addCallback(self.quiting)
         d.addErrback(self.failedXMLRPC) 

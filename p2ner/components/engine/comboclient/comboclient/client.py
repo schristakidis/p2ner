@@ -49,7 +49,8 @@ class Client(Engine):
             
         self.netChecker=loadComponent('plugin','NetworkChecker')(_parent=self)
         reactor.callLater(0.2,self.interface.checkNetwork)
-
+     
+        
     def checkNatPeer(self):
         if self.basic:
             self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port

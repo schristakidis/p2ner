@@ -1,4 +1,3 @@
-import os, sys
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import os, sys
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import os, sys
 from twisted.internet import gtk2reactor
 try:
     gtk2reactor.install()
@@ -24,73 +24,50 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from generic import genericFrame
-import p2ner.util.config as config
 from p2ner.util.utilities import get_user_data_dir
 from pkg_resources import resource_string
-
-ENCODINGS={'Greek':'ISO-8859-7',
-                      'Universal':'UTF-8',
-                      'Western European':'Latin-9'}
+from gtkgui.remotefilechooser import RemoteFileChooser
 
 class generalFrame(genericFrame):
-    def __init__(self,parent=None):
-        self.parent=parent
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+    def initUI(self):
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path, 'optGeneral.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'optGeneral.glade'))
-        """
 
         self.builder.add_from_string(resource_string(__name__, 'optGeneral.glade'))
         self.builder.connect_signals(self)
         
         self.frame=self.builder.get_object('generalFrame')
-        
-        try:
-            check=config.config.getboolean('General','checkAtStart')
-        except:
-            check=False
-            
-        self.checkButton=self.builder.get_object('checkButton')
-        self.checkButton.set_active(check)  
-        
-        checkNet=config.getCheckNetMessages()
-        self.checkNetButton=self.builder.get_object('checkNetGui')
-        self.checkNetButton.set_active(checkNet) 
 
-        if config.config.has_option('General','cdir'):
-            self.builder.get_object('dirEntry').set_text(config.config.get('General','cdir'))
-        else:
-            self.builder.get_object('dirEntry').set_text(get_user_data_dir())
+        self.checkButton=self.builder.get_object('checkButton')
+        self.checkNetButton=self.builder.get_object('checkNetGui')
+        self.builder.get_object('dirEntry').set_sensitive(False)
+        self.constructSubs() 
+        self.refresh()
         
-        self.constructSubs()    
-            
-    def save(self):
-        config.config.set('General','checkAtStart',self.checkButton.get_active())
-        config.config.set('General','shownetmessages',self.checkNetButton.get_active())
-        config.config.set('General','cdir',self.builder.get_object('dirEntry').get_text())
+    def refresh(self):
+        self.checkButton.set_active(self.preferences.getCheckAtStart())  
+        self.checkNetButton.set_active(self.preferences.getCheckNetAtStart()) 
+        self.builder.get_object('dirEntry').set_text(self.preferences.getCDir())
+
+    def on_checkNetGui_toggled(self,widget):
+        self.preferences.setCheckNetAtStart(widget.get_active())
+        
+    def on_checkButton_toggled(self,widget):
+        self.preferences.setCheckAtStart(widget.get_active())
+        
         
     def getCheckAtStart(self):
         return self.checkButton.get_active()
     
     def getCheckNetAtStart(self):
         return self.checkNetButton.get_active()
-    
-    def setCheckNetAtStart(self,check):
-        check=not check
-        if check!=self.checkNetButton.get_active():
-            self.checkNetButton.set_active(check)
-            config.setCheckNetAtStart(check)
-     
-    def getCdir(self):
-        return self.builder.get_object('dirEntry').get_text()
-    
+        
     def on_openButton_clicked(self,widget):
-
+        if self.remote:
+            RemoteFileChooser(self.browseFinished,self.interface,onlyDir=True)
+        else:
+            self.browseLocally()
+            
+    def browseLocally(self):
         dialog = gtk.FileChooserDialog("Open..",
                                None,
                                gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -102,8 +79,9 @@ class generalFrame(genericFrame):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             #print dialog.get_filename(), 'selected'
-            filename = dialog.get_filename()           
-            self.builder.get_object('dirEntry').set_text(filename)
+            filename = dialog.get_filename()       
+            self.browseFinished(filename)    
+            
         elif response == gtk.RESPONSE_CANCEL:
             filename=None
 
@@ -111,26 +89,35 @@ class generalFrame(genericFrame):
         dialog.destroy()
         
         
+    def browseFinished(self,filename):
+        print filename
+        if filename:
+            self.builder.get_object('dirEntry').set_text(filename)
+            self.preferences.setConvertedDir(filename)
+            
     def constructSubs(self):
-        if config.config.has_option('General','subsencoding'):
-           self.dsubs=config.config.get('General','subsencoding')
-        else:
-            self.dsubs='Greek'
-         
+        subs=self.preferences.getSubEncodings()
+        
         subsBox=self.builder.get_object('subsCombo')
         self.subsCombo = gtk.combo_box_new_text()
+        self.subsCombo.connect('changed',self.on_subs_changed)
         self.subsCombo.set_property('width-request',100)
         subsBox.pack_start(self.subsCombo,True,True,0)
         self.subsCombo.show()
         
         found=0
         i=0
-        for k in ENCODINGS.keys():
+        for k in subs['encodings'].keys():
             self.subsCombo.append_text(k)
-            if k==self.dsubs:
+            if k==subs['default']:
                 found=i
             i+=1
         self.subsCombo.set_active(found)
+        
+    def on_subs_changed(self,widget):
+        d=self.get_active_text(self.subsCombo)
+        if d:
+            self.preferences.setTempSubEncoding(d)
         
     def get_active_text(self,combobox):
         model = combobox.get_model()
@@ -142,12 +129,6 @@ class generalFrame(genericFrame):
     def on_subsButton_clicked(self,wdiget):
         d=self.get_active_text(self.subsCombo)
         if d:
-            config.config.set('General','subsencoding',d)
-            self.dsubs=d
-            
-    def getSubEncodings(self):
-        ret={}
-        ret['default']=self.dsubs
-        ret['encodings']=ENCODINGS
-        return ret
+            self.preferences.setSubEncoding(d)
+
                 

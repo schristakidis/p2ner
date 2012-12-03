@@ -1,4 +1,3 @@
-import os, sys
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import os, sys
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import os, sys
 import os.path
 import pygtk
 pygtk.require("2.0")

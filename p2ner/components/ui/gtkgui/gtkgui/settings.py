@@ -24,7 +24,7 @@ from datetime import datetime
 from calendarGui import CalendarGui
 from pkg_resources import resource_string
 from p2ner.abstract.ui import UI
-
+import copy
 
 class SettingsGui(UI):
     
@@ -34,16 +34,9 @@ class SettingsGui(UI):
         self.time=datetime.today()
         self.table={}
         self.entries={}
-        
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path,'settingsGui.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'settingsGui.glade'))
-        """
+
         self.builder.add_from_string(resource_string(__name__, 'settingsGui.glade'))
         self.builder.connect_signals(self)
         
@@ -84,52 +77,51 @@ class SettingsGui(UI):
             self.ui.show()
 
     def getSchedulers(self):
-        schedulers=self.preferences.getAllComponents('scheduler')
-        #schedulers=self.parent.parent.preferences.getAllComponents('scheduler')
-        self.schedulerSpecs=self.preferences.getSettings('Scheduler')
+        self.schedulers=self.preferences.components['scheduler']['subComp']
+        default=self.preferences.components['scheduler']['temp']
           
         found=False
         i=0
         self.table['scheduler']={}
         self.schedulerCombobox.get_model().clear()
-        for sc in schedulers['comps']:
+        for sc in self.schedulers.keys():
             self.schedulerCombobox.append_text(sc)
-            self.table['scheduler'][sc]=self.constructTable(sc,self.schedulerSpecs)
-            if schedulers['default']==sc:
+            self.table['scheduler'][sc]=self.constructTable(sc,self.schedulers[sc])
+            if default==sc:
                 found=i
             i+=1
         self.schedulerCombobox.connect('changed',self.componentChanged,'schedulerSpecs')
         self.schedulerCombobox.set_active(found)
         
     def getOverlays(self):
-        overlays=self.preferences.getAllComponents('overlay')
-        self.overlaySpecs=self.preferences.getSettings('Overlay')
+        self.overlays=self.preferences.components['overlay']['subComp']
+        default=self.preferences.components['overlay']['temp']
 
         found=False
         i=0
         self.table['overlay']={}
         self.overlayCombobox.get_model().clear()
-        for sc in overlays['comps']:
+        for sc in self.overlays.keys():
             self.overlayCombobox.append_text(sc)
-            self.table['overlay'][sc]=self.constructTable(sc,self.overlaySpecs)
-            if overlays['default']==sc:
+            self.table['overlay'][sc]=self.constructTable(sc,self.overlays[sc])
+            if default==sc:
                 found=i
             i+=1
         self.overlayCombobox.connect('changed',self.componentChanged,'overlaySpecs')
         self.overlayCombobox.set_active(found)
         
     def getInputs(self): 
-        inputs=self.preferences.getAllComponents('input')
-        self.inputSpecs=self.preferences.getSettings('Input')
+        self.inputs=self.preferences.components['input']['subComp']
+        default=self.preferences.components['input']['temp']
         
         found=False
         i=0
         self.table['input']={}
         self.inputCombobox.get_model().clear()
-        for sc in inputs['comps']:
+        for sc in self.inputs.keys():
             self.inputCombobox.append_text(sc)
-            self.table['input'][sc]=self.constructTable(sc,self.inputSpecs)
-            if inputs['default']==sc:
+            self.table['input'][sc]=self.constructTable(sc,self.inputs[sc])
+            if default==sc:
                 found=i
             i+=1
         self.inputCombobox.connect('changed',self.componentChanged,'inputSpecs')
@@ -143,9 +135,9 @@ class SettingsGui(UI):
         return model[active][0]
     
     def constructTable(self,comp,specs):
-        table=gtk.Table(rows=len(specs[comp]),columns=2,homogeneous=True)
+        table=gtk.Table(rows=len(specs),columns=2,homogeneous=True)
         i=0
-        for k,v in specs[comp].items():   
+        for k,v in specs.items():  
             label=gtk.Label(v['name'])
             entry=gtk.Entry()
             entry.set_name(k)
@@ -184,17 +176,17 @@ class SettingsGui(UI):
         par=widget.get_name()
         text=widget.get_text()
         try:
-            text=specs[comp][par]['type'](text)
+            text=specs[par]['type'](text)
         except:
             text=None
             
         if text is not None:
-             specs[comp][par]['value']=text
+             specs[par]['tempValue']=text
              self.bar.pop(self.context_id)
         else:
             self.bar.pop(self.context_id)
-            self.bar.push(self.context_id, ('supply valid %s'%specs[comp][par]['name']))
-            widget.set_text(str(specs[comp][par]['value']))  
+            self.bar.push(self.context_id, ('supply valid %s'%specs[par]['name']))
+            widget.set_text(str(specs[par]['value']))  
         
     def on_timeButton_toggled(self,widget):
         self.builder.get_object('hoursButton').set_sensitive(widget.get_active())
@@ -206,7 +198,7 @@ class SettingsGui(UI):
             
 
     def read_parametres(self):
-        for component,box,specs in [(self.overlayCombobox,'overlaySpecs',self.overlaySpecs),(self.schedulerCombobox,'schedulerSpecs',self.schedulerSpecs),(self.inputCombobox,'inputSpecs',self.inputSpecs)]:
+        for component,box,specs in [(self.overlayCombobox,'overlaySpecs',self.overlays),(self.schedulerCombobox,'schedulerSpecs',self.schedulers),(self.inputCombobox,'inputSpecs',self.inputs)]:
             comp=self.get_active_text(component)
             if not comp:
                 self.bar.pop(self.context_id)
@@ -254,12 +246,16 @@ class SettingsGui(UI):
         self.ui.destroy()
         self.updateSettings()
         self.parent.setSettings(self.parametres)
+ 
         
-    def updateSettings(self,save=False):
-        self.preferences.updateSettings('Input',self.inputSpecs)
-        self.preferences.updateSettings('Scheduler',self.schedulerSpecs)
-        self.preferences.updateSettings('Overlay',self.overlaySpecs)
-                
+    def updateSettings(self):
+        for comp in ('input','overlay','scheduler'):
+            for sc in self.preferences.components[comp]['subComp'].keys():
+                for par in self.preferences.components[comp]['subComp'][sc].values():
+                    if par.has_key('tempValue'):
+                        temp=par.pop('tempValue')
+                        par['value']=temp
+
     def getSettings(self):
         if not self.read_parametres():
             return False

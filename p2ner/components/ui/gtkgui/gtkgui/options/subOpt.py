@@ -26,29 +26,25 @@ import gobject
 from subcomp import subcompFrame
 
 class inputFrame(subcompFrame):
-    def __init__(self,parent):
-        self.parent=parent
-        self.settings={}
+    def initUI(self):
         self.component='input'
+        self.settings=self.preferences.components[self.component]['subComp']
         self.constructNotebook()
         
 class outputFrame(subcompFrame):
-    def __init__(self,parent):
-        self.parent=parent
-        self.settings={}
+    def initUI(self):
         self.component='output'
+        self.settings=self.preferences.components[self.component]['subComp']
         self.constructNotebook()
         
 class schedulerFrame(subcompFrame):
-    def __init__(self,parent):
-        self.parent=parent
-        self.settings={}
+    def initUI(self):
         self.component='scheduler'
+        self.settings=self.preferences.components[self.component]['subComp']
         self.constructNotebook()
         
 class overlayFrame(subcompFrame):
-    def __init__(self,parent):
-        self.parent=parent
-        self.settings={}
+    def initUI(self):
         self.component='overlay'
+        self.settings=self.preferences.components[self.component]['subComp']
         self.constructNotebook()

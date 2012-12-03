@@ -24,38 +24,15 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from generic import genericFrame
-import p2ner.util.config as config
 import copy
 
 class subcompFrame(genericFrame):
-    def __init__(self,parent):
+    def initUI(self):
         pass
-    
-    def loadValues(self):
-        self.settings={}
-        for comp,interface in self.parent.components[self.component].items():
-            if comp!='dcombo':
-                try:
-                    platform=interface.platform
-                except:
-                    platform=None
-                
-                if platform and platform not  in sys.platform:
-                    continue
-                
-                config.check_conf_section(self.component,comp)
-                self.settings[comp]={}
-                for k,v in interface.specs.items():
-                    self.settings[comp][k]={}
-                    self.settings[comp][k]['value']=config.config.get(comp,k)
-                    self.settings[comp][k]['name']=interface.specsGui[k]['name']
-                    self.settings[comp][k]['tooltip']=interface.specsGui[k]['tooltip']
-                    self.settings[comp][k]['type']=type(v)
-
-        
+         
     def constructNotebook(self):
         self.entries={}
-        self.loadValues()
+
         self.notebook=gtk.Notebook()
         for comp in self.settings.keys():
             label=gtk.Label(comp)
@@ -118,14 +95,7 @@ class subcompFrame(genericFrame):
              self.settings[comp][par]['value']=text
         else:
             widget.set_text(str(self.settings[comp][par]['value']))       
-            
-    def getSettings(self):
-        return copy.deepcopy(self.settings)  
-                
-    def save(self):
-        for comp in self.settings.keys():
-            for par in self.settings[comp].keys():
-                config.config.set(comp,par,str(self.settings[comp][par]['value']))
+    
                 
     def setDefaults(self):
         for comp,interface in self.parent.components[self.component].items():
@@ -152,7 +122,8 @@ class subcompFrame(genericFrame):
         self.settings=copy.deepcopy(settings)
         self.reloadEntries()
            
-                
+    def refresh(self):
+        self.reloadEntries()
         
                 
 

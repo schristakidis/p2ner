@@ -15,7 +15,6 @@
 from p2ner.core.namespace import Namespace, initNS
 import p2ner.util.utilities as util
 from twisted.internet import reactor,defer
-import p2ner.util.config as config
 from p2ner.core.components import loadComponent
 from p2ner.base.Peer import Peer
 from p2ner.util.stun import get_ip_info
@@ -159,8 +158,7 @@ class NetworkChecker(Namespace):
             self.networkUnreachable()
             return
         
-        config.check_config()
-        valid=config.config.getboolean('UPNP','on')
+        valid=self.preferences.getUPNP()
         if not valid:
             self.log.info('upnp is deactivated')
             self.checkStun()
@@ -289,7 +287,7 @@ class NetworkChecker(Namespace):
 
             
     def getFirstRun(self):
-        first,bw,previp=config.getFirstRun()
+        first,bw,previp=self.preferences.getFirstRun()
         if first:
             print 'first boot'
             self.root.setBW(30)

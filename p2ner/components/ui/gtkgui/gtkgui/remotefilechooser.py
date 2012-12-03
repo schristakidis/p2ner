@@ -18,6 +18,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 from pkg_resources import resource_string
+import os.path
 
 folderxpm = [
     "17 16 7 1",
@@ -74,27 +75,18 @@ class RemoteFileChooser(object):
         self.window.destroy()
         return False
  
-    def __init__(self, func,interface,dname = None):
+    def __init__(self, func,interface,dname = None,onlyDir=False):
         self.func=func
         self.interface=interface
+        self.onlyDir=onlyDir
         
-        
- 
         # Create a new window
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path,'remoteFileChooser.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'remoteFileChooser.glade'))
-        """
         self.builder.add_from_string(resource_string(__name__, 'remoteFileChooser.glade'))
         self.builder.connect_signals(self)
-        #self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        #self.window.set_modal(True)
-        #self.window.set_size_request(400, 300)
+        
+    
         self.window=self.builder.get_object('window')
         self.window.connect("delete_event", self.delete_event)
         
@@ -157,9 +149,15 @@ class RemoteFileChooser(object):
             self.window.set_title(self.dirname)
         #mfiles = self.files.keys()
         dfiles=[key for key in self.files.keys() if self.files[key][1]]
-        ffiles=[key for key in self.files.keys() if not self.files[key][1]]
+        
+        if not self.onlyDir:
+            ffiles=[key for key in self.files.keys() if not self.files[key][1]]
+            ffiles.sort()
+        else:
+            ffiles=[]
+            
         dfiles.sort()
-        ffiles.sort()
+        
         mfiles=dfiles+ffiles
         listmodel = gtk.ListStore(object)
         for f in mfiles:
@@ -175,7 +173,7 @@ class RemoteFileChooser(object):
             new_model = self.make_list(file[5])
             treeview.set_model(new_model)
         else:
-            self.func(file[5])
+            self.func(os.path.abspath(file[5]))
             self.window.destroy()
         return
 
@@ -216,11 +214,19 @@ class RemoteFileChooser(object):
         (model, iter) = treeselection.get_selected()
         file = self.files[model.get_value(iter, 0)]
     
-        if file[1]:
-            new_model = self.make_list(file[5])
-            self.treeview.set_model(new_model)
+        if not self.onlyDir:
+            if file[1]:
+                new_model = self.make_list(file[5])
+                self.treeview.set_model(new_model)
+            else:
+                print 'eeeeeeeeeeeeeeeeeeeee '
+                print file[5]
+                self.func(os.path.abspath(file[5]))
+                self.window.destroy()
         else:
-            self.func(file[5])
+            print 'eeeeeeeeeeeeeeeeeeeee '
+            print file[5]
+            self.func(os.path.abspath(file[5]))
             self.window.destroy()
         return
     

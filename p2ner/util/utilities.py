@@ -1,4 +1,3 @@
-import sys,os,subprocess
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import sys,os,subprocess
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import sys,os,subprocess
 
 def validIP(address):
     parts = address.split(".")

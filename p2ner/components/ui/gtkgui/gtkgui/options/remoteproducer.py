@@ -24,50 +24,69 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from generic import genericFrame
-import p2ner.util.config as config
 from p2ner.util.utilities import get_user_data_dir
 from pkg_resources import resource_string
+from gtkgui.remotefilechooser import RemoteFileChooser
+
 
 ENCODINGS={'Greek':'ISO-8859-7',
                       'Universal':'UTF-8',
                       'Western European':'Latin-9'}
 
 class remoteproducerFrame(genericFrame):
-    def __init__(self,parent=None):
-        self.parent=parent
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+    def initUI(self):
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path, 'optRemote.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'optRemote.glade'))
-        """ 
         self.builder.add_from_string(resource_string(__name__, 'optRemote.glade'))
         self.builder.connect_signals(self)
         
+        self.changeButton=self.builder.get_object('changeButton')
         self.frame=self.builder.get_object('remoteProducerFrame')
-        
-        remotePref=config.getRemotePreferences()
-
         self.checkButton=self.builder.get_object('checkRemote')
-        self.checkButton.set_active(remotePref['enable']) 
+        self.checkButton.connect('toggled',self.on_check_toggled)
+        self.passEntry=self.builder.get_object('passEntry')
 
-        self.builder.get_object('dirEntry').set_text(remotePref['dir'])
-        self.builder.get_object('passEntry').set_text(remotePref['password'])
+        self.passEntry.connect('activate',self.on_pass_edited)
+        self.passEntry.connect('focus-out-event',self.on_focus_out)
+        self.dirEntry=self.builder.get_object('dirEntry')
+        self.dirEntry.set_sensitive(False)
         
-            
-    def save(self):
-        config.setRemotePreferences(self.checkButton.get_active(),self.builder.get_object('dirEntry').get_text(),self.builder.get_object('passEntry').get_text())
+    def refresh(self):
+        self.passEntry.set_sensitive(False)
+        self.changeButton.set_sensitive(True)
+        remotePref=self.preferences.getRemotePreferences()
+        self.checkButton.set_active(remotePref['enable'])
+        self.passEntry.set_text(remotePref['password'])
+        self.oldPass=remotePref['password']
+        self.dirEntry.set_text(remotePref['dir'])
+        
 
-
-     
-    def getCdir(self):
-        return self.builder.get_object('dirEntry').get_text()
-    
+    def on_check_toggled(self,widget):
+        self.preferences.setEnableRemoteProducer(widget.get_active())
+        
+    def on_changeButton_clicked(self,widget):
+        widget.set_sensitive(False)
+        self.passEntry.set_sensitive(True)
+        self.passEntry.set_text('')
+        self.passEntry.grab_focus()
+        
+    def on_pass_edited(self,widget):
+        self.oldPass=widget.get_text()
+        self.preferences.setRemotePassword(self.oldPass)
+        widget.set_sensitive(False)
+        self.changeButton.set_sensitive(True)
+        
+    def on_focus_out(self,widget,event):
+        widget.set_text(self.oldPass)
+        widget.set_sensitive(False)
+        self.changeButton.set_sensitive(True)
+        
     def on_openButton_clicked(self,widget):
-
+        if self.remote:
+            RemoteFileChooser(self.browseFinished,self.interface,onlyDir=True)
+        else:
+            self.browseLocally()
+    
+    def browseLocally(self): 
         dialog = gtk.FileChooserDialog("Open..",
                                None,
                                gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -79,13 +98,17 @@ class remoteproducerFrame(genericFrame):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             #print dialog.get_filename(), 'selected'
-            filename = dialog.get_filename()           
-            self.builder.get_object('dirEntry').set_text(filename)
+            filename = dialog.get_filename()     
+            self.browseFinished(filename)      
         elif response == gtk.RESPONSE_CANCEL:
             filename=None
 
         
         dialog.destroy()
         
+    def browseFinished(self,filename):
+        if filename:
+            self.dirEntry.set_text(filename)
+            self.preferences.setRemoteProducerDir(filename)           
 
                 

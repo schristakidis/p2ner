@@ -18,7 +18,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from gtkgui.interface.xml.xmlinterface import Interface
-from gtkgui.options.options import optionsGui
+from p2ner.core.preferences import Preferences
 from gtkgui.remotefilechooser import RemoteFileChooser
 from twisted.internet import reactor
 from proxyinterface import ProxyInterface
@@ -31,6 +31,7 @@ PAUSE=3
 class PGui(ProducerGui):
     def initUI(self,parent,peer):
         self.peer=peer
+        self.parent=parent
         if self.proxy:
             self.interface=ProxyInterface(self,_parent=self)
             self.interface.setProxy(self.proxy)
@@ -40,12 +41,13 @@ class PGui(ProducerGui):
             url="http://"+peer[0]+':'+str(peer[1])+"/XMLRPC"
             self.interface.setUrl(url)
             
-        self.preferences=optionsGui(_parent=self)
+        self.preferences=Preferences(_parent=self,remote=True,func=self.continueUI)
+        self.preferences.start()
         self.visibleCollumns=[]
-        ProducerGui.initUI(self,parent)
 
         
     def continueUI(self):
+        ProducerGui.initUI(self,self.parent)
         box=self.builder.get_object("NullBox")
         button = gtk.RadioButton(group=self.builder.get_object('webcamButton'),label='Random Input')
         button.connect('toggled',self.on_nullButton_clicked)
@@ -75,13 +77,12 @@ class PGui(ProducerGui):
         return 0
 
     def on_ui_destroy(self,widget=None):
-        self.preferences.saveRemoteConfig(False)    
+        #self.preferences.saveRemoteConfig(False)    
         self.ui.destroy()
         
 
     def registerStreamSettings(self):
         input=self.settings.pop('input')
-        print input
         output={}
         output['comp']='NullOutput'
         output['kwargs']=None

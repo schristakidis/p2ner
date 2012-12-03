@@ -42,13 +42,14 @@ class localControl(Interface):
         strm=Stream(**stream)
         self.root.registerStream(strm,input,output)        
     
-    def contactServer(self,server):
-        self.root.contactServers(server)
+    def contactServers(self,server):
+        for s in server:
+            self.root.contactServers(s)
     
-    def startProducing(self,id):
+    def startProducing(self,id,type):
         self.root.startProducing(id)
     
-    def startRemoteProducer(self,id):
+    def startRemoteProducer(self,id,type):
         self.root.startRemoteProducer(id)
         
     
@@ -177,5 +178,10 @@ class localControl(Interface):
     def leaveChatRoom(self,id,username,server):
         self.chatClient.leaveChatRoom(id,username,server)
         
-
+    def send(self,rcom,arg,lcom):
+        rcom=eval('self.'+rcom)
+        if arg:
+            lcom(rcom(arg))
+        else:
+            lcom(rcom())
  

@@ -92,15 +92,15 @@ def save_config():
 def check_config():
     global config,configfile
     if not config:
-        init_config()
-    return configfile
-
+        ret=init_config()
+    return ret
+"""
 def check_chConfig():
     global chConfig,chConfigFile
     if not chConfig:
         init_config()
     return chConfigFile
-        
+"""    
 def init_config(filename=None):
         global config, configfile,chConfig,chConfigFile
         if filename == None:
@@ -134,7 +134,7 @@ def init_config(filename=None):
         except:
             pass
 
-        return
+        return (configfile,chConfigFile)
 
 def create_remote_config(file,chfile,remote):
     global config, configfile, chConfig,chConfigFile
@@ -175,7 +175,7 @@ def create_remote_config(file,chfile,remote):
     
     chConfigFile=filename2 
     
-    return
+    return (configfile,chConfigFile)
             
     
 #return 0 after creating section if section not found, else return 1
@@ -206,8 +206,8 @@ def get_servers():
     servers = []
     for server in sections:
         new_server = {}
-        for key in ('ip', 'port'):
-            new_server[key] = config.get(server, key)
+        new_server['ip'] = config.get(server, 'ip')
+        new_server['port']=int(config.get(server, 'port'))
         new_server['valid'] = config.getboolean(server, 'valid')
         servers.append(new_server)
     return servers
@@ -269,7 +269,7 @@ def get_channels():
         
     channels=chConfig.sections()
     if not channels:
-        return None
+        return {}
     ch={}
     for c in channels:
         ch[c]={}
@@ -281,7 +281,8 @@ def writeChannels(channels):
     global chConfig
     chConfig=ConfigParser.ConfigParser()
     for k,v in channels.items():
-        chConfig.add_section(k)
+        if not chConfig.has_section(k):
+            chConfig.add_section(k)
         chConfig.set(k,'location',v['location'])
         chConfig.set(k,'program',v['program'])
     save_chConfig()
