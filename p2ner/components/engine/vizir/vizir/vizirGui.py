@@ -74,7 +74,11 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.treeview.connect('button-press-event', self.on_buttonpress, self.treemodel)
         self.bar=self.builder.get_object('statusbar1')
         self.context_id=self.bar.get_context_id('status bar')
+        self.win.connect('destroy',self.on_win_destroy)
         self.win.show_all()
+        
+    def on_win_destroy(self,*args):
+        reactor.stop()
         
     def formatview(self):
         self.treemodel = gtk.ListStore(str, int, str, int, str, int, gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT) #(ip,port,bw,status,type,proxyport, id,object)
