@@ -119,7 +119,7 @@ def init_config(filename=None):
             if not os.path.exists(filename):
                 create_default_config(filename)
                 configfile = filename
-                return
+                return (configfile,chConfigFile)
             
         chConfig = ConfigParser.ConfigParser()
         config = ConfigParser.ConfigParser()

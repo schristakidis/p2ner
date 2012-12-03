@@ -103,6 +103,9 @@ class Preferences(Namespace):
                 
                 self.components[comp]['subComp'][k]={}
                 
+                if not config.config.has_section(k):
+                    config.config.add_section(k)
+                    
                 for var,value in v.specs.items():
                     temp={}
                     try:
@@ -141,7 +144,7 @@ class Preferences(Namespace):
             self.checkAtStart=config.config.getboolean('General','checkAtStart')
         except:
             self.checkAtStart=False
-            config.config.setb('General','checkAtStart','false')
+            config.config.set('General','checkAtStart','false')
             
         try:
             self.subEncoding=config.config.get('General','subsencoding')
