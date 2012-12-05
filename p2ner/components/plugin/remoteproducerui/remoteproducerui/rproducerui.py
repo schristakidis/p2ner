@@ -32,7 +32,7 @@ from gtkgui.settings import SettingsGui
 import getpass
 
 class RemoteProducerUI(UI):
-    def initUI(self):
+    def initUI(self,parent):
         ConnectGui(self)
         self.ui=None
         self.gotSettings=False
@@ -54,9 +54,8 @@ class RemoteProducerUI(UI):
         self.model = gtk.TreeStore(gobject.TYPE_STRING)#,gobject.TYPE_BOOLEAN )
         
         self.tVideo=self.model.append(None,('Videos',))
-        #self.model.append(self.tVideo,('Videos333333',))
         self.tChannel=self.model.append(None,('Channels',))        
-        #self.model.append(self.tChannel,('Videos332222',))
+ 
         
         self.treeview=self.builder.get_object('treeview')
         self.treeview.set_model(self.model)
@@ -153,14 +152,25 @@ class RemoteProducerUI(UI):
         d.addErrback(self.XMLRPCFailed)
         
     def subscribeStream(self,id,ip,port):
-        if id==-1:
-            print 'waittttttttttt'
-        elif id==-2:
+        if id==-2:
             print 'failed to register stream'
             self.treeview.set_sensitive(True)
         else:
+            self.preferences.addServer(ip,port,True)
             self.parent.on_refreshButton_clicked()
-            reactor.callLater(2,self.parent.subscribeStream,id,ip,port,True)
-            reactor.callLater(2.5,self.treeview.set_sensitive,True)
+            self.tryCount=0
+            reactor.callLater(1,self.checkID,id,ip,port)
+            
+    def checkID(self,id,ip,port):
+        if self.parent.hasID(id):
+            self.parent.subscribeStream(id,ip,port,True)
+            reactor.callLater(0.5,self.treeview.set_sensitive,True)
+        else:
+            if self.tryCount<5:
+                reactor.callLater(1,self.checkID,id,ip,port)
+                self.tryCount +=1
+            else:
+                print 'failed to register stream'
+                self.treeview.set_sensitive(True)
         
             

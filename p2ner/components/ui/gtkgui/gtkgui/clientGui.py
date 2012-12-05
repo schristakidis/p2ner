@@ -266,7 +266,7 @@ class clientGui(UI):
 		
 	def on_rProduceMenuItem_activate(self,widget):
 		if not self.rProducerViewer:
-			self.rProducerViewer=loadComponent('plugin','RemoteProducerUI')(_parent=self)
+			self.rProducerViewer=loadComponent('plugin','RemoteProducerUI')(_parent=self,parent=self)
 		else:
 			self.rProducerViewer.startUI()
 		
@@ -900,6 +900,10 @@ class clientGui(UI):
 		st=[(s[colid],s[colip],s[colport]) for s in self.streamsModel if s[colsub]]
 		st +=[(s[colid],s[colip],s[colport]) for s in self.publishModel]
 		return st
+	
+	def hasID(self,id):
+		return self.knownStreams.has_key(id)
+		
 		
 def startGui():
 	clientGui()

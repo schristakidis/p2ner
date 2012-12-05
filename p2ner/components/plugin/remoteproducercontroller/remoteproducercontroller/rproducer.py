@@ -41,7 +41,6 @@ class RemoteProducerInterface(Interface,xmlrpc.XMLRPC):
         reactor.listenTCP(p, server.Site(self))
         
     def xmlrpc_connect(self,password):
-        print 'got passworddddddd ',password
         #m=md5()
         #m.update(self.password)
         #passwrd=m.hexdigest()

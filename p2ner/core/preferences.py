@@ -287,6 +287,10 @@ class Preferences(Namespace):
             self.defaultServer=None
         
     def addServer(self,ip,port,valid=True):
+        for s in self.servers:
+            if s['ip']==ip and s['port']==port:
+                s['valid']=valid
+                return
         self.servers.append({'ip':ip,'port':port,'valid':valid})
        
     def setDefaultServer(self,server):

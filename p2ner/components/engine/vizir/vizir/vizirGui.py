@@ -70,7 +70,6 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         pixbuf = self.win.render_icon(gtk.STOCK_FIND, gtk.ICON_SIZE_MENU)
         self.win.set_icon(pixbuf)
         self.formatview()
-        #self.listlink()
         self.treeview.connect('button-press-event', self.on_buttonpress, self.treemodel)
         self.bar=self.builder.get_object('statusbar1')
         self.context_id=self.bar.get_context_id('status bar')
