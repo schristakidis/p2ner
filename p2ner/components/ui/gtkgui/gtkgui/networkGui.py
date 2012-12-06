@@ -47,7 +47,7 @@ class NetworkGui(UI):
         self.tview.scroll_to_mark(self.tbuffer.get_insert(),0)
         
     def on_closeButton_clicked(self,widget):
-        self.preferences.setCheckNetAtStart(self.builder.get_object('startUpButton').get_active())
+        self.preferences.setCheckNetAtStart(not self.builder.get_object('startUpButton').get_active(),save=True)
         self.ui.destroy()
         
     def on_startUpButton_toggled(self,widget):

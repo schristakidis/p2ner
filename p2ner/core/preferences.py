@@ -175,7 +175,6 @@ class Preferences(Namespace):
 
     def save(self):
         config.writeChannels(self.channels)
-        
         config.config.set('General','checkAtStart',self.checkAtStart)
         config.config.set('General','shownetmessages',self.showNetAtStart)
         config.config.set('General','cdir',self.convertedDir)
@@ -228,14 +227,17 @@ class Preferences(Namespace):
     def getCheckNetAtStart(self):
         return self.showNetAtStart
     
-    def setCheckNetAtStart(self,check):
+    def setCheckNetAtStart(self,check,save=False):
         self.showNetAtStart=check
-        
+        if save:
+            config.config.set('General','shownetmessages',self.showNetAtStart)
+            config.save_config()
+            
     def getCheckAtStart(self):
         return self.checkAtStart
     
     def setCheckAtStart(self,check):
-        self.checkArStart=check
+        self.checkAtStart=check
         
     def getCDir(self):
         return self.convertedDir
