@@ -75,8 +75,9 @@ class RemoteFileChooser(object):
         self.window.destroy()
         return False
  
-    def __init__(self, func,interface,dname = None,onlyDir=False):
+    def __init__(self, func,interface,dname = None,onlyDir=False,args=None):
         self.func=func
+        self.args=args
         self.interface=interface
         self.onlyDir=onlyDir
         
@@ -173,7 +174,10 @@ class RemoteFileChooser(object):
             new_model = self.make_list(file[5])
             treeview.set_model(new_model)
         else:
-            self.func(os.path.abspath(file[5]))
+            if not self.args:
+                self.func(os.path.abspath(file[5]))
+            else:
+                self.func(os.path.abspath(file[5]),self.args)
             self.window.destroy()
         return
 
@@ -219,14 +223,16 @@ class RemoteFileChooser(object):
                 new_model = self.make_list(file[5])
                 self.treeview.set_model(new_model)
             else:
-                print 'eeeeeeeeeeeeeeeeeeeee '
-                print file[5]
-                self.func(os.path.abspath(file[5]))
+                if not self.args:
+                    self.func(os.path.abspath(file[5]))
+                else:
+                    self.func(os.path.abspath(file[5]),self.args)
                 self.window.destroy()
         else:
-            print 'eeeeeeeeeeeeeeeeeeeee '
-            print file[5]
-            self.func(os.path.abspath(file[5]))
+            if not self.args:
+                self.func(os.path.abspath(file[5]))
+            else:
+                self.func(os.path.abspath(file[5]),self.args)
             self.window.destroy()
         return
     

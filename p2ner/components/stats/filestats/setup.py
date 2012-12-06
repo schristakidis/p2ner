@@ -71,6 +71,8 @@ if __name__ == "__main__":
         entry_points=""" 
         [%s]
         %s = %s:%s
-        """ % ((__entry_point__, __component_name__, __component_name__.lower(), __component_name__))
-    )
-
+        [p2ner.interface.stats]
+        %s=%s:%s
+        """ % ((__entry_point__, __component_name__, __component_name__.lower(), __component_name__,__component_name__, __component_name__.lower(), "INTERFACE"))
+        )
+ 

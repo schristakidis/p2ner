@@ -31,14 +31,16 @@ from general import generalFrame
 from optUpnp import upnpFrame
 from dvbFrame import dvbFrame
 from remoteproducer import remoteproducerFrame
+from statistics import statisticsFrame
 from subOpt import *
+from subStats import *
 from p2ner.abstract.ui import UI
 from p2ner.util.utilities import compareIP,getIP
 from pkg_resources import resource_string
 
 
 class optionsGui(UI):
-    def initUI(self):#,parent,visibleCollumns):
+    def initUI(self):
     
         self.lastSelected=None
         
@@ -60,10 +62,12 @@ class optionsGui(UI):
         optionsModel.append(parent,['Output'])
         optionsModel.append(parent,['Scheduler'])
         optionsModel.append(parent,['Overlay'])
+        parent=optionsModel.append(None,['Statistics'])
+        for stat in self.preferences.statsPrefs.keys():
+            optionsModel.append(parent,[stat])
         optionsModel.append(None,['UPNP'])
         optionsModel.append(None,['DVB'])
         optionsModel.append(None,['RemoteProducer'])
-        #optionsModel.append(None,['Statistics'])
                
         renderer=gtk.CellRendererText()   
         column=gtk.TreeViewColumn('Options',renderer, text=0)
@@ -77,8 +81,10 @@ class optionsGui(UI):
         
         self.optionsModel=optionsModel  
         
+        self.mainBox=self.builder.get_object('vbox4')
+        
         self.frames={}
-              
+        self.boxes={}
         self.makeFrames()
         
         
@@ -90,33 +96,47 @@ class optionsGui(UI):
                 path = optionsModel.get_path(piter)
             except:
                 break
-            self.builder.get_object((optionsModel[path][0].lower()+'Frame')).set_visible(False)
-            #try:
-            frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
-            #except:
-             #   print optionsModel[path][0].lower()
-              #  frame=genericFrame()    
             
-            #if optionsModel[path][0].lower()=='dvb':
-            #   frame=generalFrame(self)    
+            try:
+                box=self.builder.get_object((optionsModel[path][0].lower()+'Frame'))
+                box.set_visible(False)
+            except:
+                box=gtk.HBox()
+                self.mainBox.pack_end(box,True,True)
+                box.set_visible(False)
+                
+            self.boxes[optionsModel[path][0].lower()]=box
+            
+            frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
+
             self.frames[optionsModel[path][0]]=frame
             
-            self.builder.get_object((optionsModel[path][0].lower()+'Frame')).pack_start(frame.getFrame(),True,True,0)
+            self.boxes[optionsModel[path][0].lower()].pack_start(frame.getFrame(),True,True,0)
+            
             iter = optionsModel.iter_children(piter)
             while True:
                 try:
                    path = optionsModel.get_path(iter)
                 except:
                     break                
-                self.builder.get_object((optionsModel[path][0].lower()+'Frame')).set_visible(False)
                 try:
-                    frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
+                    box=self.builder.get_object((optionsModel[path][0].lower()+'Frame'))
+                    box.set_visible(False)
                 except:
-                    print 'failed to load in option gui:',optionsModel[path][0].lower()
-                    frame=genericFrame(_parent=self)    
+                    box=gtk.HBox()
+                    self.mainBox.pack_end(box,True,True)
+                    box.set_visible(False)
+               
+                self.boxes[optionsModel[path][0].lower()]=box
+                    
+                #try:
+                frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
+                #except:
+                 #   print 'failed to load in option gui:',optionsModel[path][0].lower()
+                 #   frame=genericFrame(_parent=self)    
                     
                
-                self.builder.get_object((optionsModel[path][0].lower()+'Frame')).pack_start(frame.getFrame(),True,True,0)
+                self.boxes[optionsModel[path][0].lower()].pack_start(frame.getFrame(),True,True,0)
                 
                 self.frames[optionsModel[path][0]]=frame
                 iter=optionsModel.iter_next(iter)
@@ -140,10 +160,10 @@ class optionsGui(UI):
         opt=model[path][0]
         if opt!=self.lastSelected:
             if self.lastSelected:
-                self.builder.get_object((self.lastSelected.lower()+'Frame')).set_visible(False)
+                self.boxes[self.lastSelected.lower()].set_visible(False)
             self.lastSelected=opt
             self.builder.get_object('descLabel').set_text(opt)
-            self.builder.get_object((opt.lower()+'Frame')).set_visible(True)
+            self.boxes[opt.lower()].set_visible(True)
             self.frames[opt].refresh()
     
         

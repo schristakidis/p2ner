@@ -54,20 +54,31 @@ class Preferences(Namespace):
         self.getRemoteComponents()
         
     def getRemoteComponents(self):
-        for comp in ['input','output','scheduler','overlay']:
+        self.gotStats=False
+        for comp in ['input','output','scheduler','overlay','stats']:
             reactor.callLater(0,self.interface.getComponentsInterfaces,comp)
     
     def setComponent(self,comp,interface):
-        self.tempComponents[comp]=interface
+        if comp=='stats':
+            self.tempStatPrefs=interface
+            self.gotStats=True
+        else:
+            self.tempComponents[comp]=interface
         for c in ['input','output','scheduler','overlay']:
-            if c not in self.tempComponents.keys():
+            if c not in self.tempComponents.keys() or not self.gotStats:
                 return
-        self.constructComponents()
+        self.constructPreferences()
         
     def getComponents(self):
         for comp in ['input','output','scheduler','overlay']:
             self.tempComponents[comp]=getComponentsInterfaces(comp)
+        self.tempStatPrefs=getComponentsInterfaces('stats')
+        self.constructPreferences()
+        
+    def constructPreferences(self):
         self.constructComponents()
+        self.constructStats()
+        self.getParameters()
         
     def constructComponents(self):
         """"
@@ -126,8 +137,43 @@ class Preferences(Namespace):
                 self.components[comp]['default']=None
                 config.config.set('Components',comp,'')
             self.components[comp]['temp']=self.components[comp]['default']
-        self.getParameters()
         
+        
+    def constructStats(self):
+        self.statsPrefs={}
+        for stat,spec in self.tempStatPrefs.items():
+            self.statsPrefs[stat]={}
+            if not config.config.has_section('Statistics'):
+                config.config.add_section('Statistics')
+        
+            try:
+                enabled=config.config.getboolean('Statistics',stat)
+            except:
+                enabled=False
+                config.config.set('Statistics',stat,'false')
+                
+            self.statsPrefs[stat]['enabled']=enabled
+            self.statsPrefs[stat]['par']={}
+            if not config.config.has_section(stat):
+                config.config.add_section(stat)
+                
+            for var,value in spec.specs.items():
+                self.statsPrefs[stat]['par'][var]={}
+                try:
+                    v=config.config.get(stat,var)
+                    if v=='False':
+                        v=False
+                except:
+                    v=value
+                    config.config.set(stat,var,value)
+                self.statsPrefs[stat]['par'][var]['value']=v
+                self.statsPrefs[stat]['par'][var]['name']=spec.specsGui[var]['name']
+                self.statsPrefs[stat]['par'][var]['tooltip']=spec.specsGui[var]['tooltip']
+                self.statsPrefs[stat]['par'][var]['default']=v
+                self.statsPrefs[stat]['par'][var]['type']=type(value)
+                if spec.specsGui[var].has_key('type'):
+                    self.statsPrefs[stat]['par'][var]['gtype']=spec.specsGui[var]['type']
+     
     def getParameters(self):
         self.visibleCols={}
         
@@ -201,6 +247,11 @@ class Preferences(Namespace):
         for name,v in self.visibleCols.items():
             config.config.set('ColumnVisibility',name,v)
             
+        for stat,v in self.statsPrefs.items():
+            config.config.set('Statistics',stat,v['enabled'])
+            for k in v['par'].keys():
+                config.config.set(stat,k,self.statsPrefs[stat]['par'][k]['value'])
+
         config.save_config()
         if self.remote:
             self.saveRemoteConfig(False)

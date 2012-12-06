@@ -277,6 +277,20 @@
                         <property name="position">10</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkHBox" id="statisticsFrame">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">11</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">True</property>

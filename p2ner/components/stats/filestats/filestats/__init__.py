@@ -14,3 +14,4 @@
 #   limitations under the License.
 
 from filestats import FileStats
+from interface import interface as INTERFACE
