@@ -45,7 +45,7 @@ class Client(Engine):
             self.holePuncher=loadComponent('plugin','HolePuncher')(_parent=self)
             self.useHolePunching=True
             self.rProducerInf=loadComponent('plugin','RemoteProducerController')(_parent=self)
-            self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
+        self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
             
         self.netChecker=loadComponent('plugin','NetworkChecker')(_parent=self)
         reactor.callLater(0.2,self.interface.checkNetwork)
