@@ -42,13 +42,14 @@ class NetworkChecker(Namespace):
         except:
             self.localIp=None
             self.log.warning('no local ip found')
-            self.networkUnreichable()
+            if not self.basic:
+                self.networkUnreichable()
             
         self.log.info('local ip is %s',self.localIp)
         
         
     def check(self):
-        if not self.localIp:
+        if not self.localIp and not self.basic:
             self.networkUnreichable()
         if not self.secondRun:
             self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
