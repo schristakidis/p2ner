@@ -181,7 +181,7 @@ class Interface(Interface):
     def returnStatValues(self,stats,func):
         func(stats)
         
-    def startMeasurement(self,ip,func):
+    def startBWMeasurement(self,ip,func):
         func=func.getResults
         d=self.proxy.callRemote('startBWMeasurement',ip)
         d.addCallback(func)

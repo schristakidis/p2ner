@@ -234,16 +234,8 @@ class Preferences(Namespace):
         
         config.setRemotePreferences(self.remotePrefs['enable'],self.remotePrefs['dir'],self.remotePrefs['password'])
         
-        for comp in ['input','output','scheduler','overlay']:
-            try:
-                d=self.components[comp]['temp']
-            except:
-                d=self.components[comp]['default']
-            config.config.set('Components',comp,d)
-            for sub in self.components[comp]['subComp'].keys():
-                for par,v in self.components[comp]['subComp'][sub].items():
-                    config.config.set(sub,par,str(v['value']))
-               
+        self.saveSettings(save=False)
+        
         for name,v in self.visibleCols.items():
             config.config.set('ColumnVisibility',name,v)
             
@@ -257,7 +249,20 @@ class Preferences(Namespace):
             self.saveRemoteConfig(False)
         
 
-
+    def saveSettings(self,save=True):
+        for comp in ['input','output','scheduler','overlay']:
+            try:
+                d=self.components[comp]['temp']
+            except:
+                d=self.components[comp]['default']
+            config.config.set('Components',comp,d)
+            for sub in self.components[comp]['subComp'].keys():
+                for par,v in self.components[comp]['subComp'][sub].items():
+                    config.config.set(sub,par,str(v['value']))
+                    
+        if save:
+            config.save_config()
+            
     def saveRemoteConfig(self,quit=True):
         f=open(self.filename,'rb')
         b=f.readlines()
@@ -400,7 +405,9 @@ class Preferences(Namespace):
         self.channels[name]['location']=str(loc)
         self.channels[name]['program']=int(prog)
     
-    def writeBW(self,bw,ip):
+    def writeBW(self,bw,ip=None):
+        if not ip:
+            ip=self.netChecker.localIp
         config.writeBW(bw,ip)
     
     def getConfigFiles(self):

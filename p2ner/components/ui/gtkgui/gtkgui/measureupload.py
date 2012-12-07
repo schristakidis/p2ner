@@ -122,7 +122,7 @@ class MeasureUpload(object):
         self.addText(text)
         
         self.builder.get_object('startButton').set_sensitive(False)
-        self.parent.interface.startMeasurement(ip,self)
+        self.parent.interface.startBWMeasurement(ip,self)
         
     def connectionFailed(self):
         self.builder.get_object('startButton').set_sensitive(True)

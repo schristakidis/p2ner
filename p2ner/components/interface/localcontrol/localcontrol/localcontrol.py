@@ -184,4 +184,10 @@ class localControl(Interface):
             lcom(rcom(arg))
         else:
             lcom(rcom())
+            
+    def startBWMeasurement(self,ip,gui):
+        self.root.startBWMeasurement(ip,gui)
+        
+    def setBW(self,bw):
+        self.root.setBW(bw)
  
