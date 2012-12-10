@@ -15,11 +15,6 @@
 from p2ner.util.utilities import get_user_data_dir
 
 class interface(object):
-    specs={'statsDir':get_user_data_dir(),
-                'use':False,
-                'num':5}
+    specs={'statsDir':get_user_data_dir()}
     
-    specsGui={'statsDir':{'name':'Statistics Directory','tooltip':'The directory to save statistics','type':'browseDir'},
-                        'use':{'name':'Use Files','tooltip':'ffffffffffff','type':'check'},
-                        'num':{'name':'Give Number','tooltip':'any number'}}
-                 
+    specsGui={'statsDir':{'name':'Statistics Directory','tooltip':'The directory to save statistics','type':'browseDir'}}

@@ -405,6 +405,17 @@ class Preferences(Namespace):
         self.channels[name]['location']=str(loc)
         self.channels[name]['program']=int(prog)
     
+    ###STATS FRAME
+    def getActiveStats(self):
+        ret=[]
+        for stat in self.statsPrefs.keys():
+            if self.statsPrefs[stat]['enabled']:
+                kwargs={}
+                for k,v in self.statsPrefs[stat]['par'].items():
+                    kwargs[k]=v['value']
+                ret.append((stat,kwargs))
+        return ret
+    
     def writeBW(self,bw,ip=None):
         if not ip:
             ip=self.netChecker.localIp

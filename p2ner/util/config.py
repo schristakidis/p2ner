@@ -305,9 +305,9 @@ def getFirstRun():
     except:
         config.add_section('boot')
         config.set('boot','first','false')
-        config.set('boot','bw','-1')
+        config.set('boot','bw','128')
         config.set('boot','previp','-1')
-        return True,-1,-1
+        return True,128,-1
         
 def writeBW(bw,ip):
     global config

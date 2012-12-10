@@ -75,7 +75,9 @@ class Engine(Namespace):
         self.preferences.start()
         
         ##TEMPORARY LOAD STATS
-        self.__stats__.append(loadComponent("stats", "FileStats")(_parent=self))
+        stats=self.preferences.getActiveStats()
+        for s in stats:
+            self.__stats__.append(loadComponent("stats", s[0])(_parent=self,**s[1]))
         
         self.controlPipe=Pipeline(_parent=self)
         

@@ -57,6 +57,7 @@ def counter(caller, _name):
     counter(self, "myCounter")
     
     """
+    
     for s in caller.__stats__:
         try:
             s.incrementKey(_name)

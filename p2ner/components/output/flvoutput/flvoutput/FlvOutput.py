@@ -65,7 +65,7 @@ class FlvOutput(Output):
         else:
             so = ''
         """
-        so="--sout=#transcode{venc=x264{slice-max-size=25200,keyint=60,ratetol=0},vcodec=h264,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:standard{access=http{mime=video/x-flv},mux=flv,dst=0.0.0.0:12000/flow.flv} "
+        so="--sout=#transcode{width=320,height=200,venc=x264{slice-max-size=25200,keyint=60,ratetol=0},vcodec=h264,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:standard{access=http{mime=video/x-flv},mux=flv,dst=0.0.0.0:12000/flow.flv} "
         proc='vlcProcess','-' , '--ignore-config', so, 'vlc://quit' 
         if 'win' in sys.platform:
             if vlc_path() != None:

@@ -15,11 +15,16 @@
 
 from p2ner.abstract.stats import Stats
 from twisted.internet import task
+from p2ner.util.utilities import get_user_data_dir
 import os
 
 class FileStats(Stats):
 
     def initStats(self, *args, **kwargs):
+        if kwargs.has_key('statsDir'):
+            self.dir=kwargs['statsDir']
+        else:
+            self.dir=get_user_data_dir()
         self.statkeys = {}
         self.fds = {}
         self.loop = task.LoopingCall(self.writeLog)
@@ -44,7 +49,10 @@ class FileStats(Stats):
             return
         if key not in self.statkeys:
             self.statkeys[key] = initValue
-            self.fds[key] = open(key + ".log", "w")
+            f=key + ".stat"
+            d=os.path.join(self.dir,f)
+            print d
+            self.fds[key] = open(d, "w")
             self.fds[key].flush()
             os.fsync(self.fds[key].fileno())
             return
