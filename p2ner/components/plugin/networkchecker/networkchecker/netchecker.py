@@ -20,6 +20,7 @@ from p2ner.base.Peer import Peer
 from p2ner.util.stun import get_ip_info
 from twisted.internet.threads import deferToThread
 from p2ner.util.utilities import findNextConsecutivePorts,findNextUDPPort
+from twisted.internet.threads import deferToThread
 
 class NetworkChecker(Namespace):
     @initNS
@@ -165,9 +166,36 @@ class NetworkChecker(Namespace):
             self.checkStun()
             return
        
-        self.upnpDevice=loadComponent('plugin',"UPNP")(self)
-        self.upnpDevice.startUpnp(self.localIp)
+        self.upnpDevice=loadComponent('plugin',"miniUPNP")(self.controlPort,self.dataPort,self.log)
+        d=deferToThread(self.upnpDevice.start)
+        #d=self.upnpDevice.start()
+        d.addCallback(self.upnpSuccess)
+        d.addErrback(self.upnpFailed)
         
+    def upnpFailed(self,reason):
+        print 'upnpFailed'
+        print reason.getErrorMessage()
+        self.checkStun()
+        
+    def upnpSuccess(self,ports):
+        print 'upnp successful'
+        if ports[0]!=self.controlPort:
+            self.controlPort=ports[0]
+            self.root.controlPipe.call('cleanUp')
+            self.log.warning('changing control port to  %s due to UPNP issues',self.controlPort)
+            self.root.controlPipe.getElement(name="UDPPortElement").port=self.controlPort
+        if ports[1]!=self.dataPort:
+            self.dataPort=ports[1]
+            self.root.trafficPipe.call('cleanUp')
+            self.log.warning('changing data port to  %s due to UPNP issues',self.dataPort)
+            self.root.trafficPipe.getElement(name="UDPPortElement").port=self.dataPort
+        
+        self.upnp=True
+        self.upnpControlPort=self.controlPort
+        self.upnpDataPort=self.dataPort
+        self.networkOk()
+        
+    """   
     def upnpDiscoveryFailed(self,reason=None):
         #print reason
         if not self.upnp:
@@ -224,6 +252,7 @@ class NetworkChecker(Namespace):
     
     def forwardFailed(self,port,exPort):
         self.checkStun()
+    """
         
     def networkUnreichable(self):
         self.interface.networkStatus(False)
@@ -266,7 +295,7 @@ class NetworkChecker(Namespace):
         return
     
     def checkStun(self):
-        print 'checking stunnnnnnnnnnnnnnnnnnnnnnnnn'
+        print 'checking stun'
         if self.difnat:
             if not self.secondRun:
                 self.secondRun=True

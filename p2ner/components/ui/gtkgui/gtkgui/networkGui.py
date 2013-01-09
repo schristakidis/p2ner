@@ -43,8 +43,15 @@ class NetworkGui(UI):
         
     def addText(self,text):
         text +='\n'
-        self.tbuffer.insert(self.tbuffer.get_end_iter(),text)
-        self.tview.scroll_to_mark(self.tbuffer.get_insert(),0)
+        iter=self.tbuffer.get_end_iter()
+        self.tbuffer.insert(iter,text)
+        #self.tview.scroll_to_iter(iter,0)
+        try:
+            adj=self.builder.get_object('scrolledwindow1').get_vadjustment()
+            adj.set_value(adj.upper)
+        except:
+            pass
+       
         
     def on_closeButton_clicked(self,widget):
         self.preferences.setCheckNetAtStart(not self.builder.get_object('startUpButton').get_active(),save=True)
