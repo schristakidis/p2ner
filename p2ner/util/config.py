@@ -311,6 +311,7 @@ def getFirstRun():
         
 def writeBW(bw,ip):
     global config
+    config.set('boot','first','false')
     config.set('boot','bw',bw)
     config.set('boot','previp',ip)
     save_config()

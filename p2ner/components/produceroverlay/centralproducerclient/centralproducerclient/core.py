@@ -31,7 +31,6 @@ class CentralClient(Overlay):
         self.sanityCheck(["stream", "control", "controlPipe"])
         self.registerMessages()
         self.neighbours = []
-
         
     def getNeighbours(self):
         return self.neighbours[:]

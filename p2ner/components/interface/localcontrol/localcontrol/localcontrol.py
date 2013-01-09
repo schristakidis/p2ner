@@ -29,11 +29,6 @@ class localControl(Interface):
     def start(self):
         pass
         
-    """
-    def getComponentsInterfaces(self,comp):
-        c=getCompInt(comp)
-        return c
-    """
         
     def cleanUp(self):
         pass

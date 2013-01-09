@@ -34,15 +34,8 @@ class ProducerGui(UI):
         self.source='webcam'
         self.advSettings=False
         
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path,'producer.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'producer.glade'))
-        """
+
         self.builder.add_from_string(resource_string(__name__, 'producer.glade'))
         self.builder.connect_signals(self)
 
@@ -179,6 +172,7 @@ class ProducerGui(UI):
                 else:
                     self.servers[ip].append(port)
                 self.preferences.addServer(ip,port)
+                self.preferences.saveServers()
             else:
                 print 'not saving'
         else:
@@ -266,6 +260,7 @@ class ProducerGui(UI):
         ip=self.ipCombo.child.get_text()
         if validateIp(ip):
             self.preferences.setDefaultServer(ip)
+            self.preferences.saveServers()
         
     def on_registerButton_clicked(self,widget):
         if not self.gotSettings:

@@ -28,7 +28,6 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         self.interface = interface
         self.to = to
         self.log.info('UDPPortElement component loaded')
-
         
     def getExPort(self,d):
         return self.exPort

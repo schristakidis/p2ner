@@ -226,9 +226,7 @@ class Preferences(Namespace):
         config.config.set('General','cdir',self.convertedDir)
         config.config.set('General','subsencoding',self.subEncoding)
         
-        config.config.set('DefaultServ','ip',self.defaultServer)
-    
-        config.writeChanges([(s['ip'],s['port'],s['valid']) for s in self.servers])
+        self.saveServers(save=False)
         
         config.config.set('UPNP','on',self.upnp)
         
@@ -249,6 +247,12 @@ class Preferences(Namespace):
             self.saveRemoteConfig(False)
         
 
+    def saveServers(self,save=True):
+        config.config.set('DefaultServ','ip',self.defaultServer)
+        config.writeChanges([(s['ip'],s['port'],s['valid']) for s in self.servers])
+        if save:
+            config.save_config()
+            
     def saveSettings(self,save=True):
         for comp in ['input','output','scheduler','overlay']:
             try:
@@ -418,8 +422,10 @@ class Preferences(Namespace):
     
     def writeBW(self,bw,ip=None):
         if not ip:
-            ip=self.netChecker.localIp
+            ip=self.netChecker.externalIp
         config.writeBW(bw,ip)
+       
+     
     
     def getConfigFiles(self):
         return self.filename,self.chFilename

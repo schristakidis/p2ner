@@ -1,4 +1,3 @@
-from mhelper import upnpUI
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ from mhelper import upnpUI
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from mhelper import upnpUI
 from twisted.internet import reactor
 import util
 
