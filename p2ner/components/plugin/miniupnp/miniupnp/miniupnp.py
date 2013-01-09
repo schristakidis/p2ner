@@ -29,9 +29,10 @@ class miniUPNP(object):
         self.upnp.discoverdelay=3000
         devices=self.upnp.discover()
         if not devices:
+            reactor.callFromThread(self.log.error,'no upnp device found')
             raise ValueError('no devices found')
         f=self.upnp.selectigd()    
-        self.log.info('upnp device found')
+        reactor.callFromThread(self.log.info,'upnp device found')
         self.ip=self.upnp.lanaddr
         
         newcport=self.addPortMapping(self.cport)
@@ -46,20 +47,20 @@ class miniUPNP(object):
 
 
     def addPortMapping(self,port):
-        self.log.info('trying to forward port %d',port)
+        reactor.callFromThread(self.log.info,'trying to forward port %d',port)
         pm=self.upnp.getspecificportmapping(port,'UDP')
         if pm:
             if self.ip==pm[0]:
                 print 'port is already forwarded for this ip'
-                self.log.info('port %d is already forwarded for %s',port,self.ip)
+                reactor.callFromThread(self.log.info,'port %d is already forwarded for %s',port,self.ip)
                 return port
             else:
                 return self.addPortMapping(port=findNextUDPPort(port))
         try:    
             b = self.upnp.addportmapping(port, 'UDP', self.ip, port, 'P2NER', '')
         except:
-            self.log.warning('a problem occured trying to forward port %d',port)
-            self.log.warning('validating if port %d was correctly forwarded',port)
+            reactor.callFromThread(self.log.warning,'a problem occured trying to forward port %d',port)
+            reactor.callFromThread(self.log.warning,'validating if port %d was correctly forwarded',port)
             self.upnp.discover()
             d=self.upnp.selectigd()
             pm=self.upnp.getspecificportmapping(port,'UDP')
@@ -68,10 +69,10 @@ class miniUPNP(object):
                 b=True
 
         if b:
-            self.log.info('port %d was successfully forwarded',port)
+            reactor.callFromThread(self.log.info,'port %d was successfully forwarded',port)
             return port
         else:
-            self.log.warning("couldn't forward port %d",port)
+            reactor.callFromThread(self.log.warning,"couldn't forward port %d",port)
             return False
         
 
