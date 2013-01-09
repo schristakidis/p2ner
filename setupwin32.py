@@ -243,7 +243,7 @@ class Deploy():
                             "build_exe": self.dist_dir,
                             "packages": find_packages(),
                             "includes": ['gtk', 'cairo', 'pangocairo', 'pango', 'atk', 'gobject','logging.handlers',
-                                        'gio', 'zlib','wmi','matplotlib','matplotlib.backends.backend_gtkagg','code','pylab','xml.dom.minidom','twisted.web.client','miniupnpc'], #'gst', 'pygst'
+                                        'gio', 'zlib','wmi','matplotlib','matplotlib.backends.backend_gtkagg','code','pylab','xml.dom.minidom','twisted.web.client','miniupnpc','twisted.web.static','twisted.web.resource','twisted.web.server'], #'gst', 'pygst'
                             "bin_excludes": ["tcl85.dll", "tk85.dll", "gdiplus.dll", "mfc90.dll", "gst-inspect.exe", "gst-launch.exe", "gst-typefind.exe", "gst-xmlinspect.exe"],
                             "excludes": ["pywin.debugger", "pywin.debugger.dbgcon","bz2", 
                                         "pywin.dialogs", "pywin.dialogs.list", "py2exe", "compiler", "email",
