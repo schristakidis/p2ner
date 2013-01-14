@@ -20,6 +20,7 @@ from p2ner.base.Consts import MessageCodes as MSG
 from p2ner.base.ControlMessage import MessageSent, MessageError
 from construct import Container
 from random import uniform
+from time import time
 
 class AckElement(PipeElement):
     
@@ -34,6 +35,7 @@ class AckElement(PipeElement):
     
     def send(self, res, msg, data, peer):
         if getattr(msg, "ack", False):
+            peer.ackRtt[self.seq]=time()
             d = defer.Deferred()
             data.header.seq = self.seq
             data.header.ack = True
@@ -69,7 +71,13 @@ class AckElement(PipeElement):
                 d = self.cache[header.seq]['d']
                 p = self.cache[header.seq]['peer']
                 del(self.cache[header.seq])
-
+                
+                if peer.ackRtt.has_key(header.seq):
+                    peer.lastRtt.append(time()-peer.ackRtt[header.seq])
+                    peer.lastRtt=peer.lastRtt[-5:]
+                    peer.ackRtt.pop(header.seq)
+                    #print peer,peer.lastRtt
+                    
                 d.errback(defer.failure.Failure(MessageSent(p)))
                 self.breakCall()
         elif header.ack:
@@ -114,6 +122,9 @@ class AckElement(PipeElement):
                 """
                 d = tosend['d']
                 del(self.cache[seq])
+                if tosend['peer'].ackRtt.has_key(seq):
+                    tosend['peer'].ackRtt.pop(seq)
+                    
                 d.errback(defer.failure.Failure(MessageError(tosend['peer'])))
                 return None
         return True  

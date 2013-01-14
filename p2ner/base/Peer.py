@@ -102,6 +102,9 @@ class Peer(object):
             obj.dataPortOk=False
             obj.conProb=False
             obj.learnedFrom=None
+            
+            obj.ackRtt={}
+            obj.lastRtt=[]
         return obj
 
 
