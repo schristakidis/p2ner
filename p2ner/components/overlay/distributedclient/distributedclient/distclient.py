@@ -314,8 +314,8 @@ class DistributedClient(Overlay):
             G.add_edge(count,-2,capacity=1)
             count +=1
         
-        flowDict=nx.min_cost_flow(G)
-        """
+        #flowDict=nx.min_cost_flow(G)
+        
         try:   
             flowDict=nx.min_cost_flow(G)
         except:
@@ -334,7 +334,7 @@ class DistributedClient(Overlay):
             self.log.warning('partner table %s',self.partnerTable[:])
             self.sendFinalTable()
             return
-        """
+    
         print flowDict
         #if flowDict['src']['active']!=swapActiveLenght or flowDict['src']['passive']!=swapPassiveLenght:
         #    raise ValueError('problem in perform swap')
