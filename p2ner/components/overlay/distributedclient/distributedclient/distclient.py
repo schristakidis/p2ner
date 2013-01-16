@@ -230,7 +230,7 @@ class DistributedClient(Overlay):
             peer.participateSwap=False
         else:
             peer.waitLock=False
-            self.checkLockFinished()
+        self.checkLockFinished()
             
             
     def checkLockFinished(self):

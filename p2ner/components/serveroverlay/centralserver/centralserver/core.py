@@ -78,7 +78,7 @@ class CentralServer(Overlay):
         self.neighbourhoods[peer] = newPeerNeighs
         n=''.join(str(newPeerNeighs))
         self.log.debug('the neighbors of %s are %s',peer,n)
-        self.capConnections()
+        #self.capConnections()
         #self.updateProducerNeighbourhood()
         self.log.debug('sending peerList message to producer %s:%s',self.producer,peer)
         #PeerListProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
