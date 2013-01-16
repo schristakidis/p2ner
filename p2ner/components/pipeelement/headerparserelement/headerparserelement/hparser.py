@@ -59,6 +59,8 @@ class HeaderParserElement(PipeElement):
                 peer = Peer(host, port)
             else:
                 peer = Peer(host, dataPort=port)
+        else:
+            self.log.error('found local peer %s',peer)
   
         return peer,header
     

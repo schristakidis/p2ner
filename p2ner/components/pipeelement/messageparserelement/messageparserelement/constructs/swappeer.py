@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 from construct import *
 from p2ner.base.Peer import Peer
 
@@ -23,8 +22,12 @@ class IpAddressAdapter(Adapter):
     def _decode(self, obj, context):
         return ".".join(str(ord(b)) for b in obj)
 
-class PeerAdapter(Adapter):
+class SwapPeerAdapter(Adapter):
     def _encode(self,  obj,  ctx):
+            rtt=-1
+            if len(obj.lastRtt):
+                rtt=sum(obj.lastRtt)/len(obj.lastRtt)
+        
             if obj.lip:
                 lip=obj.lip
                 lport=obj.lport
@@ -35,11 +38,15 @@ class PeerAdapter(Adapter):
                 lport=0
                 ldataport=0
                 hpunch=False
-            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=hpunch)
+ 
+           
+            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=hpunch,rtt=rtt,swap=obj.participateSwap)
 
     def _decode(self,  obj,  ctx):
         p=Peer(obj.IP,  obj.port,  obj.dataport)
         p.reportedBW=obj.bw
+        p.swapRtt=obj.rtt
+        p.partnerParticipateSwap=obj.swap
         if obj.LIP=='0.0.0.0':
             p.lip=None
             p.lport=None
@@ -52,7 +59,7 @@ class PeerAdapter(Adapter):
             p.hpunch=obj.hpunch
         return p
     
-PeerStruct = Struct( "peer", 
+SwapPeerStruct = Struct( "peer", 
                    IpAddressAdapter(Bytes("IP",  4)),
                    UBInt16("port"), 
                    UBInt16("dataport"),
@@ -60,13 +67,7 @@ PeerStruct = Struct( "peer",
                    IpAddressAdapter(Bytes("LIP",  4)),
                    UBInt16("lport"),
                    UBInt16("ldataport"),
-                   Flag("hpunch")
+                   Flag("hpunch"),
+                   BFloat64("rtt"),
+                   Flag("swap")
                    )
-
-if __name__ == "__main__":
-    q = Container(IP = "127.0.0.1",  port = 10000,  dataport=20000)
-    s = "\x7f\x00\x00\x01'\x10N "
-    
-    parsed = PeerAdapter(PeerStruct).parse(s)
-    print parsed
-    assert s == PeerAdapter(PeerStruct).build(parsed)

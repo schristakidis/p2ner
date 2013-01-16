@@ -88,15 +88,17 @@ class HolePuncher(Namespace):
         
 
     def sendKeepAlive(self):
-        self.peers=[p for p in self.peers if p.lastSend-time()<240]
+        self.peers=[p for p in self.peers if p.lastSend-time()<240]  
 
         for p in self.peers:
+            print 'sending keep allive to ',p
             KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
             KeepAliveMessage.send(p, self.holePipe,self.keepAliveFailed)
             
         servers=[s.server for s in self.root.getAllStreams()]
-        for p in servers:
-            KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
+        if True:#self.netChecker.hpunching:
+            for p in servers:
+                KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
             
     def startPunching(self,peer):
         if True:#peer.hpunch:

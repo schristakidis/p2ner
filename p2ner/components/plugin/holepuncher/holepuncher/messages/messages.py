@@ -67,7 +67,7 @@ class KeepAliveMessage(ControlMessage):
         return True
     
     def action(self, message, peer):
-        print 'keep alive message received'
+        print 'keep alive message received from ',peer
         return True    
     
     @classmethod

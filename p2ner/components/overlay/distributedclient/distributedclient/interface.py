@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
-from construct import Container
-from constructs.messages import MSG_TYPES
-
-def encodemsg(msg, content):
-    if msg.type not in MSG_TYPES:
-        raise
-
-    try:
-        encoded = MSG_TYPES[msg.type].build(content)
-    except:
-        import sys
-        print sys.exc_info()[0]
-        print '#############################'
-        print content
-        raise TypeError
-
-    return encoded
+class interface(object):
+    specs={'numNeigh':8,
+                  'swapFreq':3}
+    
+    specsGui={'numNeigh':{'name':'Number Of Neighbours','tooltip':'The number of neighbours each peer should have. Typical values 4-10'},
+                       'swapFreq':{'name':'Swap Frequency','tooltip':'The frequency of neighbor swapping'}}
+                      

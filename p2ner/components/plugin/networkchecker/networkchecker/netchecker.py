@@ -99,8 +99,9 @@ class NetworkChecker(Namespace):
     
         if self.localIp==self.externalIp:
             print 'global internet:'
-            self.log.debug('peer is not behind nat')
             self.extDataPort=self.dataPort
+            self.log.debug('external data port is %d',self.extDataPort)
+            self.log.debug('peer is not behind nat')
             #self.root.trafficPipe.call('listen')
             self.networkOk()
             return

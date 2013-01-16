@@ -18,6 +18,7 @@ from construct import *
 from stream import StreamAdapter,  StreamStruct
 from buffer import BufferAdapter,  BufferStruct, RequestAdapter
 from peer import PeerAdapter,  PeerStruct
+from swappeer import SwapPeerAdapter,SwapPeerStruct
 from peerbuffer import PeerBufferStruct
 from basemessage import BaseMessageAdapter, BaseMessageStruct
 
@@ -97,6 +98,22 @@ OverlayMessage=Struct("overlaymessage",
                        Optional(PeerAdapter(PeerStruct)),  
                        )
 
+LockMessage=Struct("lockmessage",
+                   UBInt16('streamid'),
+                   Flag('lock'),
+                   )
+
+SwapPeerListMessage = Struct("swappeerlistmessage", 
+        UBInt16("streamid"), 
+        OptionalGreedyRepeater(SwapPeerAdapter(SwapPeerStruct)), 
+        )
+
+SateliteMessage=Struct('satelitemessage',
+        UBInt16('streamid'),
+        Flag('action'),
+        PeerAdapter(PeerStruct),
+        )
+        
 class RawMessage(object):
     
     @staticmethod
@@ -121,7 +138,10 @@ MSG_TYPES = {
              "rttmessage" : RttMessage,
              "registermessage" : RegisterMessage,
              "peermessage" :PeerMessage,
-             "overlaymessage": OverlayMessage
+             "overlaymessage": OverlayMessage,
+             "lockmessage": LockMessage,
+             "swappeerlistmessage":SwapPeerListMessage,
+             "satelitemessage":SateliteMessage
              }
 
 

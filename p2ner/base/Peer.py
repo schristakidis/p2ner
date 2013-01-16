@@ -103,6 +103,7 @@ class Peer(object):
             obj.conProb=False
             obj.learnedFrom=None
             
+            obj.participateSwap=False
             obj.ackRtt={}
             obj.lastRtt=[]
         return obj
