@@ -163,6 +163,7 @@ class DistributedClient(Overlay):
     def recRejectSwap(self,peer):
         if peer!=self.passiveInitPeer:
             raise ValueError('problem in receive reject swap. Rejecting peer is not the passive initiator')
+        self.log.debug('swap was rejected from %s',peer)
         peer.checkResponse.cancel()
         self.initiator=False
         
@@ -256,6 +257,7 @@ class DistributedClient(Overlay):
           
     ###PERFORM SWAP
     def performSwap(self):
+        self.passiveInitPeer.participateSwap=False
         partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
 
         
