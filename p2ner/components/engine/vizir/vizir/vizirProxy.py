@@ -25,7 +25,10 @@ class VizirProxy(xmlrpc.XMLRPC):
         reactor.listenTCP(port, server.Site(self))
         url="http://"+vip+':'+str(vport)+"/XMLRPC"
         self.proxy=Proxy(url)
+        self.register(port)
         
+    def register(self,port):
+        self.proxy.callRemote('registerProxy',port)
         
     def xmlrpc_register(self,ip,rpcport,port,bw,server=False):
         print 'registered ',ip,port,bw

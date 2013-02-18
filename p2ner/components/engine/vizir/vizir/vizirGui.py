@@ -22,7 +22,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
-from twisted.web.xmlrpc import Proxy
+from twisted.web.xmlrpc import Proxy,withRequest
 from cPickle import dumps,loads
 from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
@@ -38,15 +38,13 @@ ON=1
 INPROGRESS=2
 PAUSE=3
 
+
 class vizirGui(UI,xmlrpc.XMLRPC):
-    def initUI(self,useProxy=False,vip=None,vport=None,port=9000):
+    def initUI(self,port=9000):
         xmlrpc.XMLRPC.__init__(self)
         print 'start listening xmlrpc'
         reactor.listenTCP(port, server.Site(self))
         self.proxy=None
-        if useProxy:
-            url="http://"+vip+':'+str(vport)+"/XMLRPC"
-            self.proxy=Proxy(url)
         self.remote=True
                     
         self.constructGui()
@@ -126,7 +124,13 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         else:
             return 1
         
-  
+    @withRequest
+    def xmlrpc_registerProxy(self,request,port):
+        print 'using proxy'
+        url="http://"+request.getClientIP()+':'+str(port)+"/XMLRPC"
+        self.proxy=Proxy(url)
+        return True
+    
     def xmlrpc_register(self,ip,rpcport,port,bw,server=False):
         if server:
             type='server'
@@ -466,31 +470,19 @@ def startVizirGui():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'up:v:P:h',['proxy','port=','vizir=','vizirPort=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'p:h',['port=','help'])
     except getopt.GetoptError as err:
         usage(err=err)
         
-    proxy=False
     port=9000
-    vPort=9000
-    vIP=None
+
     for opt,a in optlist:
-        if opt in ('-u','--proxy'):
-            proxy=True
         if opt in ('-p','--port'):
             port=int(a)
-        elif opt in ('-v','--vizir'):
-            vIP=a
-            proxy=True
-        elif opt in ('-P','--vizirPort'):
-            vPort=int(a)
         elif opt in ('-h','--help'):
             usage()
-            
-    if proxy and not vIP:
-        usage(err='You must set the vizir proxy ip')
-    
-    vizirGui(proxy,vIP,vPort,port)
+ 
+    vizirGui(port)
     reactor.run()
     
 def usage(err=None,daemon=False):
@@ -500,10 +492,7 @@ def usage(err=None,daemon=False):
     print ' -------------------------------------------------------------------------'
     print ' Run P2ner Vizir'
     print ' '
-    print ' -u, --proxy :use vizir through a proxy'
     print ' -p, --port port :define port'
-    print ' -v, --vizir ip :the vizir proxy ip'
-    print ' -P, --vizirPort port :the vizir proxy port'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')
