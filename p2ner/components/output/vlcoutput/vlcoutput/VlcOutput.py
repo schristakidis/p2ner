@@ -15,8 +15,6 @@
 
 
 import os.path, sys
-import pygst
-pygst.require('0.10')
 import gst
 import pygtk
 pygtk.require('2.0')
