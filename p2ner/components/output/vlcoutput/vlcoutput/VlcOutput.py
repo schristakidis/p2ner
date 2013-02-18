@@ -15,7 +15,6 @@
 
 
 import os.path, sys
-import gst
 import pygtk
 pygtk.require('2.0')
 import gtk
