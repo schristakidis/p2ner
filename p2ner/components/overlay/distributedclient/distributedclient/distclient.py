@@ -15,13 +15,14 @@
 
 
 from p2ner.abstract.overlay import Overlay
-from messages.peerlistmessage import PeerListMessage,PeerListPMessage,AddNeighbourMessage,PingMessage
+from messages.peerlistmessage import PeerListMessage,PeerListPMessage,AddNeighbourMessage,PingMessage,GetNeighsMessage,ReturnNeighsMessage
 from messages.peerremovemessage import ClientStoppedMessage
 from twisted.internet import task,reactor
 from random import choice
 from messages.swapmessages import *
 from time import time
 import networkx as nx
+
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -51,11 +52,14 @@ class DistributedClient(Overlay):
         self.messages.append(FinalSwapPeerListMessage())
         self.messages.append(SateliteMessage())
         self.messages.append(PingMessage())
+        self.messages.append(GetNeighsMessage())
         
     def initOverlay(self):
         self.log.info('initing overlay')
         print 'initing overlay'
         self.sanityCheck(["stream", "control", "controlPipe"])
+
+        
         self.registerMessages()
         self.neighbours = []
         self.tempNeighs=[]
@@ -566,4 +570,7 @@ class DistributedClient(Overlay):
         if len(self.neighbours):
             en=en/len(self.neighbours)
         return en
+    
+    def returnNeighs(self,peer):
+        ReturnNeighsMessage.send(self.stream.id,self.neighbours,peer,self.controlPipe)
         

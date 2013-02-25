@@ -47,6 +47,9 @@ class Server(Engine):
         self.bandwidthServer.startListening()
         self.controlPipe.call('listen')
         self.chatServer=loadComponent('plugin','ChatServer')(_parent=self)
+        self.drawPlots=False
+        if 'plot' in kwargs:
+            self.drawPlots=kwargs['plot']
         #self.startweb()
         
     def startweb(self):
@@ -114,7 +117,7 @@ def startServer():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:h',['port=','vizir=','vizirPort=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:hg',['port=','vizir=','vizirPort=','help','graph'])
     except getopt.GetoptError as err:
         usage(err=err)
         
@@ -123,6 +126,7 @@ def startServer():
     port=16000
     vizir=False
     vPort=9000
+    plots=False
     for opt,a in optlist:
         if opt in ('-p','--port'):
             port=int(a)
@@ -132,6 +136,8 @@ def startServer():
             vIP=a
         elif opt in ('-P','--vizirPort'):
             vPort=int(a)
+        elif opt in ('-g','--graph'):
+            plots=True
         elif opt in ('-h','--help'):
             usage()
             
@@ -140,7 +146,9 @@ def startServer():
     else:
         kwargs={}
 
-    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":port}),logger=('Logger',{'name':'p2nerServer'}),interface=(interface,[],kwargs))
+    mkwargs={'plot':plots}
+    
+    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":port}),logger=('Logger',{'name':'p2nerServer'}),interface=(interface,[],kwargs),**mkwargs)
     reactor.run()
     
 def usage(err=None):
@@ -153,6 +161,7 @@ def usage(err=None):
     print ' -p, --port port :define port'
     print ' -v, --vizir [ip] :run server with XMLRPC and vizir interface and connect to ip'
     print ' -P, --vizirPort port :set the vizir controller port'
+    print ' -g, --graph :enable overlay visualization'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')

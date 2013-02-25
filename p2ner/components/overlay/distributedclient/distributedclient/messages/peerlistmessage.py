@@ -125,3 +125,25 @@ class PingMessage(ControlMessage):
     @classmethod
     def send(cls,  peer, out):
         out.send(cls,Container(message=None),peer).addErrback(trap_sent)
+        
+class GetNeighsMessage(ControlMessage):
+    type='basemessage'
+    code=MSG.GET_NEIGHS
+    ack=True
+    
+    def trigger(self,message):
+        if message.message!=self.stream.id:
+            return False
+        return True
+    
+    def action(self,message,peer):
+        self['overlay'].returnNeighs(peer)
+        
+class ReturnNeighsMessage(BaseControlMessage):
+    type='swappeerlistmessage'
+    code=MSG.RETURN_NEIGHS
+    ack=True
+    
+    @classmethod
+    def send(cls, sid, peerlist, peer, out):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)

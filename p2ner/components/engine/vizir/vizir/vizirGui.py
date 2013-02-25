@@ -32,6 +32,8 @@ from p2ner.abstract.ui import UI
 from client import PClient
 from util import getText,getChoice
 from pkg_resources import resource_string
+from p2ner.core.components import loadComponent
+
 
 OFF=0
 ON=1
@@ -46,7 +48,11 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         reactor.listenTCP(port, server.Site(self))
         self.proxy=None
         self.remote=True
-                    
+
+        self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
+        self.vizPlot= loadComponent('plugin', 'OverlayViz')() 
+        self.overlayShowing=False
+
         self.constructGui()
             
     def constructGui(self):
@@ -60,10 +66,12 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         stopNclients = self.builder.get_object("stopNclients")
         setUploadBW = self.builder.get_object("setUploadBW")
         startProducer = self.builder.get_object("startProducer")
+        showOverlay = self.builder.get_object("showOverlay")
         startNclients.connect("clicked", self.startNclients)
         stopNclients.connect("clicked", self.stopNclients)
         setUploadBW.connect("clicked", self.setUploadBW)
         startProducer.connect("clicked", self.startProducing)
+        showOverlay.connect("clicked", self.showOverlay)
         self.win.set_title("VizEW - Control Center")
         pixbuf = self.win.render_icon(gtk.STOCK_FIND, gtk.ICON_SIZE_MENU)
         self.win.set_icon(pixbuf)
@@ -466,6 +474,30 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 prod=[p for p in prod if self.treemodel.get_value(p,6)==sid]
                 self.toggleStartStop(prod[0])
                 
+    def showOverlay(self,widget):
+        if self.overlayShowing:
+            self.vizPlot.stop()
+            self.overlayShowing = not self.overlayShowing
+            return
+        
+        id=self.getProducingId()
+        if not id:
+            self.newStatusMessage('there is no available overlays to plot')
+            return
+        elif len(id)==1:
+            id=id[0][1]
+        else:
+            sid=int(getChoice('select which id to plot', [i[1] for i in id],None,None))
+            id=[i for i in id if i[1]==sid][0][1]
+        self.vizInterface.setId(id)
+        self.vizPlot.start(self.vizInterface)
+        self.overlayShowing = not self.overlayShowing
+            
+        
+        
+    def getPeers(self):
+        return [m[7] for m in self.treemodel if m[3]==ON and m[4]=='client' and m[6]==id]
+                
 def startVizirGui():
     from twisted.internet import reactor
     import sys,getopt
@@ -475,7 +507,8 @@ def startVizirGui():
         usage(err=err)
         
     port=9000
-
+    plot=False
+    
     for opt,a in optlist:
         if opt in ('-p','--port'):
             port=int(a)
@@ -493,6 +526,7 @@ def usage(err=None,daemon=False):
     print ' Run P2ner Vizir'
     print ' '
     print ' -p, --port port :define port'
+    print ' -g, --graph :enable overlay visualization'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')

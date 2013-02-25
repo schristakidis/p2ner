@@ -282,3 +282,8 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     def checkNetwork(self):
         reactor.callLater(0.2,self.netChecker.check)
        
+    def xmlrpc_getNeighbours(self,id):
+        strm=self.root.getStream(id)
+        neighs=strm['overlay'].getNeighbours()
+        ret=[dumps(p) for p in neighs]
+        return ret

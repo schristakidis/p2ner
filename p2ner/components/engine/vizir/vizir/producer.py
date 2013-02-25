@@ -94,7 +94,10 @@ class PGui(ProducerGui):
             try:
                 videoRate=int(videoRate)
             except:
-                return
+                print 'no video rate selected'
+                print 'setting video rate to 100'
+                videoRate=100
+               
             input['videoRate']=videoRate
         self.on_ui_destroy()
         self.interface.registerStream(self.settings,input,output)

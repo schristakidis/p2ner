@@ -200,6 +200,10 @@ class Interface(Interface):
         d=self.proxy.callRemote('restartServer')
         d.addErrback(self.failedXMLRPC) 
         
+    def getNeighbours(self,id,ip,port,func):
+        d=self.proxy.callRemote('getNeighbours',id)
+        d.addCallback(func,ip,port)
+        
     def failedXMLRPC(self,f):
         print 'failed xmlrpc call'
         print f

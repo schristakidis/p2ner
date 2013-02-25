@@ -24,7 +24,7 @@ class localControl(Interface):
     
     def initInterface(self):
         self.logger=InterfaceLog()
-        pass
+
         
     def start(self):
         pass

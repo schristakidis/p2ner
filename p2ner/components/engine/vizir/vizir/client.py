@@ -87,3 +87,5 @@ class PClient(Interface):
         elif 'Null' in output:
             self.output['comp']='NullOutput'
         
+    def getNeighbours(self,id,ip,port,func):
+        self.interface.getNeighbours(id,ip,port,func)

@@ -22,6 +22,7 @@ from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage,
 from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage
 from messages.startstopclient import ClientStoppedMessage
 from p2ner.base.ControlMessage import ControlMessage
+from p2ner.core.components import loadComponent
 
 class CentralServer(Overlay):
     
@@ -45,6 +46,11 @@ class CentralServer(Overlay):
         self.stream = stream
         #self.producerNeighbours = []
         self.neighbourhoods = {}
+        
+        if self.drawPlots:
+            self.vizInterface = loadComponent('plugin', 'VizNetInterface')(_parent=self)
+            self.vizPlot= loadComponent('plugin', 'OverlayViz')() 
+            self.vizPlot.start(self.vizInterface)
         
     def getNeighbours(self, peer=None):
         if not peer:
@@ -133,3 +139,6 @@ class CentralServer(Overlay):
     def removes(self):
         self.messagess=[] 
         self.stop()
+        
+    def getPeers(self):
+        return self.neighbourhoods.keys()
