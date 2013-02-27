@@ -19,10 +19,11 @@ from p2ner.abstract.overlay import Overlay
 from p2ner.base.Stream import Stream
 from messages.requeststream import RequestStreamMessage
 from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage, StartRemoteMessage
-from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage
+from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage,SuggestNewPeerMessage,SuggestMessage
 from messages.startstopclient import ClientStoppedMessage
 from p2ner.base.ControlMessage import ControlMessage
 from p2ner.core.components import loadComponent
+from random import choice
 
 class CentralServer(Overlay):
     
@@ -34,6 +35,7 @@ class CentralServer(Overlay):
         self.messagess.append(ServerStoppedMessage())
         self.messagess.append(StartRemoteMessage())
         self.messagess.append(ClientStoppedMessage())
+        self.messages.append(SuggestNewPeerMessage())
     
     def initOverlay(self, producer, stream):
         self.log=self.logger.getLoggerChild(('s'+str(stream.id)),self.interface)
@@ -142,3 +144,9 @@ class CentralServer(Overlay):
         
     def getPeers(self):
         return self.neighbourhoods.keys()
+    
+    def suggestNewPeer(self,peer,neighs):
+        avNeighs=[p for p in self.getNeighbours() if p!=peer and p not in neighs]
+        if avNeighs:
+            avNeighs=[choice(avNeighs)]
+        SuggestMessage.send(self.stream.id,avNeighs,peer,self.controlPipe)

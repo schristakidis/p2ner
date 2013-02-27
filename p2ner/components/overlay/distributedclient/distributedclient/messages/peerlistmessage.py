@@ -147,3 +147,41 @@ class ReturnNeighsMessage(BaseControlMessage):
     @classmethod
     def send(cls, sid, peerlist, peer, out):
         return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
+    
+class SuggestNewPeerMessage(ControlMessage):
+    type = "peerlistmessage"
+    code = MSG.SUGGEST_NEW_PEER
+    ack = True
+    
+    def trigger(self, message):
+        if self.stream.id != message.streamid:
+            return False
+        return True
+
+    def action(self, message, peer):
+        self.log.debug('received suggest new peer message from %s',peer)
+        self['overlay'].suggestNewPeer(peer,message.peer)
+                  
+        
+    @classmethod
+    def send(cls, sid, peerlist, peer, out, suc_func=None,err_func=None):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func)  
+
+class SuggestMessage(ControlMessage):
+    type = "peerlistmessage"
+    code = MSG.SUGGEST
+    ack = True
+    
+    def trigger(self, message):
+        if self.stream.id != message.streamid:
+            return False
+        return True
+
+    def action(self, message, peer):
+        self.log.debug('received suggest  message from %s',peer)
+        self['overlay'].availableNewPeers(peer,message.peer)
+                  
+        
+    @classmethod
+    def send(cls, sid, peerlist, peer, out):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)  

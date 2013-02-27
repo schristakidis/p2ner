@@ -80,3 +80,5 @@ class MessageCodes(object):
     ADDNEIGH_RTT=99
     GET_NEIGHS=100
     RETURN_NEIGHS=101
+    SUGGEST_NEW_PEER=102
+    SUGGEST=103

@@ -67,8 +67,14 @@ class OverlayViz(object):
             for v in p:
                 if not (k,v[0]) in edges and not (v[0],k) in edges:
                     self.g.add_edge(k,v[0],len=v[1])
-        if len(self.final)==1:
-            self.g.add_node(0) 
+                    
+        unconnected=[p for p in self.final.keys() if p not in self.g.nodes()]
+        for p in unconnected:
+            self.g.add_node(p)
+            
+        #if len(self.final)==1:
+        #    self.g.add_node(0) 
+        
         self.drawPlot()
         
     def drawPlot(self):

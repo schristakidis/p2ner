@@ -15,14 +15,14 @@
 
 
 from p2ner.abstract.overlay import Overlay
-from messages.peerlistmessage import PeerListMessage,PeerListPMessage,AddNeighbourMessage,PingMessage,GetNeighsMessage,ReturnNeighsMessage
+from messages.peerlistmessage import *
 from messages.peerremovemessage import ClientStoppedMessage
 from twisted.internet import task,reactor
-from random import choice
+from random import choice,uniform
 from messages.swapmessages import *
 from time import time
 import networkx as nx
-
+from p2ner.base.Peer import Peer
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -53,6 +53,8 @@ class DistributedClient(Overlay):
         self.messages.append(SateliteMessage())
         self.messages.append(PingMessage())
         self.messages.append(GetNeighsMessage())
+        self.messages.append(SuggestNewPeerMessage())
+        self.messages.append(SuggestMessage())
         
     def initOverlay(self):
         self.log.info('initing overlay')
@@ -70,8 +72,8 @@ class DistributedClient(Overlay):
         self.duringSwap=False
         self.numNeigh=self.stream.overlay['numNeigh']
         self.loopingCall = task.LoopingCall(self.startSwap)
-        self.loopingCall.start(self.stream.overlay['swapFreq'])
-     
+        #self.loopingCall.start(self.stream.overlay['swapFreq'])
+
         
     def getNeighbours(self):
         return self.neighbours[:]
@@ -110,6 +112,15 @@ class DistributedClient(Overlay):
             self.neighbours.remove(peer)
             self.log.info('removing %s from neighborhood',peer)
             print 'removing form neighbourhood ',peer
+            if uniform(0,10)<5:
+                self.log.info('should find a new neighbor')
+                print 'should find a new neighbor'
+                for p in self.neighbours:
+                    p.askedReplace=False
+                self.findNewNeighbor()
+            else:
+                self.log.info('no further action needed')
+                print 'no further action needed'
         except:
             self.log.error('%s is not a neighbor',peer)
                     
@@ -119,7 +130,10 @@ class DistributedClient(Overlay):
     def stop(self):
         self.log.info('stopping overlay')
         self.log.debug('sending clientStopped message to %s',self.server)
-        self.loopingCall.stop()
+        try:
+            self.loopingCall.stop()
+        except:
+            pass
         for p in self.neighbours:
             try:
                 p.checkResponse.cancel()
@@ -180,6 +194,8 @@ class DistributedClient(Overlay):
         self.duringSwap=True
         self.gotPartnerUpdatedTable=False
         self.partnerTable=peerlist
+        for p in peerlist:                  ####should check it!!!!!!!!!!!!!!
+            p.learnedFrom=peer 
         self.sendTable()
         
         
@@ -467,6 +483,8 @@ class DistributedClient(Overlay):
         
         peer.checkResponse.cancel()
         self.partnerTable=peerlist
+        for p in peerlist:  ###should check if this is needed!!!!!!!!!!!!!!!!!!
+            p.learnedFrom=peer
         self.sendLocks()
         
     ###SEND UPDATE SWAP TABLE
@@ -574,3 +592,43 @@ class DistributedClient(Overlay):
     def returnNeighs(self,peer):
         ReturnNeighsMessage.send(self.stream.id,self.neighbours,peer,self.controlPipe)
         
+    def findNewNeighbor(self):
+        neighs=[p for p in self.neighbours if not p.askedReplace]
+        if len(neighs):
+            askNeigh=choice(neighs)
+            SuggestNewPeerMessage.send(self.stream.id,self.getNeighbours(),askNeigh,self.controlPipe,err_func=self.sendFindNewFailed)
+        else:
+            self.log.debug("there isn't an appropiate neighbour for asking for a new peer\n Contacting Server")
+            print "there isn't an appropiate neighbour for asking for a new peer\n Contacting Server"
+            SuggestNewPeerMessage.send(self.stream.id,self.getNeighbours(),Peer(self.stream.server[0],self.stream.server[1]),self.controlPipe)
+            pass
+        
+    def sendFindNewFailed(self,peer):
+        self.log.warning('find new neighbor message to %s failed',peer)
+        peer.askedReplace=True
+        self.findNewNeighbor()
+        
+    def suggestNewPeer(self,peer,neighs):
+        avNeighs=[p for p in self.neighbours if p!=peer and p not in neighs]
+        SuggestMessage.send(self.stream.id,avNeighs,peer,self.controlPipe)
+        
+    def availableNewPeers(self,peer,avNeighs):
+        avNeighs=[p for p in avNeighs if p not in self.neighbours]
+        if not len(avNeighs):
+            peer.askedReplace=True
+            if peer!=Peer(self.stream.server[0],self.stream.server[1]):
+                self.findNewNeighbor()
+            else:
+                self.log.warning('there are no new peers to connect to')
+                print 'there are no new peers to connect to'
+            return
+        
+        newPeer=choice(avNeighs)
+        newPeer.learnedFrom=peer
+        self.log.debug('received available peers message from %s with %s',peer,newPeer)
+        print 'receive  available peers message from ',peer,' with ',newPeer
+        inpeer,port=self.root.checkNatPeer()
+        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.addNeighbour,self.failedNeighbour,self.root.controlPipe)
+        
+            
