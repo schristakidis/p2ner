@@ -51,7 +51,6 @@ setup(
 
 
     entry_points={
-                  'p2ner.components.engine':'%s=%s:%s' %((__component_name__, __component_name__.lower(), __component_name__)),
                   'console_scripts':['vizirGui=%s:start%s' %(( __component_name__.lower(), __component_name__)),
                                               'vizirProxy=%s:startVizirProxy'%((__component_name__.lower()))],  
                   }
