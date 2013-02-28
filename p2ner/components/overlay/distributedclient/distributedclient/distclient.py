@@ -64,6 +64,7 @@ class DistributedClient(Overlay):
         
         self.registerMessages()
         self.neighbours = []
+        self.duringSwapNeighbours=[]
         self.tempNeighs=[]
         self.partnerTable=[]
         self.satelite=0
@@ -82,8 +83,14 @@ class DistributedClient(Overlay):
         if not self.isNeighbour(peer):
             #if self.netChecker.nat and peer.ip==self.netChecker.externalIp:
              #   peer.useLocalIp=True
-            self.neighbours.append(peer)
-            self.log.info('adding %s to neighborhood',peer)
+            if self.duringSwap:
+                self.duringSwapNeighbours.append(peer)
+                self.log.info('adding %s to during swap neighborhood',peer)
+                print 'eeeeeeeeeeeeeeeeeeeeeee'
+                print 'during swap neighbour ',peer
+            else:
+                self.neighbours.append(peer)
+                self.log.info('adding %s to neighborhood',peer)
             PingMessage.send(peer,self.controlPipe)
         else:
             self.log.error("%s  yet in overlay" ,peer)
@@ -393,6 +400,7 @@ class DistributedClient(Overlay):
          
         
     def updateSatelites(self):
+        self.mergeTempTable()
         available=[p for p in self.newTable if p.participateSwap]
         self.log.warning('in update satelites')
         self.log.warning('new table:%s',self.newTable[:])
@@ -409,6 +417,11 @@ class DistributedClient(Overlay):
             SateliteMessage.send(self.stream.id,p.swapAction,self.partnerPeer,p,self.controlPipe,err_func=self.satUpdateFailed,suc_func=self.satUpdateSuccess)
             self.log.debug('sending update satelite to %s',p)
             
+    def mergeTempTable(self):
+        newNeighs=[p for p in self.duringSwapNeighbours if p not in self.newTable]
+        self.newTable=self.newTable+self.duringSwapNeighbours
+        self.duringSwapNeighbours=[]
+        
     def satUpdateFailed(self,peer):
         self.log.warning('failed to update satelite %s',peer)
         self.log.info('removing %s from swap table',peer)
@@ -548,7 +561,10 @@ class DistributedClient(Overlay):
             if partner not in self.getNeighbours():
                 raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
             self.neighbours.remove(partner)
-            self.neighbours.append(peer)
+            if peer not in self.getNeighbours():
+                self.neighbours.append(peer)
+            else:
+                self.log.warning('problem in recUpadate table %s is already a neighbour %s',peer,partner)
             self.satelite -=1
             peer.checkResponse.cancel()
         self.log.info('satelite %d',self.satelite)
