@@ -338,8 +338,8 @@ class DistributedClient(Overlay):
             else:
                 raise ValueError("can't perform swap with no rtt for %s",p)
             temp[p]=count
-            G.add_edge(-3,count,capacity=1,weight=rtt)
-            G.add_edge(-4,count,capacity=1,weigth=p.swapRtt)
+            G.add_edge(-3,count,capacity=1,weight=int(1000*rtt))
+            G.add_edge(-4,count,capacity=1,weigth=int(1000*p.swapRtt))
             G.add_edge(count,-2,capacity=1)
             count +=1
         
