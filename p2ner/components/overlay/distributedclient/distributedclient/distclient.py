@@ -73,7 +73,7 @@ class DistributedClient(Overlay):
         self.duringSwap=False
         self.numNeigh=self.stream.overlay['numNeigh']
         self.loopingCall = task.LoopingCall(self.startSwap)
-        #self.loopingCall.start(self.stream.overlay['swapFreq'])
+        self.loopingCall.start(self.stream.overlay['swapFreq'])
 
         
     def getNeighbours(self):
