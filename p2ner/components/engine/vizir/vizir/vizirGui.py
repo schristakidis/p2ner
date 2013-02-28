@@ -22,7 +22,10 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
-from twisted.web.xmlrpc import Proxy,withRequest
+try:
+    from twisted.web.xmlrpc import Proxy,withRequest
+except:
+    pass
 from cPickle import dumps,loads
 from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
