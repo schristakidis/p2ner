@@ -12,6 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from vizirGui import vizirGui as Vizir
-from vizirGui import startVizirGui as startVizir
+import sys,os.path
+
+if os.path.basename(sys.argv[0])=='vizirGui':
+    from vizirGui import vizirGui as Vizir
+    from vizirGui import startVizirGui as startVizir
 from vizirProxy import startVizirProxy
