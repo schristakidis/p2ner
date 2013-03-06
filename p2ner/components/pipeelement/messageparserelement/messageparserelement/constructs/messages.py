@@ -110,7 +110,7 @@ SwapPeerListMessage = Struct("swappeerlistmessage",
 
 SateliteMessage=Struct('satelitemessage',
         UBInt16('streamid'),
-        Flag('action'),
+        UBInt8('action'),
         PeerAdapter(PeerStruct),
         )
         

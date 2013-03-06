@@ -17,7 +17,7 @@
 from p2ner.abstract.overlay import Overlay
 from messages.peerlistmessage import *
 from messages.peerremovemessage import ClientStoppedMessage
-from twisted.internet import task,reactor
+from twisted.internet import task,reactor,defer
 from random import choice,uniform
 from messages.swapmessages import *
 from time import time
@@ -33,6 +33,7 @@ SEND_INIT_TABLE=5
 
 CONTINUE=0
 SUBSTITUTE=1
+DUMMY_SUBSTITUTE=2
 
 class DistributedClient(Overlay):
     
@@ -61,7 +62,8 @@ class DistributedClient(Overlay):
         print 'initing overlay'
         self.sanityCheck(["stream", "control", "controlPipe"])
 
-        
+        self.shouldStop=False
+        self.stopDefer=None
         self.registerMessages()
         self.neighbours = []
         self.duringSwapNeighbours=[]
@@ -135,6 +137,20 @@ class DistributedClient(Overlay):
         return peer in self.neighbours
     
     def stop(self):
+        self.shouldStop=True
+        if not self.stopDefer:
+            self.stopDefer=defer.Deferred()
+        reactor.callLater(0,self._stop)
+        return self.stopDefer
+    
+            
+    def _stop(self):
+        if self.satelite or self.initiator or self.passiveInitiator:
+            print 'can not stop '
+            print 'satelite:',self.satelite
+            print 'initiator:',self.initiator
+            print 'passive initiator:',self.passiveInitiator
+            return
         self.log.info('stopping overlay')
         self.log.debug('sending clientStopped message to %s',self.server)
         try:
@@ -157,14 +173,14 @@ class DistributedClient(Overlay):
         for n in self.getNeighbours():
             self.log.debug('sending clientStopped message to %s',n)
             ClientStoppedMessage.send(self.stream.id, n, self.controlPipe)
-        
+        self.stopDefer.callback(True)
 
     ###ACTIVE INITIATOR ##########################3
     
     ### ASK SWAP
     def startSwap(self):
         self.log.debug('starting swap')
-        if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1:
+        if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop:
             self.log.debug('no available conditions for swap')
             return
         
@@ -187,7 +203,9 @@ class DistributedClient(Overlay):
     ###RECEIVED REJECT SWAP
     def recRejectSwap(self,peer):
         if peer!=self.passiveInitPeer:
-            raise ValueError('problem in receive reject swap. Rejecting peer is not the passive initiator')
+            #raise ValueError('problem in receive reject swap. Rejecting peer is not the passive initiator')
+            print 'problem in receive reject swap. Rejecting peer is not the passive initiator'
+            reactor.stop()
         self.log.debug('swap was rejected from %s',peer)
         peer.checkResponse.cancel()
         self.initiator=False
@@ -195,9 +213,12 @@ class DistributedClient(Overlay):
     ###RECEIVED ACCEPT SWAP
     def recAcceptSwap(self,peer,peerlist):
         if peer!=self.passiveInitPeer:
-            raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
+            #raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
+            print 'problem in receive accept swap. Accepting peer is not the passive initiator'
+            reactor.stop()
         peer.checkResponse.cancel()
         self.log.debug('swap accepted from %s',peer)
+        print 'swap accepted from ',peer
         self.duringSwap=True
         self.gotPartnerUpdatedTable=False
         self.partnerTable=peerlist
@@ -242,7 +263,7 @@ class DistributedClient(Overlay):
             self.checkLockFinished()
             
     def lockFailed(self,peer):
-        p.participateSwap=False
+        peer.participateSwap=False
         self.checkLockFinished()
         
     def lockSent(self,peer):
@@ -252,10 +273,13 @@ class DistributedClient(Overlay):
     def recAnsLock(self,peer,lock):
         peer.checkResponse.cancel()
         if not peer.participateSwap:
-            raise ValueError('got an unexpected lock response from %s',peer)
+            #raise ValueError('got an unexpected lock response from %s',peer)
+            print 'got an unexpected lock response from ',peer
+            reactor.stop()
         self.log.debug('the lock answer from %s was %s',peer,lock)
         if not lock:
             peer.participateSwap=False
+            peer.partnerParticipateSwap=False
         else:
             peer.waitLock=False
         self.checkLockFinished()
@@ -289,6 +313,12 @@ class DistributedClient(Overlay):
 
         
         availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
+        #tempav=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
+        #if len(availablePeers)!=len(tempav):
+        #    print availablePeers
+        #    print tempav
+         #   reactor.stop()
+            
         for p in availablePeers:
             p.participateSwap=True
             
@@ -336,7 +366,8 @@ class DistributedClient(Overlay):
             if len(p.lastRtt):
                 rtt=sum(p.lastRtt)/len(p.lastRtt)
             else:
-                raise ValueError("can't perform swap with no rtt for %s",p)
+                #raise ValueError("can't perform swap with no rtt for %s",p)
+                reactor.stop()
             temp[p]=count
             G.add_edge(-3,count,capacity=1,weight=int(1000*rtt))
             G.add_edge(-4,count,capacity=1,weigth=int(1000*p.swapRtt))
@@ -372,7 +403,13 @@ class DistributedClient(Overlay):
         newPassiveTable=[p for p in availablePeers if flowDict[-4][temp[p]]==1]
         
         if len(newActiveTable)+len(newPassiveTable)!=len(availablePeers):
-            raiseValueError('problem in perform swap')
+            #raise ValueError('problem in perform swap')
+            print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+            print 'problem in perform swap'
+            print newActiveTable
+            print newPassiveTable
+            print availablePeers
+            reactor.stop()
             
         self.log.warning("current neughs %s",self.getNeighbours())
         self.log.warning('partner table %s',self.partnerTable)
@@ -400,7 +437,6 @@ class DistributedClient(Overlay):
          
         
     def updateSatelites(self):
-        self.mergeTempTable()
         available=[p for p in self.newTable if p.participateSwap]
         self.log.warning('in update satelites')
         self.log.warning('new table:%s',self.newTable[:])
@@ -409,17 +445,26 @@ class DistributedClient(Overlay):
             self.finishSwap()
             return
 
+        self.checkDuplicates()
+        if len(self.newTable)!=len(set(self.newTable)):
+            print 'duplicates in update satelites'
+            print self.newTable
+            reactor.stop()
+            
         for p in available:
             if p in self.getNeighbours():
                 p.swapAction=CONTINUE
+            elif p in self.duringSwapNeighbours:
+                p.swapAction=DUMMY_SUBSTITUTE
             else:
                 p.swapAction=SUBSTITUTE
             SateliteMessage.send(self.stream.id,p.swapAction,self.partnerPeer,p,self.controlPipe,err_func=self.satUpdateFailed,suc_func=self.satUpdateSuccess)
             self.log.debug('sending update satelite to %s',p)
+            print 'sending update satelite to ',p,' with action ',p.swapAction
             
     def mergeTempTable(self):
         newNeighs=[p for p in self.duringSwapNeighbours if p not in self.newTable]
-        self.newTable=self.newTable+self.duringSwapNeighbours
+        self.newTable=self.newTable+newNeighs
         self.duringSwapNeighbours=[]
         
     def satUpdateFailed(self,peer):
@@ -442,6 +487,7 @@ class DistributedClient(Overlay):
             self.finishSwap()
             
     def finishSwap(self):
+        self.mergeTempTable()
         self.log.info('swap with %s finished',self.partnerPeer)
         self.log.info('old table %s',self.getNeighbours())
         print '---------------------------'
@@ -462,6 +508,9 @@ class DistributedClient(Overlay):
         self.initiator=False
         self.passiveInitiator=False
         self.duringSwap=False
+        self.checkDuplicates()
+        if self.shouldStop:
+            self._stop()
         
     ###PASSIVE INITIATOR##############################
     
@@ -469,7 +518,7 @@ class DistributedClient(Overlay):
     def recAskSwap(self,peer):
         self.log.debug('received ask swap from %s',peer)
         print 'received ask swap from ',peer
-        if self.satelite or self.initiator or self.passiveInitiator:
+        if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop:
             RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
             self.log.debug('and rejected it')
         else:
@@ -492,7 +541,9 @@ class DistributedClient(Overlay):
     def recInitSwapTable(self,peer,peerlist):
         self.log.debug('received initial swap routing table from %s',peer)
         if peer!=self.initPeer:
-            raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
+            #raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
+            print 'problem in receive accept swap. Accepting peer is not the passive initiator'
+            reactor.stop()
         
         peer.checkResponse.cancel()
         self.partnerTable=peerlist
@@ -533,43 +584,82 @@ class DistributedClient(Overlay):
     
     def recAskLock(self,peer):
         self.log.debug('received ask lock from %s',peer)
-        if self.initiator or self.passiveInitiator:
+        print 'received ans lock from ',peer
+        if self.initiator or self.passiveInitiator or self.shouldStop:
             AnswerLockMessage.send(self.stream.id,False,peer,self.controlPipe)
             self.log.debug('and rejected it')
+            print 'and rejected it'
         else:
             self.satelite+=1
             AnswerLockMessage.send(self.stream.id,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
             self.log.debug('and accepted it')
+            print 'and accepted it'
             
     def ansLockFailed(self,peer):
         self.satelite -=1
         self.log.warning('failed to deliver possitive lock answer to %s',peer)
+        print 'failed to deliver possitive lock answer to ',peer
         
     def ansLockSent(self,peer):
         peer.checkResponse=reactor.callLater(10,self.checkStatus, WAIT_SWAP,peer)
         
     def recUpdateSatelite(self,peer,action,partner):
         self.log.debug('received update satelite from %s with partner %s',peer,partner)
+        print 'received update satelite from ',peer,' with partner ',partner,' and action ',action
         if action==CONTINUE:
             self.log.debug('with action continue')
             if peer not in self.getNeighbours():
-                raise ValueError('got continue satelite from %s while he is not my neighbour',peer)
-            self.satelite -=1
-            partner.checkResponse.cancel()
+                #raise ValueError('got continue satelite from %s while he is not my neighbour',peer)
+                print 'got continue satelite from %s while he is not my neighbour'
+                reactor.stop()
+            else:
+                self.satelite -=1
+                partner.checkResponse.cancel()
+        elif action==DUMMY_SUBSTITUTE:
+            self.log.debug('with action dummy substitute with %s',partner)
+            if partner not in self.getNeighbours():
+                #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
+                print 'got dummy substitute satelite from s while s is not my neighbour'
+                reactor.stop()
+            self.neighbours.remove(partner)
+            if peer in self.getNeighbours():
+                self.satelite -=1
+                peer.checkResponse.cancel()
+            else:
+                self.log.warning('problem in dummy recUpadate table %s is not already a neighbour %s',peer,partner)
+                print 'problem in dummy recUpadate table s not is already a neighbour'
+                reactor.stop()
         else:
             self.log.debug('with action substitute with %s',partner)
             if partner not in self.getNeighbours():
-                raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
+                #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
+                print 'got substitute satelite from s while s is not my neighbour'
+                reactor.stop()
             self.neighbours.remove(partner)
             if peer not in self.getNeighbours():
                 self.neighbours.append(peer)
+                self.satelite -=1
+                peer.checkResponse.cancel()
             else:
                 self.log.warning('problem in recUpadate table %s is already a neighbour %s',peer,partner)
-            self.satelite -=1
-            peer.checkResponse.cancel()
+                print 'problem in recUpadate table s is already a neighbour'
+                reactor.stop()
         self.log.info('satelite %d',self.satelite)
         self.log.info('table %s',self.getNeighbours())
-        
+        if self.satelite<0:
+            self.log.error('negative value of satelite')
+            print 'negative value of satelite'
+            reactor.stop()
+        if self.initiator or self.passiveInitiator or self.duringSwap:
+            self.log.error('got update satelite while in swap')
+            
+            print 'got update satelite while in swap'
+            print self.initiator,self.passiveInitiator, self.duringSwap
+            print peer,partner,action
+            reactor.stop()
+        if self.shouldStop:
+            self._stop()
+            
     def checkStatus(self,status,peer=None):
         if status==ASK_SWAP:
             self.initiator=False
@@ -648,3 +738,10 @@ class DistributedClient(Overlay):
         AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.addNeighbour,self.failedNeighbour,self.root.controlPipe)
         
             
+    def checkDuplicates(self):
+        neighs=self.getNeighbours()
+        if len(neighs)!=len(set(neighs)):
+            print 'DUPLICATESSSSSSSSSSSSSSSSSSSSSS'
+            print neighs
+            reactor.stop()
+        

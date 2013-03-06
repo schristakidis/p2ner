@@ -42,8 +42,11 @@ class VizXMLInterface(Interface):
             print 'already got the neighs from that peer'
             print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
         for p in neighs:
-            p.plotRtt=sum(p.lastRtt)/len(p.lastRtt)
-            
+            try:
+                p.plotRtt=sum(p.lastRtt)/len(p.lastRtt)
+            except:
+                print 'no rtt values ',p.lastRtt
+                p.plotRtt=1
         self.neighs[(ip,port)]['response']=True
         self.neighs[(ip,port)]['neighs']=neighs
         for p in self.neighs.values():

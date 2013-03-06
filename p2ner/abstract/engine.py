@@ -251,7 +251,7 @@ class Engine(Namespace):
     def start(self):
         pass
 
-    def quit(self):
+    def quit(self,*args):
         reactor.stop()
         
         

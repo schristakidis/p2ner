@@ -65,12 +65,17 @@ class StreamClient(Stream):
     
     def stop(self):
         if True:#self.running:
+            d=self['overlay'].stop()
+            d.addCallback(self._stop)
+            return d
+        
+    def _stop(self,res):
             self.log.info('stream is stopping')
             self.running=False
             self.stream.live=False
             self.interface.setLiveStream(self.stream.id,False)
             self.trafficPipe.unregisterProducer(self.scheduler)
-            for c in ["output",  "scheduler",'overlay']:
+            for c in ["output",  "scheduler"]:
                 self.log.debug('trying to stop %s',c)
                 self[c].stop()
             self.log.info('removing stream')

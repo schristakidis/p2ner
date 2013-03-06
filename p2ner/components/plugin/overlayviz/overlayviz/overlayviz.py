@@ -17,15 +17,30 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pylab
 from twisted.internet import task
-
+import gtk
 
 class OverlayViz(object):
     def __init__(self):
-        pylab.ion()
+        #pylab.ion()
         self.fig=None
         self.loopingCall=task.LoopingCall(self.getNeighbours)
+        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        #window.connect("delete_event", self.close_application)
+        window.set_border_width(10)
+        
+
+        hbox = gtk.HBox()
+        hbox.show()
+        
+        window.add(hbox)
+        image = gtk.Image()
+        hbox.pack_start(image)
+        image.show()
+        self.image=image
+        self.window=window
         
     def start(self,interface):
+        self.window.show()
         self.interface=interface
         if not self.loopingCall.running:
             self.loopingCall.start(5)
@@ -33,10 +48,12 @@ class OverlayViz(object):
     def stop(self):
         if self.loopingCall.running:
             self.loopingCall.stop()
-            if self.fig:
-                pylab.close(self.fig)
+            #if self.fig:
+            #    pylab.close(self.fig)
+            self.window.hide()
             
     def getNeighbours(self):
+        print 'getting neighboursssssssssssssssssssssss'
         self.interface.getNeighbours(self.makeStruct)
         
     def makeStruct(self,neighs):
@@ -78,13 +95,17 @@ class OverlayViz(object):
         self.drawPlot()
         
     def drawPlot(self):
+        print 'drawing plottttttttt'
         a=nx.to_agraph(self.g)
         self.g=nx.from_agraph(a)
-        if self.fig:
-            pylab.close(self.fig)
+        #if self.fig:
+         #   pylab.close(self.fig)
         self.fig=pylab.figure()
-        pylab.show()
+        #pylab.show()
         nx.draw_graphviz(self.g,prog='neato')
-        self.fig.canvas.draw()
-        pylab.draw()
+        plt.savefig("path.png")
+       
+        self.image.set_from_file("path.png")
+        
+      
         

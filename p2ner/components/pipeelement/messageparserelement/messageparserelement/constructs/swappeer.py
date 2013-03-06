@@ -47,6 +47,7 @@ class SwapPeerAdapter(Adapter):
         p.reportedBW=obj.bw
         p.swapRtt=obj.rtt
         p.partnerParticipateSwap=obj.swap
+        p.participateSwap=obj.swap
         if obj.LIP=='0.0.0.0':
             p.lip=None
             p.lport=None

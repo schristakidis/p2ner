@@ -43,7 +43,7 @@ class CentralServer(Overlay):
         self.overlay = self
         self.sanityCheck(["controlPipe", "overlay"])
         self.registerMessages()
-        self.maxPeers = stream.overlay['numNeigh']
+        self.maxPeers = stream.overlay['numNeigh']/2
         self.producer = producer
         self.stream = stream
         #self.producerNeighbours = []

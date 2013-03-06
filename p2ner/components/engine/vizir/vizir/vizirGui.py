@@ -333,7 +333,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 if self.treemodel.get_value(iterator, 3)!=OFF or self.treemodel.get_value(iterator,4)!='client':
                     iterator = self.treemodel.iter_next(iterator)
                 else:
-                    self.toggleStartStop(iterator,id)
+                    reactor.callLater(num*0.5,self.toggleStartStop,iterator,id)
                     num -= 1
                     iterator = self.treemodel.iter_next(iterator)
             else:
