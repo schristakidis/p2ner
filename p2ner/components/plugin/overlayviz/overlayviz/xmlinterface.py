@@ -37,7 +37,8 @@ class VizXMLInterface(Interface):
             p.getNeighbours(self.id,ip,port,self.gotNeighs)
             
     def gotNeighs(self,neighs,ip,port):
-        neighs = [loads(p) for p in neighs]
+        en=neighs[1]
+        neighs = [loads(p) for p in neighs[0]]
         if self.neighs[(ip,port)]['response']:
             print 'already got the neighs from that peer'
             print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
@@ -49,6 +50,7 @@ class VizXMLInterface(Interface):
                 p.plotRtt=1
         self.neighs[(ip,port)]['response']=True
         self.neighs[(ip,port)]['neighs']=neighs
+        self.neighs[(ip,port)]['energy']=en
         for p in self.neighs.values():
             if not p['response']:
                 return
@@ -56,9 +58,11 @@ class VizXMLInterface(Interface):
         
     def constructNeighs(self):
         self.returnNeighs={}
+        en=[]
         for k,v in self.neighs.items():
             self.returnNeighs[k]=[]
+            en.append(v['energy'])
             for p in v['neighs']:
                 self.returnNeighs[k].append(((p.getIP(),p.getPort()),p.plotRtt))
         
-        self.func(self.returnNeighs)
+        self.func(self.returnNeighs,energy=en)

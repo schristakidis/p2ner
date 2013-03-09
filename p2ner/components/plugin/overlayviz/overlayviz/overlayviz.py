@@ -53,12 +53,12 @@ class OverlayViz(object):
             self.window.hide()
             
     def getNeighbours(self):
-        print 'getting neighboursssssssssssssssssssssss'
         self.interface.getNeighbours(self.makeStruct)
         
-    def makeStruct(self,neighs):
+    def makeStruct(self,neighs,energy=None):
         count=0
         peer={}
+
         for k,v in neighs.items():
             if k not in peer.keys():
                 peer[k]=count
@@ -67,13 +67,17 @@ class OverlayViz(object):
                 if p[0] not in peer.keys():
                     peer[p[0]]=count
                     count +=1
-                    
+       
         self.final={}
         for k,v in neighs.items():
             self.final[peer[k]]=[]
             for p in v:
                 self.final[peer[k]].append((peer[p[0]],int(1000*p[1])))
         
+  
+        if energy:
+            print 'system energy=',sum(energy)/len(energy)
+            
         if self.final:        
             self.makeGraph()
         
@@ -95,7 +99,6 @@ class OverlayViz(object):
         self.drawPlot()
         
     def drawPlot(self):
-        print 'drawing plottttttttt'
         a=nx.to_agraph(self.g)
         self.g=nx.from_agraph(a)
         #if self.fig:

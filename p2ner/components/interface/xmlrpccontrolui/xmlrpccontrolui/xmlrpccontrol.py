@@ -286,4 +286,5 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         strm=self.root.getStream(id)
         neighs=strm['overlay'].getNeighbours()
         ret=[dumps(p) for p in neighs]
-        return ret
+        en=strm['overlay'].getEnergy()
+        return (ret,en)
