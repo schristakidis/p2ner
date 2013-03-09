@@ -45,7 +45,7 @@ class NetworkChecker(Namespace):
             self.log.warning('no local ip found')
             if not self.basic:
                 self.networkUnreichable()
-            
+ 
         self.log.info('local ip is %s',self.localIp)
         
         

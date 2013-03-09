@@ -69,12 +69,17 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         else:
             ip=peer.ip
             
+        delay=0
+        subnet=self.root.netChecker.externalIp.split('.')[-2]
+        psubnet=peer.ip.split('.')[-2]
+        if subnet!=psubnet:
+            delay=0.1
         #print 'send to:',ip,to,getattr(peer, to)
         if isinstance(res, (list, tuple)):
             for r in res:
-                self.sockwrite(r, ip, getattr(peer, to))
+                reactor.callLater(delay,self.sockwrite,r, ip, getattr(peer, to))
         else:
-            self.sockwrite(res, ip, getattr(peer, to))
+            reactor.callLater(delay,self.sockwrite,res, ip, getattr(peer, to))
         return res
     
     def sockwrite(self, data, host, port):
