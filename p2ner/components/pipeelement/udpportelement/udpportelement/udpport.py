@@ -70,10 +70,13 @@ class UDPPortElement(PipeElement, DatagramProtocol):
             ip=peer.ip
             
         delay=0
-        subnet=self.root.netChecker.externalIp.split('.')[-2]
-        psubnet=peer.ip.split('.')[-2]
-        if subnet!=psubnet:
-            delay=0.1
+        try:
+            subnet=self.root.netChecker.externalIp.split('.')[-2]
+            psubnet=peer.ip.split('.')[-2]
+            if subnet!=psubnet:
+                delay=0.1
+        except:
+            pass
         #print 'send to:',ip,to,getattr(peer, to)
         if isinstance(res, (list, tuple)):
             for r in res:
