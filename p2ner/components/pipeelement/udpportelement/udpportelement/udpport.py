@@ -80,9 +80,9 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         #print 'send to:',ip,to,getattr(peer, to)
         if isinstance(res, (list, tuple)):
             for r in res:
-                reactor.callLater(delay,self.sockwrite,r, ip, getattr(peer, to))
+               self.sockwrite(r, ip, getattr(peer, to))
         else:
-            reactor.callLater(delay,self.sockwrite,res, ip, getattr(peer, to))
+            self.sockwrite(res, ip, getattr(peer, to))
         return res
     
     def sockwrite(self, data, host, port):
