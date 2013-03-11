@@ -280,8 +280,8 @@ class DistributedClient(Overlay):
         if not lock:
             peer.participateSwap=False
             peer.partnerParticipateSwap=False
-        else:
-            peer.waitLock=False
+        
+        peer.waitLock=False
         self.checkLockFinished()
             
             

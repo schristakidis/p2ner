@@ -26,24 +26,16 @@ from remotefilechooser import RemoteFileChooser
 from p2ner.util.utilities import get_user_data_dir
 from plot import PlotGui
 from pkg_resources import resource_string
+from p2ner.abstract.ui import UI
 
-class statsGui(object):
-    def __init__(self,interface=None,remote=False):
-        self.interface=interface
-        self.remote=remote
+class statsGui(UI):
+    def initUI(self):
         self.selectedStats=[]
         self.combine=False
         self.file=None
         
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
-        """
-        try:
-            self.builder.add_from_file(os.path.join(path,'stats.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'stats.glade'))
-        """
+
         self.builder.add_from_string(resource_string(__name__, 'stats.glade'))
         self.builder.connect_signals(self)
         
