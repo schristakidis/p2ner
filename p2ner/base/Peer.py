@@ -106,7 +106,7 @@ class Peer(object):
             obj.participateSwap=False
             obj.ackRtt={}
             obj.lastRtt=[]
-            self.swapRtt=0
+            obj.swapRtt=0
         return obj
 
 
