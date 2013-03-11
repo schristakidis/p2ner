@@ -57,18 +57,12 @@ def counter(caller, _name):
     counter(self, "myCounter")
     
     """
-    try:
-        id=caller.stream.id
-        b=caller.scheduler
-    except:
-        id=-1
-        b=-1
     
     for s in caller.__stats__:
         try:
-            s.incrementKey(_name,id)
+            s.incrementKey(_name)
         except:
-            s.addKey(_name, 1,id,b)
+            s.addKey(_name, 1)
     
 def setValue(caller, _name, value):
     """set a stats key to a given value
@@ -251,16 +245,3 @@ def dumpStats(caller):
     for s in caller.__stats__:
         ret = s.dumpKeys()
     return ret
-
-def addKey(caller,stat,name,value):
-    print name
-
-    try:
-        id=caller.stream.id
-        b=caller.scheduler.buffer
-    except:
-        id=-1
-        b=-1
-    
-    stat.addKey(name,value,id,b)
-        
