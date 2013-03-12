@@ -28,7 +28,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.""" 
-__description__ = "P2ner file statistics plugin" 
+__description__ = "P2ner statistics plugin for BonFIRE Aggregator" 
 __long_description__ = """""" 
 __pkg_data__ = {} 
 __entry_point__ = "p2ner.components.stats" 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         long_description=__long_description__ if __long_description__ else __description__,
         install_requires = __requirements__, 
 
-        packages=[__component_name__.lower()],
+        packages=[__component_name__.lower(), __component_name__.lower()+".ZabbixSender"], 
         package_data = __pkg_data__,
 
         entry_points=""" 
