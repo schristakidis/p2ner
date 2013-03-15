@@ -23,6 +23,7 @@ from messages.swapmessages import *
 from time import time
 import networkx as nx
 from p2ner.base.Peer import Peer
+from p2ner.core.statsFunctions import counter,setValue
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -76,7 +77,8 @@ class DistributedClient(Overlay):
         self.numNeigh=self.stream.overlay['numNeigh']
         self.loopingCall = task.LoopingCall(self.startSwap)
         self.loopingCall.start(self.stream.overlay['swapFreq'])
-
+        self.statsLoopingCall=task.LoopingCall(self.collectStats)
+        self.statsLoopingCall.start(2)
         
     def getNeighbours(self):
         return self.neighbours[:]
@@ -157,6 +159,10 @@ class DistributedClient(Overlay):
             self.loopingCall.stop()
         except:
             pass
+        try:
+            self.statsLoopingCall.stop()
+        except:
+            pass
         for p in self.neighbours:
             try:
                 p.checkResponse.cancel()
@@ -196,6 +202,7 @@ class DistributedClient(Overlay):
         self.initiator=False
         
     def askReceived(self,peer):
+        counter('swapInitiators')
         self.passiveInitPeer=peer
         self.passiveInitPeer.checkResponse= reactor.callLater(3,self.checkStatus,ASK_SWAP,peer)
         
@@ -522,6 +529,7 @@ class DistributedClient(Overlay):
             RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
             self.log.debug('and rejected it')
         else:
+            counter('swapInitiators')
             self.log.debug('and accepted it')
             self.passiveInitiator=True
             self.initPeer=peer
@@ -590,6 +598,7 @@ class DistributedClient(Overlay):
             self.log.debug('and rejected it')
             print 'and rejected it'
         else:
+            counter('swapSatelites')
             self.satelite+=1
             AnswerLockMessage.send(self.stream.id,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
             self.log.debug('and accepted it')
@@ -745,3 +754,6 @@ class DistributedClient(Overlay):
             print neighs
             reactor.stop()
         
+    def collectStats(self):
+        setValue('energy',self.getEnergy())
+        setValue('neighbors',self.getNeighbours())

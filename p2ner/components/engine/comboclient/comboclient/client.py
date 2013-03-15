@@ -235,7 +235,7 @@ def startClient():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'bp:dv:P:h',['basic','port=','daemon','vizir=','vizirPort=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:dv:P:hs',['basic','port=','daemon','vizir=','vizirPort=','help','stats'])
     except getopt.GetoptError as err:
         usage(err=err)
         
@@ -244,6 +244,7 @@ def startClient():
     port=50000
     vizir=False
     vPort=9000
+    stat=None
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -257,6 +258,8 @@ def startClient():
             vIP=a
         elif opt in ('-P','--vizirPort'):
             vPort=int(a)
+        elif opt in ('-s','--stats'):
+            stat='ZabbixStats'
         elif opt in ('-h','--help'):
             usage()
     if interface=='XMLRPCControlUI':
@@ -268,9 +271,11 @@ def startClient():
     else:
         gui=('GtkGui',[],{})
         kwargs={}
-        
-    P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port)
-
+    
+    if not stat:    
+        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port)
+    else:
+        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port,stats=stat)
     reactor.run()   
     
 def startBasicNetClient():
@@ -283,7 +288,7 @@ def startDaemonClient():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'bp:v:P:h',['basic','port=','vizir=','vizirPort=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:v:P:hs',['basic','port=','vizir=','vizirPort=','help','stats'])
     except getopt.GetoptError as err:
         usage(err=err,daemon=True)
         
@@ -291,6 +296,7 @@ def startDaemonClient():
     port=50000
     vizir=False
     vPort=9000
+    stat=None
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -301,6 +307,8 @@ def startDaemonClient():
             vIP=a
         elif opt in ('-P','--vizirPort'):
             vPort=int(a)
+        elif opt in ('-s','--stats'):
+            stat='ZabbixStats'
         elif opt in ('-h','--help'):
             usage(daemon=True)
     
@@ -308,7 +316,10 @@ def startDaemonClient():
         kwargs={'vizir':True,'vizirIP':vIP,'vizirPort':vPort}
     else:
         kwargs={}
-    P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),basic=basic,port=port)
+    if not stat:
+        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),basic=basic,port=port)
+    else:
+        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),stats=stat,basic=basic,port=port)
     reactor.run()   
     
 def usage(err=None,daemon=False):
@@ -327,6 +338,7 @@ def usage(err=None,daemon=False):
         print ' -d, --daemon :run p2ner daemon with XMLRPC interface'
     print ' -v, --vizir [ip] :run daemon with XMLRPC and vizir interface and connect to ip'
     print ' -P, --vizirPort port :set the vizir controller port'
+    print '-s, --stats : enable Zabbix Statistics'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')

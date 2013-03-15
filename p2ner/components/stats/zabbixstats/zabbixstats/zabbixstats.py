@@ -20,7 +20,7 @@ from configobj import ConfigObj
 from ZabbixSender.ZabbixSender import ZabbixSender
 import time, os
 
-class FileStats(Stats):
+class ZabbixStats(Stats):
 
     def initStats(self, *args, **kwargs):
         config = ConfigObj('/etc/zabbix/zabbix_agentd.conf')
@@ -50,7 +50,7 @@ class FileStats(Stats):
             now = time.time()
             self.statkeys[key] = initValue
             k = "".join("p2ner.", key)
-           self.sender.AddData(host = self.host, key = k.encode('utf-8'), value = initValue, clock = now)
+            self.sender.AddData(host = self.host, key = k.encode('utf-8'), value = initValue, clock = now)
             return
         raise KeyError('Key already exists: %s' % str(key))
         

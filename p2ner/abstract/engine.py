@@ -19,7 +19,7 @@ from abc import abstractmethod
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
 from twisted.internet import reactor
-from p2ner.core.components import loadComponent
+from p2ner.core.components import loadComponent,getComponents
 from p2ner.core.pipeline import Pipeline
 import sys
 from random import uniform
@@ -79,6 +79,10 @@ class Engine(Namespace):
         for s in stats:
             self.__stats__.append(loadComponent("stats", s[0])(_parent=self,**s[1]))
         
+        if 'stats' in kwargs:
+            stats=kwargs['stats']
+            self.__stats__.append(loadComponent("stats",stats)(_parent=self))
+                    
         self.controlPipe=Pipeline(_parent=self)
         
         self.log.debug('trying to load pipeline element messageparser')
