@@ -49,7 +49,7 @@ class ZabbixStats(Stats):
         if key not in self.statkeys:
             now = time.time()
             self.statkeys[key] = initValue
-            k = "".join("p2ner.", key)
+            k = "".join(["p2ner.", key])
             self.sender.AddData(host = self.host, key = k.encode('utf-8'), value = initValue, clock = now)
             return
         raise KeyError('Key already exists: %s' % str(key))
@@ -61,7 +61,7 @@ class ZabbixStats(Stats):
             raise KeyError('Key does not exists')
         self.statkeys[key] = value
         now = time.time()
-        k = "".join("p2ner.", key)
+        k = "".join(["p2ner.", key])
         self.sender.AddData(host = self.host, key = k.encode('utf-8'), value = value, clock = now)
     
     def incrementKey(self, key, by=1):
@@ -69,7 +69,7 @@ class ZabbixStats(Stats):
             raise KeyError('Key does not exists')
         self.statkeys[key] += by
         now = time.time()
-        k = "".join("p2ner.", key)
+        k = "".join(["p2ner.", key])
         self.sender.AddData(host = self.host, key = k.encode('utf-8'), value = self.statkeys[key], clock = now)
 
         
