@@ -212,7 +212,7 @@ class DistributedClient(Overlay):
         if peer!=self.passiveInitPeer:
             #raise ValueError('problem in receive reject swap. Rejecting peer is not the passive initiator')
             print 'problem in receive reject swap. Rejecting peer is not the passive initiator'
-            reactor.stop()
+            #reactor.stop()
         self.log.debug('swap was rejected from %s',peer)
         peer.checkResponse.cancel()
         self.initiator=False
@@ -222,7 +222,7 @@ class DistributedClient(Overlay):
         if peer!=self.passiveInitPeer:
             #raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
             print 'problem in receive accept swap. Accepting peer is not the passive initiator'
-            reactor.stop()
+            #reactor.stop()
         peer.checkResponse.cancel()
         self.log.debug('swap accepted from %s',peer)
         print 'swap accepted from ',peer
@@ -282,7 +282,7 @@ class DistributedClient(Overlay):
         if not peer.participateSwap:
             #raise ValueError('got an unexpected lock response from %s',peer)
             print 'got an unexpected lock response from ',peer
-            reactor.stop()
+            #reactor.stop()
         self.log.debug('the lock answer from %s was %s',peer,lock)
         if not lock:
             peer.participateSwap=False
@@ -374,7 +374,8 @@ class DistributedClient(Overlay):
                 rtt=sum(p.lastRtt)/len(p.lastRtt)
             else:
                 #raise ValueError("can't perform swap with no rtt for %s",p)
-                reactor.stop()
+                #reactor.stop()
+                pass
             temp[p]=count
             G.add_edge(-3,count,capacity=1,weight=int(1000*rtt))
             G.add_edge(-4,count,capacity=1,weigth=int(1000*p.swapRtt))
@@ -416,7 +417,7 @@ class DistributedClient(Overlay):
             print newActiveTable
             print newPassiveTable
             print availablePeers
-            reactor.stop()
+            #reactor.stop()
             
         self.log.warning("current neughs %s",self.getNeighbours())
         self.log.warning('partner table %s',self.partnerTable)
@@ -456,7 +457,7 @@ class DistributedClient(Overlay):
         if len(self.newTable)!=len(set(self.newTable)):
             print 'duplicates in update satelites'
             print self.newTable
-            reactor.stop()
+            #reactor.stop()
             
         for p in available:
             if p in self.getNeighbours():
@@ -551,7 +552,7 @@ class DistributedClient(Overlay):
         if peer!=self.initPeer:
             #raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
             print 'problem in receive accept swap. Accepting peer is not the passive initiator'
-            reactor.stop()
+            #reactor.stop()
         
         peer.checkResponse.cancel()
         self.partnerTable=peerlist
@@ -620,7 +621,8 @@ class DistributedClient(Overlay):
             if peer not in self.getNeighbours():
                 #raise ValueError('got continue satelite from %s while he is not my neighbour',peer)
                 print 'got continue satelite from %s while he is not my neighbour'
-                reactor.stop()
+                #reactor.stop()
+                return
             else:
                 self.satelite -=1
                 partner.checkResponse.cancel()
@@ -629,7 +631,8 @@ class DistributedClient(Overlay):
             if partner not in self.getNeighbours():
                 #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
                 print 'got dummy substitute satelite from s while s is not my neighbour'
-                reactor.stop()
+                #reactor.stop()
+                return
             self.neighbours.remove(partner)
             if peer in self.getNeighbours():
                 self.satelite -=1
@@ -637,13 +640,15 @@ class DistributedClient(Overlay):
             else:
                 self.log.warning('problem in dummy recUpadate table %s is not already a neighbour %s',peer,partner)
                 print 'problem in dummy recUpadate table s not is already a neighbour'
-                reactor.stop()
+                #reactor.stop()
+                return
         else:
             self.log.debug('with action substitute with %s',partner)
             if partner not in self.getNeighbours():
                 #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
                 print 'got substitute satelite from s while s is not my neighbour'
-                reactor.stop()
+                #reactor.stop()
+                return
             self.neighbours.remove(partner)
             if peer not in self.getNeighbours():
                 self.neighbours.append(peer)
@@ -652,20 +657,22 @@ class DistributedClient(Overlay):
             else:
                 self.log.warning('problem in recUpadate table %s is already a neighbour %s',peer,partner)
                 print 'problem in recUpadate table s is already a neighbour'
-                reactor.stop()
+                #reactor.stop()
+                return
         self.log.info('satelite %d',self.satelite)
         self.log.info('table %s',self.getNeighbours())
         if self.satelite<0:
             self.log.error('negative value of satelite')
             print 'negative value of satelite'
-            reactor.stop()
+            self.satelite=0
+            #reactor.stop()
         if self.initiator or self.passiveInitiator or self.duringSwap:
             self.log.error('got update satelite while in swap')
             
             print 'got update satelite while in swap'
             print self.initiator,self.passiveInitiator, self.duringSwap
             print peer,partner,action
-            reactor.stop()
+            #reactor.stop()
         if self.shouldStop:
             self._stop()
             
@@ -752,7 +759,7 @@ class DistributedClient(Overlay):
         if len(neighs)!=len(set(neighs)):
             print 'DUPLICATESSSSSSSSSSSSSSSSSSSSSS'
             print neighs
-            reactor.stop()
+            #reactor.stop()
         
     def collectStats(self):
         setValue(self,'energy',1000*self.getEnergy())

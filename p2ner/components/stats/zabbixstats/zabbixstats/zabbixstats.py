@@ -40,7 +40,7 @@ class ZabbixStats(Stats):
         
     def sendStats(self):
         ret = self.sender.Send()
-        print ret
+        #print ret
         self.sender.ClearData()
 
     def addKey(self, key, initValue=0):
