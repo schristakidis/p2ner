@@ -756,4 +756,4 @@ class DistributedClient(Overlay):
         
     def collectStats(self):
         setValue(self,'energy',self.getEnergy())
-        setValue(self,'neighbors',self.getNeighbours())
+        setValue(self,'neighbors',len(self.getNeighbours()))
