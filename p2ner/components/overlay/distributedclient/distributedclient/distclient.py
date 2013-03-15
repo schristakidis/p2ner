@@ -755,5 +755,5 @@ class DistributedClient(Overlay):
             reactor.stop()
         
     def collectStats(self):
-        setValue(self,'energy',self.getEnergy())
+        setValue(self,'energy',1000*self.getEnergy())
         setValue(self,'neighbors',len(self.getNeighbours()))
