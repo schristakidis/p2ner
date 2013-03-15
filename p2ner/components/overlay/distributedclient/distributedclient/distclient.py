@@ -202,7 +202,7 @@ class DistributedClient(Overlay):
         self.initiator=False
         
     def askReceived(self,peer):
-        counter('swapInitiators')
+        counter(self,'swapInitiators')
         self.passiveInitPeer=peer
         self.passiveInitPeer.checkResponse= reactor.callLater(3,self.checkStatus,ASK_SWAP,peer)
         
@@ -529,7 +529,7 @@ class DistributedClient(Overlay):
             RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
             self.log.debug('and rejected it')
         else:
-            counter('swapInitiators')
+            counter(self,'swapInitiators')
             self.log.debug('and accepted it')
             self.passiveInitiator=True
             self.initPeer=peer
@@ -598,7 +598,7 @@ class DistributedClient(Overlay):
             self.log.debug('and rejected it')
             print 'and rejected it'
         else:
-            counter('swapSatelites')
+            counter(self,'swapSatelites')
             self.satelite+=1
             AnswerLockMessage.send(self.stream.id,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
             self.log.debug('and accepted it')
@@ -755,5 +755,5 @@ class DistributedClient(Overlay):
             reactor.stop()
         
     def collectStats(self):
-        setValue('energy',self.getEnergy())
-        setValue('neighbors',self.getNeighbours())
+        setValue(self,'energy',self.getEnergy())
+        setValue(self,'neighbors',self.getNeighbours())
