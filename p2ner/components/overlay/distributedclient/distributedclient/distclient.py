@@ -186,6 +186,7 @@ class DistributedClient(Overlay):
     ### ASK SWAP
     def startSwap(self):
         self.log.debug('starting swap')
+        setValue(self,'log','start swapping')
         if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop:
             self.log.debug('no available conditions for swap')
             return

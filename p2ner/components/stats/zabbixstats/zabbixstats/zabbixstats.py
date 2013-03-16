@@ -19,6 +19,7 @@ from p2ner.util.utilities import get_user_data_dir
 from configobj import ConfigObj
 from ZabbixSender.ZabbixSender import ZabbixSender
 import time, os
+from twisted.internet.threads import deferToThread
 
 class ZabbixStats(Stats):
 
@@ -39,7 +40,7 @@ class ZabbixStats(Stats):
         self.lpb = lpb
         
     def sendStats(self):
-        ret = self.sender.Send()
+        ret = deferToThread(self.sender.Send)
         #print ret
         self.sender.ClearData()
 
