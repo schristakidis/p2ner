@@ -24,7 +24,7 @@ from time import time
 
 class AckElement(PipeElement):
     
-    def initElement(self, retries=15, timeout=0.5, dupeTimeout=10, **kargs):
+    def initElement(self, retries=5, timeout=0.5, dupeTimeout=10, **kargs):
         self.seq = 0
         self.timeout = timeout
         self.dupeTimeout = dupeTimeout
@@ -107,7 +107,7 @@ class AckElement(PipeElement):
             tosend = self.cache[seq]
             tosend['retries'] -= 1
             if tosend['retries']:
-                #peer.ackRtt[self.seq]=time()
+                tosend['peer'].ackRtt[seq]=time()
                 d = self.forwardnext("send", tosend['msg'], tosend['data'], tosend['peer'])
                 reactor.callLater(0, d.callback, tosend['res'])
                 reactor.callLater(self.timeout, self.checkAck, seq)
