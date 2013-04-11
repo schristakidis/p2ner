@@ -129,7 +129,7 @@ class Peer(object):
         return ret
 
     def __repr__(self):
-        ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort),str(self.lastRtt),str(self.swapRtt) ])])
+        ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort)])])#,str(self.lastRtt),str(self.swapRtt) ])])
         if self.lip:
             ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch) ])])
         return ret

@@ -259,6 +259,11 @@ class DistributedClient(Overlay):
         return
         
     def sendLocks(self):
+        if self.initiator:
+            pnode=self.passiveInitPeer
+        else:
+            pnode=self.initPeer
+            
         self.log.debug('start sending locks')
         self.gotPartnerUpdatedTable=False
         availableNeighs=[p for p in self.partnerTable if p not in self.getNeighbours()]
@@ -271,7 +276,7 @@ class DistributedClient(Overlay):
             p.participateSwap=True
             p.partnerParticipateSwap=True
             p.waitLock=True
-            AskLockMessage.send(self.stream.id,p,self.controlPipe,err_func=self.lockFailed,suc_func=self.lockSent)
+            AskLockMessage.send(self.stream.id,[pnode],p,self.controlPipe,err_func=self.lockFailed,suc_func=self.lockSent)
         if not availableNeighs:
             self.log.debug('there are no locks to send')
             self.checkLockFinished()
@@ -606,7 +611,7 @@ class DistributedClient(Overlay):
         
     ###SATELITES ########################################
     
-    def recAskLock(self,peer):
+    def recAskLock(self,peer,partner):
         self.log.debug('received ask lock from %s',peer)
         print 'received ans lock from ',peer
         if self.initiator or self.passiveInitiator or self.shouldStop:
@@ -614,6 +619,7 @@ class DistributedClient(Overlay):
             self.log.debug('and rejected it')
             print 'and rejected it'
         else:
+            peer.lockPartner=partner
             counter(self,'swapSatelites')
             self.satelite+=1
             AnswerLockMessage.send(self.stream.id,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
@@ -641,8 +647,16 @@ class DistributedClient(Overlay):
                 #reactor.stop()
                 #return
             else:
-                self.satelite -=1
-                partner.checkResponse.cancel()
+                if partner.lockPartner==peer:
+                    try:
+                        partner.checkResponse.cancel()
+                        self.satelite -=1
+                    except:
+                        self.log.error('in except: got continue satatelite from wrong peer %s %s',peer,partner)
+                        setValue(self,'log','in except: got continue satatelite from wrong peer')
+                else:
+                    self.log.error('got continue satatelite from wrong pair of peers %s %s',peer,partner)
+                    setValue(self,'log','got continue satatelite from wrong pair of peers')
         elif action==DUMMY_SUBSTITUTE:
             self.log.debug('with action dummy substitute with %s',partner)
             if partner not in self.getNeighbours():
@@ -654,8 +668,16 @@ class DistributedClient(Overlay):
             else:
                 self.neighbours.remove(partner)
             if peer in self.getNeighbours():
-                self.satelite -=1
-                peer.checkResponse.cancel()
+                if peer.lockPartner==partner:
+                    try:
+                        peer.checkResponse.cancel()
+                        self.satelite -=1
+                    except:
+                         self.log.error('in except: got dummy substitue from wrong pair of peers %s %s',peer,partner)
+                         setValue(self,'log','in except: got dummy substitue from wrong pair of peers ')
+                else:
+                    self.log.error('got dummy substitue from wrong pair of peers %s %s',peer,partner)
+                    setValue(self,'log','got dummy substitue from wrong pair of peers ')
             else:
                 self.log.warning('problem in dummy recUpadate table %s is not already a neighbour %s',peer,partner)
                 print 'problem in dummy recUpadate table s not is already a neighbour'
@@ -673,9 +695,17 @@ class DistributedClient(Overlay):
             else:
                 self.neighbours.remove(partner)
             if peer not in self.getNeighbours():
-                self.neighbours.append(peer)
-                self.satelite -=1
-                peer.checkResponse.cancel()
+                if peer.lockPartner==partner:
+                    self.neighbours.append(peer)
+                    try:
+                        peer.checkResponse.cancel()
+                        self.satelite -=1
+                    except:
+                        self.log.error('in except: got substitute from wrong pair of peers %s %s',peer,partner)
+                        setValue(self,'log','in exept: got  substitute from wrong pair of peers')
+                else:
+                    self.log.error('got substitute from wrong pair of peers %s %s',peer,partner)
+                    setValue(self,'log','got  substitute from wrong pair of peers')
             else:
                 self.log.warning('problem in recUpadate table %s is already a neighbour %s',peer,partner)
                 print 'problem in recUpadate table s is already a neighbour'
@@ -717,6 +747,7 @@ class DistributedClient(Overlay):
             ###should clean satelites
         elif status==LOCK_SENT:
             peer.participateSwap=False
+            peer.partnerParticipateSwap=False
             self.checkLockFinished()
             self.log.warning('never got an answer for ask lock from %s',peer)
         elif status==WAIT_SWAP:

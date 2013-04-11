@@ -77,12 +77,23 @@ class InitSwapTableMessage(AcceptSwapMessage):
     def action(self,message,peer):
         self['overlay'].recInitSwapTable(peer,message.peer)
         
-class AskLockMessage(AskSwapMessage):
+class AskLockMessage(ControlMessage):
+    type='peerlistmessage'
     code=MSG.ASK_LOCK
+    ack=True
+    
+    def trigger(self,message):
+        if self.stream.id!=message.streamid:
+            return False
+        return True
     
     def action(self,message,peer):
-        self['overlay'].recAskLock(peer)
-        
+        self['overlay'].recAskLock(peer,message.peer[0])
+       
+    @classmethod
+    def send(cls, sid, peerlist, peer, out,suc_func=None,err_func=None):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func) 
+    
 class AnswerLockMessage(ControlMessage):
     type='lockmessage'
     code=MSG.ANS_LOCK
