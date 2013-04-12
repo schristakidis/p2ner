@@ -732,31 +732,36 @@ class DistributedClient(Overlay):
             
     def checkStatus(self,status,peer=None):
         setValue(self,'log','in checkstatus')
-        setValue(self,'log',str(status))
         if status==ASK_SWAP:
             self.initiator=False
             self.log.warning('never got an answer for ask swap from %s',peer)
+            setValue(self,'log','never got an answer for ask swap')
         elif status==ACCEPT_SWAP:
             self.duringSwap=False
             self.passiveInitiator=False
             self.log.warning('never got an answer for accept swap from %s',peer)
+            setValue(self,'log','never got an answer for accept swap')
         elif status==SEND_INIT_TABLE:
             self.log.warning('never got an answer for send init table from %s',peer)
             self.initiator=False
             self.duringSwap=False
+            setValue(self,'log','never got an answer for send init table ')
             ###should clean satelites
         elif status==LOCK_SENT:
             peer.participateSwap=False
             peer.partnerParticipateSwap=False
             self.checkLockFinished()
             self.log.warning('never got an answer for ask lock from %s',peer)
+            setValue(self,'log','never got an answer for ask lock')
         elif status==WAIT_SWAP:
             self.satelite -=1
             self.log.warning('never got an answer as a satelite from %s',peer)
+            setValue(self,'log','never got an answer as a satelite')
         elif status==SEND_UPDATE:
             self.duringSwap=False
             self.passiveInitiator=False
             self.log.warning('never got an answer for send updated table from %s',peer)
+            setValue(self,'log','never got an answer for send updated table')
             ###should free satelites
         
     def getEnergy(self):
