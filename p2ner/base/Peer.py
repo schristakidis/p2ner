@@ -134,6 +134,14 @@ class Peer(object):
             ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch) ])])
         return ret
     
+    def __getstate__(self):
+        pickledict=self.__dict__.copy()
+        try:
+            pickledict.pop('checkResponse')
+        except:
+            pass
+        return pickledict
+        
     def getIP(self):
         return self.ip
     
