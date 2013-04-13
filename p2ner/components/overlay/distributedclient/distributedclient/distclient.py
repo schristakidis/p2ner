@@ -80,6 +80,11 @@ class DistributedClient(Overlay):
         self.statsLoopingCall=task.LoopingCall(self.collectStats)
         self.statsLoopingCall.start(2)
         
+        self.tempSatelites=0
+        self.tempSwaps=0
+        self.tempLastSatelite=0
+        self.tempLastSwap=0
+        
     def getNeighbours(self):
         return self.neighbours[:]
     
@@ -143,6 +148,7 @@ class DistributedClient(Overlay):
     
     def stop(self):
         self.shouldStop=True
+        self.log.warning('should stop')
         if not self.stopDefer:
             self.stopDefer=defer.Deferred()
         reactor.callLater(0,self._stop)
@@ -232,6 +238,9 @@ class DistributedClient(Overlay):
         peer.checkResponse.cancel()
         self.log.debug('swap accepted from %s',peer)
         print 'swap accepted from ',peer
+        
+        self.tempSwaps +=1
+        self.tempLastSwap=time()
         self.duringSwap=True
         self.gotPartnerUpdatedTable=False
         self.partnerTable=peerlist
@@ -550,6 +559,10 @@ class DistributedClient(Overlay):
         else:
             counter(self,'swapInitiators')
             self.log.debug('and accepted it')
+            
+            self.tempSwaps+=1
+            self.tempLastSwap=time()
+            
             self.passiveInitiator=True
             self.initPeer=peer
             self.duringSwap=True
@@ -622,6 +635,8 @@ class DistributedClient(Overlay):
             peer.lockPartner=partner
             counter(self,'swapSatelites')
             self.satelite+=1
+            self.tempSatelites+=1
+            self.tempLastSatelite=time()
             AnswerLockMessage.send(self.stream.id,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
             self.log.debug('and accepted it')
             print 'and accepted it'
@@ -687,7 +702,7 @@ class DistributedClient(Overlay):
         else:
             self.log.debug('with action substitute with %s',partner)
             if partner not in self.getNeighbours():
-                #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
+                self.log.error('got substitute satelite from %s while %s is not my neighbour',peer,partner)
                 print 'got substitute satelite from s while s is not my neighbour'
                 setValue(self,'log','got substitute satelite from s while s is not my neighbour')
                 #reactor.stop()
@@ -820,6 +835,7 @@ class DistributedClient(Overlay):
     def checkDuplicates(self):
         neighs=self.getNeighbours()
         if len(neighs)!=len(set(neighs)):
+            setValue(self,'log','duplicate in table after swap')
             print 'DUPLICATESSSSSSSSSSSSSSSSSSSSSS'
             print neighs
             #reactor.stop()
@@ -827,3 +843,9 @@ class DistributedClient(Overlay):
     def collectStats(self):
         setValue(self,'energy',1000*self.getEnergy())
         setValue(self,'neighbors',len(self.getNeighbours()))
+        
+    def getVizirStats(self):
+        ret=(self.tempSwaps,time()-self.tempLastSwap,self.tempSatelites,time()-self.tempLastSatelite)
+        self.tempSwaps=0
+        self.tempSatelites=0
+        return ret

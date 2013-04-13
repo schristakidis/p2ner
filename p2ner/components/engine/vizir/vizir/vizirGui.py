@@ -54,7 +54,6 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')() 
-        self.overlayShowing=False
 
         self.constructGui()
             
@@ -478,9 +477,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 self.toggleStartStop(prod[0])
                 
     def showOverlay(self,widget):
-        if self.overlayShowing:
+        if self.vizPlot.showing:
             self.vizPlot.stop()
-            self.overlayShowing = not self.overlayShowing
             return
         
         id=self.getProducingId()
@@ -494,7 +492,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             id=[i for i in id if i[1]==sid][0][1]
         self.vizInterface.setId(id)
         self.vizPlot.start(self.vizInterface)
-        self.overlayShowing = not self.overlayShowing
+        
             
         
         

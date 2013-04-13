@@ -287,4 +287,5 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         neighs=strm['overlay'].getNeighbours()
         ret=[dumps(p) for p in neighs]
         en=strm['overlay'].getEnergy()
-        return (ret,en)
+        stats=strm['overlay'].getVizirStats()
+        return (ret,en,stats)
