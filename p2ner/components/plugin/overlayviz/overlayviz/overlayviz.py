@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import pylab
 from twisted.internet import task
 import gtk
-import os.path,sys
+from pkg_resources import resource_string
 
 class OverlayViz(object):
     def __init__(self):
@@ -28,15 +28,8 @@ class OverlayViz(object):
         self.fig=None
         self.loopingCall=task.LoopingCall(self.getNeighbours)
 
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
         self.builder = gtk.Builder()
-        
-        try:
-            self.builder.add_from_file(os.path.join(path,'graphGui.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'graphGui.glade'))
-
+        self.builder.add_from_string(resource_string(__name__, 'graphGui.glade'))
         self.builder.connect_signals(self)
              
         self.image=self.builder.get_object('image')

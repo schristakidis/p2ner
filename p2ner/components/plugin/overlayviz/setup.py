@@ -34,7 +34,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    limitations under the License."""
 __description__ = "remote producer controller component"
 __long_description__ = """"""
-__pkg_data__ = {} #__component_name__.lower(): ["template/*", "data/*"]}
+__pkg_data__ = {'': ["*.glade"]}
 
 setup(
     name=__component_name__,
