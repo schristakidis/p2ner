@@ -49,9 +49,9 @@ class Client(Engine):
         
         sip=None
         sport=None
-        if 'vizir' in kwargs.keys() and kwargs['vizir']:
-            sip=kwargs['vizirIP']
-            sport=kwargs['vizirPort']
+        if 'vizir' in kwargs['interface'][2].keys() and kwargs['interface'][2]['vizir']:
+            sip=kwargs['interface'][2]['vizirIP']
+            sport=kwargs['interface'][2]['vizirPort']
         self.netChecker=loadComponent('plugin','NetworkChecker')(sip,sport,_parent=self,)
         reactor.callLater(0.2,self.interface.checkNetwork)
      
