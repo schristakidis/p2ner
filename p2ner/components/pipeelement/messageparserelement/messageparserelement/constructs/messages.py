@@ -45,7 +45,7 @@ StreamMessage = Struct("streammessage",
 
 # Container( stream = [<Stream obj>....])
 MStreamMessage = Struct("mstreammessage", 
-        OptionalGreedyRepeater(StreamAdapter(StreamStruct)), 
+        OptionalGreedyRange(StreamAdapter(StreamStruct)), 
         )
 # Container( streamid = <UInt16>, buffer = <Buffer obj>)
 BufferMessage = Struct("buffermessage", 
@@ -57,13 +57,13 @@ BufferMessage = Struct("buffermessage",
 # Container( streamid = <UInt16>, peer = [Peer obj])
 PeerListMessage = Struct("peerlistmessage", 
         UBInt16("streamid"), 
-        OptionalGreedyRepeater(PeerAdapter(PeerStruct)), 
+        OptionalGreedyRange(PeerAdapter(PeerStruct)), 
         )
 
 # Container( streamid = <UInt16>, peerbuffer = [Container(peer = <Peer obj>, buffer = <Buffer obj>)])
 BufferListMessage = Struct("bufferlistmessage", 
         UBInt16("streamid"), 
-        OptionalGreedyRepeater(PeerBufferStruct), 
+        OptionalGreedyRange(PeerBufferStruct), 
         )
 
 RetransmitMessage=Struct("retransmitmessage",
@@ -105,7 +105,7 @@ LockMessage=Struct("lockmessage",
 
 SwapPeerListMessage = Struct("swappeerlistmessage", 
         UBInt16("streamid"), 
-        OptionalGreedyRepeater(SwapPeerAdapter(SwapPeerStruct)), 
+        OptionalGreedyRange(SwapPeerAdapter(SwapPeerStruct)), 
         )
 
 SateliteMessage=Struct('satelitemessage',
