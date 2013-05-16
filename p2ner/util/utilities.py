@@ -182,7 +182,10 @@ def getGateway():
             
 
 
-def getIP():
+def getIP(sip=None,sport=None):
+    if not sip:
+        sip='google.com'
+        sport=80
     ip=[]
     if 'linux' in sys.platform:
         """
@@ -195,7 +198,7 @@ def getIP():
         """
         from socket import socket, SOCK_DGRAM, AF_INET
         s = socket(AF_INET, SOCK_DGRAM)    
-        s.connect(('google.com', 0))
+        s.connect((sip,sport))
         ip=s.getsockname()
         s.close()
         if ip:

@@ -24,7 +24,7 @@ from twisted.internet.threads import deferToThread
 
 class NetworkChecker(Namespace):
     @initNS
-    def __init__(self):
+    def __init__(self,ip=None,port=None):
         self.secondRun=False
         self.nat=False
         self.hpunching=False
@@ -34,12 +34,12 @@ class NetworkChecker(Namespace):
         self.log.debug('initting network checker')
         self.measureBW=True
         self.difnat=False
-        self.getIP()
+        self.getIP(ip,port)
         
         
-    def getIP(self):
+    def getIP(self,ip,port):
         try:
-            self.localIp=util.getIP()[0]
+            self.localIp=util.getIP(ip,port)[0]
         except:
             self.localIp=None
             self.log.warning('no local ip found')

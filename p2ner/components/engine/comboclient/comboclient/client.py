@@ -46,8 +46,13 @@ class Client(Engine):
             self.useHolePunching=True
             self.rProducerInf=loadComponent('plugin','RemoteProducerController')(_parent=self)
         self.chatClient=loadComponent('plugin','ChatClient')(_parent=self)
-            
-        self.netChecker=loadComponent('plugin','NetworkChecker')(_parent=self)
+        
+        sip=None
+        sport=None
+        if 'vizir' in kwargs.keys() and kwargs['vizir']:
+            sip=kwargs['vizirIP']
+            sport=kwargs['vizirPort']
+        self.netChecker=loadComponent('plugin','NetworkChecker')(sip,sport,_parent=self,)
         reactor.callLater(0.2,self.interface.checkNetwork)
      
         
