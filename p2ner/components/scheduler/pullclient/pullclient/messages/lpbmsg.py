@@ -32,6 +32,7 @@ class LPBMessage(ControlMessage):
         #while self.buffer.lpb < message.message:
         #    self.scheduler.shift(norequests=True)
         self.buffer.lpb=message.message
+        self.buffer.flpb=message.message
         if not self.loopingCall.running:
             #self.scheduler.start()
             self.streamComponent.start()

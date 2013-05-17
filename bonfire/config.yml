@@ -15,9 +15,15 @@ experiment:
                  type: 2
                  value_type: 0
                  percentile: True
+
+               - key: p2ner.scheduler
+                 description: 'peer scheduler'
+                 type: 2
+                 value_type: 0
+                 percentile: True
                 
                - key: p2ner.swapInitiators
-                 description: 'number of inititing swap'
+                 description: 'number of initiating swap'
                  type: 2
                  value_type: 3
                  percentile: True
@@ -46,7 +52,7 @@ experiment:
 
     clients:
         - site: fr-inria
-          number: 2
+          number: 10
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
@@ -56,12 +62,12 @@ experiment:
           net: "BonFIRE WAN"
 
         - site: de-hlrs
-          number: 0
+          number: 10
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
         - site: uk-epcc
-          number: 0
+          number: 10
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
