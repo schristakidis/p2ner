@@ -29,6 +29,17 @@ def ssh_func(cmd,serv)
 	end
 end  
 
+def ssh_hp(cmd,serv,vizirIP)
+	pp cmd
+	serv.ssh do |ssh|
+		puts ssh.exec!("killall /usr/bin/python")
+		puts ssh.exec!("svn cleanup p2ner")
+		puts ssh.exec!("svn switch --relocate svn://nam.ece.upatras.gr/p2ner/trunk/p2ner svn://#{vizirIP}:443/p2ner/trunk/p2ner --username sakis --password sakis4440 --non-interactive p2ner")
+		puts ssh.exec!("svn up  --username sakis --password sakis4440 --non-interactive p2ner")
+		puts ssh.exec!(cmd)
+	end
+end  
+
 begin
 
   experiment = session.root.experiments.find{|e|
@@ -37,6 +48,12 @@ begin
   
   fail 'experiment not running' if  experiment.nil?
   vizir = experiment.computes[1]
+  vizir.ssh do |ssh|
+    puts ssh.exec!("iptables -t nat -F")
+    puts ssh.exec!("iptables -t nat -A PREROUTING -p tcp -m tcp --dport 443 -j DNAT --to-destination 150.140.186.115:443")
+    puts ssh.exec!("iptables -t nat -A POSTROUTING -j MASQUERADE")
+    puts ssh.exec!("echo 1 > /proc/sys/net/ipv4/ip_forward")
+  end
   vizirIP=vizir['context']['wan_ip']
   vizirGui='150.140.186.118'
   len=experiment.computes.length
@@ -60,7 +77,12 @@ begin
   a.each{|vm| 
 	client=experiment.computes[vm]
 	pp client['name']
-	t1=Thread.new{ssh_func(cmd,client)}
+	if client['name'].include? "uk-hplabs"
+	    puts "HP"
+	    t1 = Thread.new{ssh_hp(cmd,client,vizirIP)}
+	else
+	    t1=Thread.new{ssh_func(cmd,client)}
+	end
 	}
 	
 	pp 'finishhhhhhhhhh'
