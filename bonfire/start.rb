@@ -62,7 +62,7 @@ begin
   monitor_ip = monitor['nic'][0]['ip']
   session.logger.info "AGGREGATOR IP=#{monitor_ip}"
 
-  # Create producer:
+  # Create vizir site:
   s = conf['experiment']['vizir']['site']  
   vizir_site = session.root.locations[s.to_sym]
   fail "Can't select the #{s} location for vizir" if vizir_site.nil?
