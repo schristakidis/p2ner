@@ -15,7 +15,6 @@
 
 
 from bitarray import bitarray
-from p2ner.core.statsFunctions import counter,setValue
 
 class Buffer(object):
 
@@ -25,8 +24,6 @@ class Buffer(object):
         self.lpb = lpb
         self.flpb = 0
         self.buffer = buffer
-        self.countHit=0
-        self.countMiss=0
         if not buffer:
             if buffersize:
                 self.buffer = bitarray('0'*buffersize)
@@ -61,10 +58,6 @@ class Buffer(object):
         if self.lpb - self.flpb > self.buffersize:
             if not playBlock:
                 self.log.debug("missed block %d" %(self.lpb-1-self.buffersize))
-                self.countMiss +=1
-            else:
-                self.countHit +=1
-            setValue(self,'scheduler',self.countHit/float(self.countHit+self.countMiss))
             return ret
         else :
             return -1

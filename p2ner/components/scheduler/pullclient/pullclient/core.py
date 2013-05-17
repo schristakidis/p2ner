@@ -25,7 +25,7 @@ from messages.buffermessage import BufferMessage
 from messages.lpbmsg import LPBMessage
 from messages.retransmitmessage import RetransmitMessage
 from block import Block
-from p2ner.core.statsFunctions import counter, setLPB
+from p2ner.core.statsFunctions import counter, setLPB,setValue
 
 EXPIRE_TIME = 0.5
 
@@ -47,7 +47,9 @@ class PullClient(Scheduler):
         self.reqInterval=self.stream.scheduler['reqInt']
         self.frequency = 1.0/self.stream.scheduler['blocksec']
         self.buffer = Buffer(buffersize=self.stream.scheduler['bufsize'],log=self.log)
-    
+        self.countHit=0
+        self.countMiss=0
+        
     def errback(self, failure): return failure
 
     def produceBlock(self):
@@ -169,7 +171,15 @@ class PullClient(Scheduler):
         n = self.overlay.getNeighbours()
         outID = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
-
+        
+        if self.buffer.lpb - self.buffer.flpb > self.buffer.buffersize:
+            if outID<0:
+                self.countMiss +=1
+            else:
+                self.countHit +=1
+            setValue(self,'scheduler',self.countHit/float(self.countHit+self.countMiss))
+      
+        
         if not norequests:
             #send buffers
             if self.buffer.lpb % self.reqInterval == 0:
