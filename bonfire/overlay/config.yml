@@ -52,7 +52,7 @@ experiment:
 
     clients:
         - site: fr-inria
-          number: 10
+          number: 1
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
@@ -62,19 +62,19 @@ experiment:
           net: "BonFIRE WAN"
 
         - site: de-hlrs
-          number: 10
+          number: 0
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
         - site: uk-epcc
-          number: 10
+          number: 0
           img: p2pcloudsV3
           net: "BonFIRE WAN"
 
         - site: uk-hplabs
-          number: 0
+          number: 1
           img: p2pcloudsV1
-          net: "Internet@HP"
+          net: "BonFIRE WAN"
 
         - site: federica
           number: 0
