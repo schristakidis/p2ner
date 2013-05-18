@@ -49,6 +49,8 @@ class Logger(object):
         if not filename:
             filename = self.dir+"log"
             
+        self.logFilename=filename
+        
         if not level or level not in levels:
             level = "error"
 
@@ -108,8 +110,10 @@ class Logger(object):
 
         log.addHandler(handler)
 
+    
 
-
+    def getFilename(self):
+        return self.logFilename
 
 
 

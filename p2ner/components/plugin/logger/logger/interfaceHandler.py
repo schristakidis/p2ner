@@ -1,4 +1,3 @@
-import logging
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,9 @@ import logging
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-#import sys
- 
+import logging
+import sys
+
 class interfaceHandler(logging.Handler):
     def __init__(self,func):
         logging.Handler.__init__(self)
@@ -25,5 +25,5 @@ class interfaceHandler(logging.Handler):
         try:
             self.func.logRecord(record)
         except:
-            pass
-            #print "Unexpected error:", sys.exc_info()
+            #pass
+            print "Unexpected error:", sys.exc_info()

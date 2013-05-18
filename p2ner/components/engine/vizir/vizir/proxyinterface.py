@@ -22,6 +22,7 @@ class ProxyInterface(Interface):
     def setForwardPeer(self,peer):
         self.proxy.setPeer(peer)
         
+        
 class DummyProxy(object):
     def __init__(self,proxy):
         self.proxy=proxy

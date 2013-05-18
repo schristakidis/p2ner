@@ -18,7 +18,7 @@ from twisted.internet import reactor,defer
 from cPickle import dumps,loads
 from p2ner.core.components import getComponentsInterfaces as getCompInt
 from p2ner.base.Stream import Stream
-from interfacelog import InterfaceLog
+from p2ner.util.interfacelog import DatabaseLog
 import os,os.path,stat,time
 from random import uniform
 from twisted.internet.threads import deferToThread
@@ -42,7 +42,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             self.proxy=None
             
     def start(self):
-        self.logger=InterfaceLog()
+        self.logger=DatabaseLog(_parent=self)
         print 'start listening xmlrpc'
         p=findNextTCPPort(9090)
         print p
@@ -67,6 +67,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             reactor.callLater(1,self.getIp,port)
             return
 
+        print ip,port,p,bw
         self.register(ip,port,p,bw)
 
     def register(self,ip,rpcport,port,bw):
@@ -179,11 +180,15 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         
     def logRecord(self,record):
         if record.levelno%10==0:
-            self.logger.addRecord(record)
+            reactor.callLater(0,self.logger.addRecord,record)
         
     def xmlrpc_getRecords(self):
-        ret=self.logger.getRecords()[:]
-        ret= [dumps(r) for r in ret]
+        ret=self.logger.getRecords()
+        if ret:
+            ret=[dict(r) for r in ret]
+            ret= [dumps(r) for r in ret]
+        else:
+            ret=[]
         return ret
     
     def xmlrpc_requestFiles(self,dname):
@@ -289,3 +294,5 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         en=strm['overlay'].getEnergy()
         stats=strm['overlay'].getVizirStats()
         return (ret,en,stats)
+    
+   

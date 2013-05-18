@@ -52,13 +52,12 @@ class clientGui(UI):
 			from interface.xml.connectgui import ConnectGui
 			ConnectGui(self)
 			self.interface=Interface(_parent=self)
-			#self.logger=Logger(self)
-			self.logger=Logger(self)
+			self.logger=loadComponent('plugin','loggerGUI')(_parent=self)
 		else:
 			#from interface.localinterface import Interface
 			#self.interface=Interface(_parent=self)
 			self.interface=self.root.interface
-			self.logger=Logger(self)
+			self.logger=loadComponent('plugin','loggerGUI')(_parent=self)
 			self.rProducerViewer=None
 			reactor.callLater(0,self.startUI)
 	

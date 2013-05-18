@@ -204,8 +204,18 @@ class Interface(Interface):
         d=self.proxy.callRemote('getNeighbours',id)
         d.addCallback(func,ip,port)
         
+    def getLog(self,func):
+        d=self.proxy.callRemote('getLog')
+        d.addCallback(func)
+        
     def failedXMLRPC(self,f):
         print 'failed xmlrpc call'
         print f
+        
+    def getVizirLogRecords(self,func,ip,port):
+        d=self.proxy.callRemote('getRecords')
+        d.addCallback(self.loadRecords)
+        d.addCallback(func,ip,port)
+        d.addErrback(self.failedXMLRPC)
             
         

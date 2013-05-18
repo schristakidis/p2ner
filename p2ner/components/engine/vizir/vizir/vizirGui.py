@@ -54,8 +54,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')() 
-
+        self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self)
         self.constructGui()
+        
+        
             
     def constructGui(self):
         self.builder = gtk.Builder()
@@ -69,11 +71,13 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         setUploadBW = self.builder.get_object("setUploadBW")
         startProducer = self.builder.get_object("startProducer")
         showOverlay = self.builder.get_object("showOverlay")
+        showLog=self.builder.get_object("showLog")
         startNclients.connect("clicked", self.startNclients)
         stopNclients.connect("clicked", self.stopNclients)
         setUploadBW.connect("clicked", self.setUploadBW)
         startProducer.connect("clicked", self.startProducing)
         showOverlay.connect("clicked", self.showOverlay)
+        showLog.connect('clicked',self.logger.start)
         self.win.set_title("VizEW - Control Center")
         pixbuf = self.win.render_icon(gtk.STOCK_FIND, gtk.ICON_SIZE_MENU)
         self.win.set_icon(pixbuf)
@@ -260,6 +264,9 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         
         return peer[0]
        
+    def findPeerObject(self,peer):
+        return self.findPeer(peer,True)[7]
+    
     def setStatus(self,peer,status):
         p=self.findPeer(peer)
         if p:
@@ -497,7 +504,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         
         
     def getPeers(self):
-        return [m[7] for m in self.treemodel if m[3]==ON and m[4]=='client' and m[6]==id]
+        return [(m[0],m[1]) for m in self.treemodel]
                 
 def startVizirGui():
     from twisted.internet import reactor

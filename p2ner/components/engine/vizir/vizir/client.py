@@ -89,3 +89,7 @@ class PClient(Interface):
         
     def getNeighbours(self,id,ip,port,func):
         self.interface.getNeighbours(id,ip,port,func)
+        
+    def getLog(self,func,ip,port):
+        self.interface.getVizirLogRecords(func,ip,port)
+        

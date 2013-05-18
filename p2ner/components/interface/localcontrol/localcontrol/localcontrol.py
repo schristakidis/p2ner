@@ -1,4 +1,3 @@
-from p2ner.abstract.interface import Interface
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +12,19 @@ from p2ner.abstract.interface import Interface
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from p2ner.abstract.interface import Interface
 from twisted.internet import reactor
 from p2ner.core.components import getComponents as getComp
 from p2ner.core.components import getComponentsInterfaces as getCompInt
 from p2ner.base.Stream import Stream
-from interfacelog import InterfaceLog
+from p2ner.util.interfacelog import DatabaseLog
 from twisted.internet.threads import deferToThread
+
 
 class localControl(Interface):
     
     def initInterface(self):
-        self.logger=InterfaceLog()
-
+        self.logger=DatabaseLog(_parent=self)
         
     def start(self):
         pass
@@ -96,7 +96,7 @@ class localControl(Interface):
             return
         elif record.name=='p2ner.network':
             self.controlUI.logNGui(record.getMessage())
-        self.logger.addRecord(record)
+        reactor.callLater(0,self.logger.addRecord,record)
         
     def getRecords(self):
         return self.logger.getRecords()
