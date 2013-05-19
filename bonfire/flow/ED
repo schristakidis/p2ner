@@ -1,0 +1,102 @@
+{
+  "name": "Flow test",
+  "description": "Flow control test",
+  "duration": 3600,
+  "resources": [
+    {
+      "network": {
+        "name": "net1",
+        "locations": [
+          "be-ibbt"
+        ],
+        "address": "192.168.0.0",
+        "size": "C",
+        "lossrate": 0,
+        "bandwidth": 1000,
+        "latency": 0
+      }
+    },
+    {
+      "network": {
+        "name": "net2",
+        "locations": [
+          "be-ibbt"
+        ],
+        "address": "192.168.1.0",
+        "size": "C",
+        "lossrate": 0,
+        "bandwidth": 1000,
+        "latency": 0
+      }
+    },
+    {
+      "compute": {
+        "name": "Producer",
+        "locations": [
+          "be-ibbt"
+        ],
+        "instanceType": "Large-EN",
+        "min": 1,
+        "resources": [
+          {
+            "storage": "@BonFIRE Debian Squeeze 2G v4"
+          },
+          {
+            "network": "@BonFIRE WAN"
+          },
+          {
+            "network": "net1"
+          }
+        ],
+        "contexts": []
+      }
+    },
+    {
+      "compute": {
+        "name": "RoutingBox",
+        "locations": [
+          "be-ibbt"
+        ],
+        "instanceType": "Large-EN",
+        "min": 1,
+        "resources": [
+          {
+            "storage": "@BonFIRE Debian Squeeze 2G v4"
+          },
+          {
+            "network": "net1"
+          },
+          {
+            "network": "net2"
+          },
+          {
+            "network": "@BonFIRE WAN"
+          }
+        ],
+        "contexts": []
+      }
+    },
+    {
+      "compute": {
+        "name": "Client1",
+        "locations": [
+          "be-ibbt"
+        ],
+        "instanceType": "Large-EN",
+        "min": 1,
+        "resources": [
+          {
+            "storage": "@BonFIRE Debian Squeeze 2G v4"
+          },
+          {
+            "network": "@BonFIRE WAN"
+          },
+          {
+            "network": "net2"
+          }
+        ],
+        "contexts": []
+      }
+    }
+  ]
+}

@@ -51,7 +51,7 @@ experiment:
         img: p2pcloudsV5
         
     subnets:
-        - name: backbone
+        - name: source
           address: 192.168.1.1
           size: C
           lossrate: 0
@@ -61,51 +61,46 @@ experiment:
         - name: local1
           address: 192.168.2.1
           size: C
-          lossrate: 0.01
+          lossrate: 0.0
           bandwidth: 20
           latency: 100
           
         - name: local2
           address: 192.168.3.1
           size: C
-          lossrate: 0.02
+          lossrate: 0.0
           bandwidth: 10
           latency: 150
           
+    router:
+        - site: be-ibbt
+          img: BonFIRE Debian Squeeze 2G v4
+          net: 
+             - BonFIRE WAN
+             - producer
+             - local1
+             - local2
 
     clients:
-        - site: fr-inria
-          number: 1
-          img: p2pcloudsV5
-          net: "BonFIRE WAN"
 
-        - site: be-ibbt
-          number: 0
+        - name: producer
+          site: be-ibbt
           img: BonFIRE Debian Squeeze 2G v4
-          net: "BonFIRE WAN"
-
-        - site: de-hlrs
-          number: 0
-          img: p2pcloudsV3
-          net: "BonFIRE WAN"
-
-        - site: uk-epcc
-          number: 0
-          img: p2pcloudsV3
-          net: "BonFIRE WAN"
-
-        - site: uk-hplabs
-          number: 1
-          img: p2pcloudsV1
-          net: "BonFIRE WAN"
-
-        - site: federica
-          number: 0
-          img: none
-          net: none
-
-        - site: useast-aws
-          number: 0
-          img: none
-          net: none
+          net: 
+             - source
+             - BonFIRE WAN
+          
+        - name: client1
+          site: be-ibbt
+          img: BonFIRE Debian Squeeze 2G v4
+          net: 
+             - local1
+             - BonFIRE WAN
+          
+        - name: client2
+          site: be-ibbt
+          img: BonFIRE Debian Squeeze 2G v4
+          net: 
+             - local2
+             - BonFIRE WAN
 

@@ -5,8 +5,8 @@ require 'restfully'
 require 'restfully/addons/bonfire'
 
 
-CONFIG_FILE = "config.yml"
-SERVER_IMAGE_NAME = "BonFIRE Debian Squeeze v2"
+CONFIG_FILE = "owconfig.yml"
+SERVER_IMAGE_NAME = "BonFIRE Debian Squeeze 2G v4"
 WAN_NAME = "BonFIRE WAN"
 
 logger = Logger.new(STDOUT)
@@ -33,6 +33,20 @@ begin
     :description => "#{conf['experiment']['description']} - #{Time.now.to_s}",
     :walltime => conf['experiment']['walltime']
   )
+  
+  #create networks
+  conf['experiment']['subnets'].each { |subnet|
+    experiment.networks.submit(
+        :name => "#{subnet['name']}",
+        :locations => ["be-ibbt"],
+        :address => "#{subnet['address']}",
+        :size => "#{subnet['size']}",
+        :lossrate => subnet['lossrate'],
+        :bandwidth => subnet['bandwidth'],
+        :latency => subnet['latency']
+    )
+  }
+  
 
   #start monitoring VM
   s = conf['experiment']['monitoring']['site']
@@ -98,7 +112,6 @@ begin
 
   # Create clients:
   conf['experiment']['clients'].each { |client_s|
-      if client_s['number'] > 0  
       s = client_s['site']
       client_site = session.root.locations[s.to_sym]
       fail "Can't select the #{s} location for client" if client_site.nil?
@@ -106,8 +119,6 @@ begin
       img_storage = client_site.storages.find{|stor| stor['name'] == img}
        
       session.logger.info "Launching #{client_s['number']} client VM(s) \"#{img}\" on site #{s}..."
-      end
-      1.upto(client_s['number']) { |instance|
           
 	  session.logger.info "# #{instance}"
           client = experiment.computes.find{|vm|
@@ -131,7 +142,6 @@ begin
         client_ip = client['nic'][0]['ip']
         session.logger.info "IP=#{client_ip}"
         sleep 1
-        }    
 
       }
 
