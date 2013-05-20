@@ -59,6 +59,7 @@ class DistributedClient(Overlay):
         self.messages.append(SuggestMessage())
         
     def initOverlay(self):
+        self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
         self.log.info('initing overlay')
         print 'initing overlay'
         self.sanityCheck(["stream", "control", "controlPipe"])
