@@ -139,7 +139,8 @@ class UDPsender(threading.Thread):
         
         tidle=sum(self.idle)
         print 'idle is:',tidle
-        self.umax=self.umax*(1+tidle/(1.0*self.Tsend*len(AckHistory)))
+        #self.umax=self.umax*(1+tidle/(1.0*self.Tsend*len(AckHistory)))
+        self.umax=self.umax*self.Tsend*len(AckHistory)/(1.0*(self.Tsend*len(AckHistory)-tidle))
         print 'final umax is:',self.umax
     
     def setW(self):
@@ -255,6 +256,12 @@ class ACKreceiver(threading.Thread):
             seq=int(data)
             Hlock.acquire()
             AckHistory[-1]+=1
+            tempAck=[]
+            for h in History:
+                if h['s']<seq:
+                    termAck.append(h)
+                    print 'removing not acked block from history'
+            History=[h for h in History if h not in tempAck]
             for h in History:
                 if h['s']==seq:
                     block=h
