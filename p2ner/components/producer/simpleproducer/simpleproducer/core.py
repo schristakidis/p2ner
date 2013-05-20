@@ -88,7 +88,7 @@ class SimpleProducer(Scheduler):
                     peer=sorted(destination, key=lambda p:p.reportedBW)[-1]
                     self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
                     d.addCallback(self.sendblock, lpb, peer)
-        outID = self.buffer.shift()
+        outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
         #self.log.debug('%s',self.buffer)
         outdata = self.trafficPipe.call("popblockdata", self, outID)
