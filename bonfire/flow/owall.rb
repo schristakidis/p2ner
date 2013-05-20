@@ -39,14 +39,14 @@ begin
       end
     elsif compute['name'] == PRODUCER
       compute.ssh do |ssh|
-        ssh.exec!("apt-get install subversion -y")
+        ssh.exec!("apt-get install subversion psmisc -y")
         ssh.exec!("apt-get install iptraf -y")
         puts ssh.exec!("svn co svn://#{monitorIP}:443/p2ner/trunk/p2ner/flowcontrol --username sakis --password sakis4440 --non-interactive flow")
       end
     
     elsif compute['name'] == CLIENT
       compute.ssh do |ssh|
-        ssh.exec!("apt-get install subversion -y")
+        ssh.exec!("apt-get install subversion psmisc -y")
         ssh.exec!("apt-get install iptraf -y")
         puts ssh.exec!("svn co svn://#{monitorIP}:443/p2ner/trunk/p2ner/flowcontrol --username sakis --password sakis4440 --non-interactive flow")
       end
