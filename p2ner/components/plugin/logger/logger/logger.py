@@ -83,11 +83,13 @@ class Logger(object):
     def getLoggerChild(self,name,interface=None,level='debug'):
         try:
             log=self.log.getChild(name)
-            if interface:
-                self.add_handler(log,level,interfaceHandler(interface))
-            return log
         except:
-            return self.log
+            log=logging.getLogger('p2ner.'+name)
+        
+        if interface:
+            self.add_handler(log,level,interfaceHandler(interface))
+        return log
+       
 
     def addFileHandler(self,name,level='debug'):
         if not level or level not in levels:
