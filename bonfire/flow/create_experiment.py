@@ -104,4 +104,11 @@ while True:
 print "UP"
 '''
 
+e = Experiment("dummy")
+e.status = "running"
+broker.occi("PUT", experiment, toprettyxml(e, ("status",)), validate = False)
+
+newres = VirtualWallNetworkResource("net1", "/locations/be-ibbt", experiment)
+newres.latency = "20"
+print broker.occi("PUT", net1, toprettyxml(newres), validate = False)
 
