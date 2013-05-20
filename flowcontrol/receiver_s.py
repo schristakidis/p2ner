@@ -7,10 +7,10 @@ import struct
 #import time
 #from cPickle import dumps
 
-IP = sys.argv[1]
-PORT = int(sys.argv[2])
+IP = '192.168.0.2'
+PORT = 30000
 
-serverIP = "127.0.0.1"
+serverIP = '192.168.0.1'
 serverXport = 8000
 proxy = xmlrpclib.ServerProxy("http://%s:%d/" % (serverIP, serverXport), allow_none=True)
 
@@ -31,7 +31,7 @@ class UDPreceiver(object):
             #print len(data)
             
             try:
-                seq = str(struct.unpack("l", data[0:8])[0])
+                seq = str(struct.unpack("l", data[0:4])[0])
                 #self.receivedTime[seq]=time.time()
                 print 'received:',seq
             except:
