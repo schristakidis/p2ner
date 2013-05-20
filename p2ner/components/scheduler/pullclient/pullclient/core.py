@@ -169,11 +169,11 @@ class PullClient(Scheduler):
         
     def shift(self, norequests = False):
         n = self.overlay.getNeighbours()
-        outID = self.buffer.shift()
+        outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
         
         if self.buffer.lpb - self.buffer.flpb > self.buffer.buffersize:
-            if outID<0:
+            if not hit:
                 self.countMiss +=1
             else:
                 self.countHit +=1
