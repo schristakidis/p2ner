@@ -10,7 +10,7 @@ import struct
 IP = sys.argv[1]
 PORT = int(sys.argv[2])
 
-serverIP = "150.140.186.115"
+serverIP = "127.0.0.1"
 serverXport = 8000
 proxy = xmlrpclib.ServerProxy("http://%s:%d/" % (serverIP, serverXport), allow_none=True)
 

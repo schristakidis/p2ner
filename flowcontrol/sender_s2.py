@@ -1,4 +1,3 @@
-
 import socket
 import threading
 import time 
@@ -59,7 +58,7 @@ class UDPsender(threading.Thread):
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
         self.sum_idle = 0
-        self.Window = 0
+        self.window = 0
         self.umax = 1
         self.u = 0
         self.f1 =2# 1.2
@@ -68,7 +67,7 @@ class UDPsender(threading.Thread):
         self.idle=[]
         self.preUmax=0
         self.slowStart=True
-
+        self.preWindow=0
         
     def run(self):
         global History, queue,AckHistory
@@ -176,10 +175,24 @@ class UDPsender(threading.Thread):
                 prtt+=p['min']
             prtt=prtt/len(PeerRtt)
             Plock.release()
-        print 'final final prtt:',prtt    
-        prtt +=self.Tsend
+        print 'final final prtt:',prtt
+        prtt=max(prtt,self.Tsend)    
+        #prtt +=self.Tsend
         print 'prtt+Tsend:',prtt
-        self.window=ceil(self.umax*prtt*self.f1)
+        for k,v in PeerRtt.items():
+            Plock.acquire()
+            rmin=PeerRtt[k]['min']
+            rav=PeerRtt[k]['mean']
+            Plock.release()
+            f=2*(1-(rav-rmin)/rav)
+
+        if self.preWindow>self.window:
+            f=f*(1+(self.preWindow-self.window)/self.window)
+        if f<1.2:
+            f=1.2
+        print 'ffffffffffffffffff:',f
+        self.window=ceil(self.umax*prtt*f)
+        self.preWindow=self.window
         
         """
         if self.umax<self.preUmax:
@@ -254,26 +267,36 @@ class ACKreceiver(threading.Thread):
             
             seq=int(data)
             Hlock.acquire()
-            AckHistory[-1]+=1
+            ackedPackets=[]
+            #AckHistory[-1]+=1
             for h in History:
-                if h['s']==seq:
+                if h['s']<=seq:
                     block=h
-                    History.remove(h)
-                    break
-            Hlock.release()
-            peer=block['to']
-            tsend=block['t1']
-            rtt=now-tsend
+                    ackedPackets.append(h)
+                    #History.remove(h)
+                    #break
+
+                    peer=block['to']
+                    tsend=block['t1']
+                    rtt=now-tsend
             #print block
             #print 'rtttttttttttttttttttttttt:',rtt
             #print PeerRtt[peer]
-            Plock.acquire()
-            if not PeerRtt[peer]['min'] or PeerRtt[peer]['min']>rtt:
-                PeerRtt[peer]['min']=rtt
+                    Plock.acquire()
+                    if not PeerRtt[peer]['min'] or PeerRtt[peer]['min']>rtt:
+                        PeerRtt[peer]['min']=rtt
                 #print 'in if'
-            PeerRtt[peer]['last'].append(rtt)
-            PeerRtt[peer]['last']=PeerRtt[peer]['last'][-5:]
-            Plock.release()        
+                    PeerRtt[peer]['last'].append(rtt)
+                    PeerRtt[peer]['last']=PeerRtt[peer]['last'][-15:]
+                    PeerRtt[peer]['mean']=sum(PeerRtt[peer]['last'])/len(PeerRtt[peer]['last'])
+                    mean=PeerRtt[peer]['mean']
+                    print mean,PeerRtt[peer]['min'],mean-PeerRtt[peer]['min'],(mean-PeerRtt[peer]['min'])/mean
+                        
+                    Plock.release() 
+            AckHistory[-1]+=len(ackedPackets)
+            for h in ackedPackets:
+                History.remove(h)
+            Hlock.release()       
             """
             try:
                 (item for item in History if item["s"] == int(data)).next()["t2"] = now
