@@ -64,7 +64,7 @@ class PullClient(Scheduler):
             self.running = False
             return None
         bid, peer = req
-        #self.log.debug('sending block %d to %s',bid,peer)
+        self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
         
@@ -177,7 +177,9 @@ class PullClient(Scheduler):
                 self.countMiss +=1
             else:
                 self.countHit +=1
-            setValue(self,'scheduler',self.countHit/float(self.countHit+self.countMiss))
+            hitRatio=self.countHit/float(self.countHit+self.countMiss)
+            setValue(self,'scheduler',hitRatio)
+            self.log.debug('hit ratio %f',hitRatio)
       
         
         if not norequests:
