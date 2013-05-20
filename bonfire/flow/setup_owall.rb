@@ -1,0 +1,5 @@
+require 'rubygems'
+require 'yaml'
+require 'pp'
+require 'restfully'
+require 'restfully/addons/bonfire'
