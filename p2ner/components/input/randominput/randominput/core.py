@@ -28,6 +28,10 @@ class RandomInput(Input):
         print 'NB:',blockSec
         blocksize = int(self.videoRate/blockSec/8.0)
         print 'block size:',blocksize
+        self.log.info('setting video rate to %f',self.videoRate)
+        self.log.info('setting NB to %d',blockSec)
+        self.log.info('setting blocksize to %d',blocksize)
+
         b = ""              
         for i in xrange(blocksize):
             b+=chr(random.randint(0,255))
