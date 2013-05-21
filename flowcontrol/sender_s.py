@@ -280,6 +280,16 @@ class ACKreceiver(threading.Thread):
                 #print 'in if'
             PeerRtt[peer]['last'].append(rtt)
             PeerRtt[peer]['last']=PeerRtt[peer]['last'][-5:]
+            try:
+                av=sum(PeerRtt[peer]['last'])/len(PeerRtt[peer]['last'])
+                min=PeerRtt[peer]['min']
+                self.f1=2-(av+min)/av
+                print 'average:',av
+                print 'min:',min
+                print 'factor 11111:',self.f1
+            except:
+                self.f1=2
+                print 'in except'
             Plock.release()        
             """
             try:
