@@ -174,6 +174,8 @@ class UDPsender(threading.Thread):
                 print 'min:',r
                 print 'factor 11111:',self.f1
             except:
+                self.avRtt=0
+                self.minRtt=0
                 print 'in except'
             Plock.release()
             if not r:
