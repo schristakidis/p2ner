@@ -7,7 +7,7 @@ import struct
 #import time
 #from cPickle import dumps
 
-IP = '192.168.0.2'
+IP = '192.168.1.2'
 PORT = 30000
 
 serverIP = '192.168.0.1'
@@ -22,8 +22,8 @@ class UDPreceiver(object):
         self.socketUDPdata.bind(("0.0.0.0", port))
         self.to = (serverIP, ackport)
         #self.receivedTime={}
-        #self.acked=0
-        #self.lastAcked=0
+        self.acked=0
+        self.lastAcked=0
         
     def run(self):
         while True:
@@ -33,13 +33,16 @@ class UDPreceiver(object):
             try:
                 seq = str(struct.unpack("l", data[0:4])[0])
                 #self.receivedTime[seq]=time.time()
-                print 'received:',seq
+                #print 'received:',seq
             except:
                 print data[0]
                 print data[1:]
             
-            #if seq>self.lastAcked:
-            #    self.lastAcked=seq
+	    if int(seq)!=self.lastAcked+1:
+		print 'missed packet'
+
+            if seq>self.lastAcked:
+                self.lastAcked=int(seq)
                 
             self.socketUDPack.sendto(seq, self.to)
                 
