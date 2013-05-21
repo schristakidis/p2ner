@@ -97,7 +97,7 @@ class UDPsender(threading.Thread):
                 tosend = "".join([str(int(ack)), struct.pack("l", self.seq), self.fragment])
                 
                 self.socketUDPdata.sendto(tosend, to)
-                #print "send", self.seq, to
+                print "send", self.seq, to
                 Hlock.acquire()
                 if ack:
                     t = time.time()

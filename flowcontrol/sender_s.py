@@ -58,7 +58,7 @@ class UDPsender(threading.Thread):
         for i in xrange(fsize):
             self.fragment+=chr(random.randint(0,255))
         self.seq = 0
-        self.Tsend = 0.1
+        self.Tsend = 0.05
         history=4
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
@@ -171,7 +171,9 @@ class UDPsender(threading.Thread):
                 av=sum(PeerRtt[k]['last'])/len(PeerRtt[k]['last'])
                 self.avRtt=av
                 self.minRtt=r
-                self.f1=2-(av-r)/av
+                self.f1=2-3*(av-r)/av
+		if self.f1<1:
+			self.f1=1
                 print 'average:',av
                 print 'min:',r
                 print 'factor 11111:',self.f1
@@ -198,8 +200,12 @@ class UDPsender(threading.Thread):
         print 'final final prtt:',prtt    
         prtt +=self.Tsend
         print 'prtt+Tsend:',prtt
+	try:
+		self.f1=0.3*(self.f1-self.f1old)+self.f1old
+	except:
+		pass
         self.window=ceil(self.umax*prtt*self.f1)
-        
+	self.f1old=self.f1        
         """
         if self.umax<self.preUmax:
 			self.slowStart=False
