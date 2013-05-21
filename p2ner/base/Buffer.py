@@ -58,9 +58,9 @@ class Buffer(object):
         if self.lpb - self.flpb > self.buffersize:
             if not playBlock:
                 self.log.debug("missed block %d" %(self.lpb-1-self.buffersize))
-            return ret
+            return (ret,playBlock)
         else :
-            return -1
+            return (-1,False)
         
     def fillLevel(self):
         '''

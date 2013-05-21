@@ -65,7 +65,7 @@ class SimpleProducer(Scheduler):
     def shift(self):
         from time import time
         #print "SHIFT: ", time()
-        self.log.debug("SHIFT: %f",time())
+        #self.log.debug("SHIFT: %f",time())
         chunk = self.input.read()
         lpb = self.buffer.lpb
         #print self.buffer
@@ -91,7 +91,7 @@ class SimpleProducer(Scheduler):
         
         outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
-        self.log.debug('%s',self.buffer)
+        #self.log.debug('%s',self.buffer)
         outdata = self.trafficPipe.call("popblockdata", self, outID)
         outdata.addCallback(self.output.write)
         counter(self, "sent_block")
