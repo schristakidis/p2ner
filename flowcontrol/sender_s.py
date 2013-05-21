@@ -97,7 +97,7 @@ class UDPsender(threading.Thread):
                 self.setUmax()
                 self.setW()
                 self.setU()
-                writer.writerow([self.u,self.f1,self.umax,self.window,len(History)])
+                writer.writerow([self.u,self.f1,self.umax,self.window,len(History),self.avRtt,self.minRtt])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
