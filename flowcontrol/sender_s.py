@@ -162,6 +162,8 @@ class UDPsender(threading.Thread):
         print 'in window unack ',sendPeers
         Hlock.release()
         prtt=0
+        self.avRtt=0
+        self.minRtt=0
         for k,v in sendPeers.items():
             Plock.acquire()
             r=PeerRtt[k]['min']
@@ -174,8 +176,6 @@ class UDPsender(threading.Thread):
                 print 'min:',r
                 print 'factor 11111:',self.f1
             except:
-                self.avRtt=0
-                self.minRtt=0
                 print 'in except'
             Plock.release()
             if not r:
