@@ -71,7 +71,7 @@ class UDPPortElement(PipeElement, DatagramProtocol):
             
        
     
-        print 'send to:',ip,to,getattr(peer, to)
+        #print 'send to:',ip,to,getattr(peer, to)
         
         if isinstance(res, (list, tuple)):
             for r in res:
