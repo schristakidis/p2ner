@@ -6,8 +6,8 @@ from bonfire.broker.occi import toprettyxml
 USER = "loox"
 PASSWORD = "sakis4440"
 URI = "https://api.bonfire-project.eu"
-LATENCY = "300"
-BANDWIDTH = "222"
+LATENCY = "10"
+BANDWIDTH = "1"
 
 brokerargs = {'username': USER,
               'password': PASSWORD,
