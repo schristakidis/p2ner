@@ -256,6 +256,7 @@ class ACKreceiver(threading.Thread):
         self.socketUDPdata.bind(("0.0.0.0", port))
         
     def run(self):
+        global History
         while True:
   
             data, addr = self.socketUDPdata.recvfrom(1024)
@@ -267,9 +268,9 @@ class ACKreceiver(threading.Thread):
             tempAck=[]
             for h in History:
                 if h['s']<seq:
-                    termAck.append(h)
+                    tempAck.append(h)
                     print 'removing not acked block from history'
-            History=[h for h in History if h not in tempAck]
+            History[:]=[h for h in History if h not in tempAck]
             for h in History:
                 if h['s']==seq:
                     block=h
