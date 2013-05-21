@@ -6,6 +6,9 @@ import random
 import struct
 from Queue import Queue
 from math import ceil
+import csv
+csvfile = open('file.csv', 'wb')
+writer = csv.writer(csvfile, delimiter=' ',quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
 peers = []
 History = []
@@ -16,6 +19,7 @@ Plock = threading.RLock()
 Srate = 6000000
 START = threading.Event()
 PeerRtt={}
+
 
 class XMLRPCserver(threading.Thread):
 
@@ -93,6 +97,7 @@ class UDPsender(threading.Thread):
                 self.setUmax()
                 self.setW()
                 self.setU()
+                writer.writerow([self.u,self.f1,self.umax,self.window,len(History)])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -161,6 +166,8 @@ class UDPsender(threading.Thread):
             r=PeerRtt[k]['min']
             try:
                 av=sum(PeerRtt[k]['last'])/len(PeerRtt[k]['last'])
+                self.avRtt=av
+                self.minRtt=r
                 self.f1=2-(av-r)/av
                 print 'average:',av
                 print 'min:',r
