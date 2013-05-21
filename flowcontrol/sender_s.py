@@ -72,7 +72,7 @@ class UDPsender(threading.Thread):
         self.idle=[]
         self.preUmax=0
         self.slowStart=True
-
+        self.countPlot=0
         
     def run(self):
         global History, queue,AckHistory
@@ -97,7 +97,8 @@ class UDPsender(threading.Thread):
                 self.setUmax()
                 self.setW()
                 self.setU()
-                writer.writerow([self.u,self.f1,self.umax,self.window,len(History),self.avRtt,self.minRtt])
+                self.countPlot +=1
+                writer.writerow([self.countPlot,self.u,self.f1,self.umax,self.window,len(History),self.avRtt,self.minRtt])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
