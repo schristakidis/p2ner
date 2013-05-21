@@ -81,7 +81,7 @@ class LoggerGui(UI):
        
         self.builder.get_object('sidePane').set_visible(False) 
         self.tview=self.builder.get_object('treeview')    
-        self.tmodel=gtk.ListStore(str,int,str,str,str,float,float,str,str,int,str,str,str)
+        self.tmodel=gtk.ListStore(str,int,str,str,str,float,float,str,str,int,str,str,str,str)
         
         for i in range(len(self.cols)):
             renderer=gtk.CellRendererText()   
@@ -199,7 +199,7 @@ class LoggerGui(UI):
             clr='black'
             if r['level'].lower() in levelColors.keys():
                 clr=levelColors[r['level'].lower()]
-            self.tmodel.append((r['ip'],r['port'],r['level'],r['log'],r['time'],r['epoch'],r['msecs'],r['module'],r['func'],r['lineno'],r['msg'],clr,'white'))
+            self.tmodel.append((r['ip'],r['port'],r['level'],r['log'],r['time'],r['epoch'],r['msecs'],r['module'],r['func'],r['lineno'],r['msg'],clr,'white','white'))
             if r['log'] not in self.loggers:
                 self.addLogger(r['log'])
             if len(self.tfilter):
@@ -248,7 +248,7 @@ class LoggerGui(UI):
             path=tuple(path)
             
         for m in self.tfilter:
-            if text in m[-3]:
+            if text in m[-4]:
                 self.tmodel.set_value(self.tfilter.convert_iter_to_child_iter(m.iter),len(self.cols)+1,'orange')
                 if not found and (m.path>=path and self.forward) or (m.path<=path and not self.forward):
                     self.tview.get_selection().select_path(m.path)
@@ -258,8 +258,8 @@ class LoggerGui(UI):
             
     def clearSearch(self):
         for m in self.tmodel:
-            if m[-1]=='orange':
-                m[-1]='white'
+            if m[-2]=='orange':
+                m[-2]=m[-1]
 
     def on_delete_event(self,widget,event):
         if self.loopingCall.running:

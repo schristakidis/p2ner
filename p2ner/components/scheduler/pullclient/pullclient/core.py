@@ -193,7 +193,7 @@ class PullClient(Scheduler):
                 #print 'sending buffer'
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
         
-        #self.log.debug('%s',self.buffer)
+        self.log.debug('%s',self.buffer)
         #print self.buffer
         #push block to output
 

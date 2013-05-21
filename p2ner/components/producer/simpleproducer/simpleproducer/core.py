@@ -65,7 +65,7 @@ class SimpleProducer(Scheduler):
     def shift(self):
         from time import time
         #print "SHIFT: ", time()
-        #self.log.debug("SHIFT: %f",time())
+        self.log.debug("SHIFT: %f",time())
         chunk = self.input.read()
         lpb = self.buffer.lpb
         #print self.buffer

@@ -21,7 +21,6 @@ from twisted.internet import task,reactor
 from pkg_resources import resource_string
 from p2ner.abstract.ui import UI
 from loggergui import LoggerGui
-from util import getText
 from vizirdb import DatabaseLog
 
 levels = {
@@ -57,15 +56,15 @@ class VizirLoggerGui(LoggerGui):
         
         self.peerView=self.builder.get_object('peerView')
         
-        self.peerStore=gtk.ListStore(str,int,bool,bool)
+        self.peerStore=gtk.ListStore(str,int,bool,bool,str)
         self.peerView.set_model(self.peerStore) 
         
         renderer=gtk.CellRendererText()   
-        column=gtk.TreeViewColumn('Peer',renderer, text=0)
+        column=gtk.TreeViewColumn('Peer',renderer, text=0 , background=4)
         self.peerView.append_column(column)
         
         renderer=gtk.CellRendererText()   
-        column=gtk.TreeViewColumn('Port',renderer, text=1)
+        column=gtk.TreeViewColumn('Port',renderer, text=1, background=4)
         self.peerView.append_column(column)
         
         renderer=gtk.CellRendererToggle()
@@ -95,7 +94,7 @@ class VizirLoggerGui(LoggerGui):
         avPeers=[(m[0],m[1]) for m in self.peerStore]
         for peer in peers:
             if peer not in avPeers:
-                self.peerStore.append((peer[0],peer[1],False,False))
+                self.peerStore.append((peer[0],peer[1],False,False,'white'))
         
     def showing_toggled_cb(self,cell,path,model):
         if not model.get_value(model.get_iter(path),3):
@@ -130,7 +129,7 @@ class VizirLoggerGui(LoggerGui):
                     m[2]=True
                     self.filters['peer'].append((ip,port))
                     break
-        
+
         self.db.addRecord(records)
         
         self.tmodel.clear()
@@ -161,6 +160,9 @@ class VizirLoggerGui(LoggerGui):
         menuItem.connect('activate',self.refreshLog,iter)
         menu.append(menuItem)
         
+        menuItem=gtk.MenuItem('Set Color')
+        menuItem.connect('activate',self.setColor,iter)
+        menu.append(menuItem)
         menu.show_all()
         return menu
     
@@ -169,3 +171,21 @@ class VizirLoggerGui(LoggerGui):
         port=self.peerStore.get_value(iter,1)
         peer=self.root.findPeerObject((ip,port))
         peer.getLog(self.newLog,ip,port)
+        
+    def setColor(self,widget,iter):
+        colorseldlg=gtk.ColorSelectionDialog('Choose color...')
+        colorsel = colorseldlg.colorsel
+      
+        response =colorseldlg.run()
+
+        if response==gtk.RESPONSE_OK:
+            color = colorsel.get_current_color()
+            self.peerStore.set_value(iter,4,color)
+            ip=self.peerStore.get_value(iter,0)
+            port=self.peerStore.get_value(iter,1)
+            for m in self.tmodel:
+                if m[0]==ip and m[1]==port:
+                    m[-1]=color
+                    m[-2]=color
+        colorseldlg.destroy()
+        
