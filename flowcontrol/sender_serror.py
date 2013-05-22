@@ -31,7 +31,7 @@ class XMLRPCserver(threading.Thread):
         def join(ip, port):
             global peers
             peers.append((ip, port),)
-            PeerRtt[(ip,port)]={'min':None,'mean':None,'last':[]}
+            PeerRtt[(ip,port)]={'min':None,'mean':None,'last':[],'congRtt':0}
             print 'peerssssssssssss:',peers
 
         def start():
@@ -65,6 +65,7 @@ class UDPsender(threading.Thread):
         self.sum_idle = 0
         self.Window = 0
         self.umax = 1
+	self.maxumax = 1
         self.u = 0
         self.f1 =2# 1.2
         self.f2 =1# 0.7
@@ -98,7 +99,7 @@ class UDPsender(threading.Thread):
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self,f1,self.f1error,self.umax,self.window,len(History),self.avRtt,self.minRtt])
+                writer.writerow([self.countPlot,self.u,self.f1final,self.f1,self.f1error,self.umax,self.window,len(History),self.avRtt,self.minRtt,self.maxRtt,self.congRtt])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -142,6 +143,8 @@ class UDPsender(threading.Thread):
         print 'in umax ack is:',sum2
         self.umax=1.0*sum2/(self.Tsend*len(AckHistory))
         print 'umax is:',self.umax
+	if self.umax>self.maxumax:
+		self.maxumax=self.umax
         
         tidle=sum(self.idle)
         print 'idle is:',tidle
@@ -150,7 +153,7 @@ class UDPsender(threading.Thread):
         print 'final umax is:',self.umax
     
     def setW(self):
-
+	congestion=False
         sendPeers={}
         Hlock.acquire()
         sum2=len(History)
@@ -173,14 +176,22 @@ class UDPsender(threading.Thread):
                 self.minRtt=r
                 self.f1=2-3*(av-r)/av
                 self.f1error=2
+		self.maxRtt=0
+		self.congRtt=PeerRtt[k]['congRtt']
                 if PeerRtt[k].has_key('max'):
-                    self.f1error=1+(PeerRtt[k]['max']-av)/PeerRtt[k]['max']
+                    self.f1error=1+2*(PeerRtt[k]['max']-av)/PeerRtt[k]['max']
+		    self.maxRtt=PeerRtt[k]['max']
                 print 'factor error:',self.f1error
                 self.f1final=min(self.f1,self.f1error)
                 print 'factor normal:',self.f1
                 print 'final factor:',self.f1final
 		if self.f1final<1:
-			self.f1final=1
+			congestion=True
+			if self.f1error!=2:
+				self.f1final=self.f1error
+			else:
+				self.f1final=1+2*(PeerRtt[k]['congRtt']-av)/PeerRtt[k]['congRtt']
+			#self.f1final=1
                 print 'average:',av
                 print 'min:',r
                 print 'final factor:',self.f1final
@@ -213,9 +224,9 @@ class UDPsender(threading.Thread):
 		  self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
         except:
             pass
-        
         self.window=ceil(self.umax*prtt*self.f1final)
         self.f1old=self.f1final        
+
         """
         if self.umax<self.preUmax:
 			self.slowStart=False
@@ -315,6 +326,8 @@ class ACKreceiver(threading.Thread):
             if not PeerRtt[peer]['min'] or PeerRtt[peer]['min']>rtt:
                 PeerRtt[peer]['min']=rtt
                 #print 'in if'
+	    if PeerRtt[peer]['congRtt']<rtt:
+		PeerRtt[peer]['congRtt']=rtt
             if error:
                 if not PeerRtt[peer].has_key('max'):
                     PeerRtt[peer]['max']=rtt 
