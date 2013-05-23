@@ -260,7 +260,7 @@ class UDPsender(threading.Thread):
             
 class Producer(threading.Thread):
     
-    def __init__(self, nreceivers=1):
+    def __init__(self, nreceivers=2):
         threading.Thread.__init__(self)
         self.nb = 7
         self.fperb=(Srate/self.nb)/1500
@@ -272,15 +272,15 @@ class Producer(threading.Thread):
         START.wait()
         while True:
             
-            queue.put_nowait((peers[0], self.fperb))
-            """
+            #queue.put_nowait((peers[0], self.fperb))
+            
             if len(peers) >= self.nreceivers:
                 newpeer = random.shuffle(peers[:])
                 print 'newpeerrrr ',newpeer
                 for i in range(self.nreceivers):
                     to = newpeer.pop()
                     queue.put_nowait((to, self.nb))
-            """
+            
             time.sleep(self.sleep)
                 
                 
