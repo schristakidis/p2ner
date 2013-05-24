@@ -16,7 +16,7 @@ queue = Queue()
 AckHistory=[]
 Hlock = threading.RLock()
 Plock = threading.RLock()
-Srate = 8000000/8
+Srate=500000 
 START = threading.Event()
 PeerRtt={}
 LastAck=[]
@@ -92,7 +92,7 @@ class UDPsender(threading.Thread):
                 AckHistory.pop(0)
                 print 'len ack histoty issssssssssss:',len(AckHistory)
             Hlock.release()
-            if time.time()-startTime<2:
+            if time.time()-startTime<3:
                 self.u=self.umax
             else:
                 self.setUmax()

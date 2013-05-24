@@ -272,14 +272,12 @@ class Producer(threading.Thread):
         START.wait()
         while True:
             
-            #queue.put_nowait((peers[0], self.fperb))
-            
-            if len(peers) >= self.nreceivers:
-                newpeer = random.shuffle(peers[:])
-                print 'newpeerrrr ',newpeer
-                for i in range(self.nreceivers):
+	    newpeer=peers[:]            
+            random.shuffle(newpeer)
+            print 'newpeerrrr ',newpeer
+            for i in range(min(self.nreceivers,len(peers))):
                     to = newpeer.pop()
-                    queue.put_nowait((to, self.nb))
+                    queue.put_nowait((to, self.fperb))
             
             time.sleep(self.sleep)
                 
