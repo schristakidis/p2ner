@@ -58,7 +58,7 @@ class UDPsender(threading.Thread):
         for i in xrange(fsize):
             self.fragment+=chr(random.randint(0,255))
         self.seq = 0
-        self.Tsend = 0.1
+        self.Tsend = 0.05
         history=4
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
@@ -217,17 +217,18 @@ class UDPsender(threading.Thread):
         self.f1final=2-1*f    
         print 'f:',self.f1final
         """
-    if not self.errorRtt:
-        self.errorRtt=0.2
+    	if not self.errorRtt:
+        	self.errorRtt=self.minRtt+self.Tsend
         if self.errorRtt:
-            rttRef=(self.errorRtt+self.minRtt)/2
+            rttRef=self.minRtt+3*(self.errorRtt-self.minRtt)/4
         else:
                 rttRef=self.minRtt+2*self.Tsend
             
         self.f1final=1+(self.errorRtt-self.avRtt)/(self.errorRtt-self.minRtt)
-    if self.avRtt>rttRef:
-        rttRef=self.errorRtt
-        self.rttRef=rttRef
+    	#if self.avRtt>rttRef+0.03:
+        #	rttRef=self.errorRtt
+        #rttRef=rttRef+0.01
+	self.rttRef=rttRef
         self.f1final=1+rttRef-self.avRtt
         if self.f1final<1:
             self.f1final=1
@@ -243,9 +244,10 @@ class UDPsender(threading.Thread):
         #if self.avRtt>rttRef:
     #    self.window=ceil(self.maxumax*self.minRtt)
     #else:
-        self.window=ceil(self.umax*rttRef+(rttRef-self.avRtt)*self.umax*rttRef)
+	
+        self.window=(self.umax*(rttRef+self.Tsend)+(rttRef-self.avRtt)*self.umax*(rttRef+self.Tsend))
         try:
-            self.window=self.winOld+0.3*(self.window-self.winOld)
+            self.window=round(self.winOld+0.3*(self.window-self.winOld))
         except:
             pass
         self.winOld=self.window
