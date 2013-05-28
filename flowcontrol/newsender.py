@@ -16,7 +16,7 @@ queue = Queue()
 AckHistory=[]
 Hlock = threading.RLock()
 Plock = threading.RLock()
-Srate=500000 
+Srate=700000 
 START = threading.Event()
 PeerRtt={}
 LastAck=[]
@@ -58,7 +58,7 @@ class UDPsender(threading.Thread):
         for i in xrange(fsize):
             self.fragment+=chr(random.randint(0,255))
         self.seq = 0
-        self.Tsend = 0.05
+        self.Tsend = 0.1
         history=4
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
@@ -99,13 +99,13 @@ class UDPsender(threading.Thread):
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.minRtt,self.errorRtt])
+                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.minRtt,self.errorRtt,self.rttRef])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
-		    print to,i
+                    print to,i
                 except:
-		    print 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'                   
+                    print 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'                   
             
             before = time.time()
             if not self.u:
@@ -115,7 +115,7 @@ class UDPsender(threading.Thread):
                     try:
                         to, i = queue.get_nowait()
                     except:
-			             print 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'                        
+                         print 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'                        
                 if i == 0:
                     self.idle[-1] +=1.0*self.Tsend/self.u
                     time.sleep(1.0*self.Tsend/self.u)
@@ -166,9 +166,11 @@ class UDPsender(threading.Thread):
         Hlock.release()
         prtt=0
         self.avRtt=0
+        self.errorRtt=0
         self.minRtt=0
         for k,v in sendPeers.items():
             Plock.acquire()
+            self.avRtt=sum(PeerRtt[k]['last'])/len(PeerRtt[k]['last'])
             r=PeerRtt[k]['min']
             self.minRtt=r
             if PeerRtt[k].has_key('max'):
@@ -180,7 +182,7 @@ class UDPsender(threading.Thread):
                 print 'no min'
                 r=0.05
             prtt +=v*r
-	    
+        
         print 'prtt:',prtt
         try:
             prtt=prtt/sum2
@@ -195,8 +197,7 @@ class UDPsender(threading.Thread):
                 prtt+=p['min']
             prtt=prtt/len(PeerRtt)
             Plock.release()
-	
-        self.avRtt=prtt
+    
         print 'final final prtt:',prtt    
         prtt +=self.Tsend
         print 'prtt+Tsend:',prtt
@@ -213,28 +214,41 @@ class UDPsender(threading.Thread):
             f=1
             
         Plock.release()
-        self.f1final=2-1*f	
+        self.f1final=2-1*f    
         print 'f:',self.f1final
         """
+    if not self.errorRtt:
+        self.errorRtt=0.2
         if self.errorRtt:
-            eRtt=self.errorRtt
+            rttRef=(self.errorRtt+self.minRtt)/2
         else:
-            eRtt=self.minRtt+2*self.Tsend
+                rttRef=self.minRtt+2*self.Tsend
             
-        self.f1final=1+(eRtt-self.avRtt)/(eRtt-self.minRtt)
-        
+        self.f1final=1+(self.errorRtt-self.avRtt)/(self.errorRtt-self.minRtt)
+    if self.avRtt>rttRef:
+        rttRef=self.errorRtt
+        self.rttRef=rttRef
+        self.f1final=1+rttRef-self.avRtt
         if self.f1final<1:
             self.f1final=1
         
-        print 'final f:',self.f1final
+       # print 'final f:',self.f1final
+       # try:
+       #     self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
+       # except:
+       #     pass
+        
+       # self.window=ceil(self.umax*prtt*self.f1final)
+       # self.f1old=self.f1final
+        #if self.avRtt>rttRef:
+    #    self.window=ceil(self.maxumax*self.minRtt)
+    #else:
+        self.window=ceil(self.umax*rttRef+(rttRef-self.avRtt)*self.umax*rttRef)
         try:
-            self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
+            self.window=self.winOld+0.3*(self.window-self.winOld)
         except:
             pass
-        
-        self.window=ceil(self.umax*prtt*self.f1final)
-        self.f1old=self.f1final        
-        
+        self.winOld=self.window
         print 'window is :',self.window
         
     def setU(self):
@@ -254,7 +268,7 @@ class UDPsender(threading.Thread):
             
 class Producer(threading.Thread):
     
-    def __init__(self, nreceivers=2):
+    def __init__(self, nreceivers=1):
         threading.Thread.__init__(self)
         self.nb = 7
         self.fperb=(Srate/self.nb)/1500
@@ -270,10 +284,10 @@ class Producer(threading.Thread):
             #queue.put_nowait((peers[0], self.fperb))
             if len(peers) >= self.nreceivers:
                 newpeer =peers[:]
-		random.shuffle(newpeer)
+                random.shuffle(newpeer)
                 for i in range(self.nreceivers):
                     to = newpeer.pop()
-		    print to
+                    print to
                     queue.put_nowait((to, self.fperb))
             time.sleep(self.sleep)
                 
@@ -320,13 +334,17 @@ class ACKreceiver(threading.Thread):
                 PeerRtt[peer]['min']=rtt
                 #print 'in if'
             if PeerRtt[peer]['congRtt']<rtt:
-		          PeerRtt[peer]['congRtt']=rtt
+                  PeerRtt[peer]['congRtt']=rtt
             if error:
-                if not PeerRtt[peer].has_key('max'):
-                    PeerRtt[peer]['max']=rtt 
+                if not PeerRtt[peer].has_key('meanmax'):
+                    PeerRtt[peer]['meanmax']=[PeerRtt[peer]['last'][-1]] 
+                    PeerRtt[peer]['meanmax'].append(rtt)
                 else:
-                    if rtt>PeerRtt[peer]['max']:
-                        PeerRtt[peer]['max']=rtt
+                    PeerRtt[peer]['meanmax'].append(PeerRtt[peer]['last'][-1])
+                    PeerRtt[peer]['meanmax'].append(rtt)
+
+                PeerRtt[peer]['meanmax']=PeerRtt[peer]['meanmax'][-10:]
+                PeerRtt[peer]['max']=sum(PeerRtt[peer]['meanmax'])/len(PeerRtt[peer]['meanmax'])
             PeerRtt[peer]['last'].append(rtt)
             PeerRtt[peer]['last']=PeerRtt[peer]['last'][-5:]
             LastAck.append((peer,rtt))
