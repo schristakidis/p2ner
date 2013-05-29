@@ -16,7 +16,7 @@ queue = Queue()
 AckHistory=[]
 Hlock = threading.RLock()
 Plock = threading.RLock()
-Srate=700000 
+Srate=700000/2 
 START = threading.Event()
 PeerRtt={}
 LastAck=[]
@@ -51,6 +51,7 @@ class XMLRPCserver(threading.Thread):
 class UDPsender(threading.Thread):
     
     def __init__(self, fsize=1400, ack=10, bsize=10):
+	global GTsend
         threading.Thread.__init__(self)
         self.ack = ack
         self.bsize = bsize
@@ -59,7 +60,7 @@ class UDPsender(threading.Thread):
         for i in xrange(fsize):
             self.fragment+=chr(random.randint(0,255))
         self.seq = 0
-        self.Tsend = 0.05
+        self.Tsend = 0.1
         GTsend=self.Tsend
         history=4
         self.history_size=int(history/self.Tsend)
@@ -94,14 +95,14 @@ class UDPsender(threading.Thread):
                 AckHistory.pop(0)
                 print 'len ack histoty issssssssssss:',len(AckHistory)
             Hlock.release()
-            if time.time()-startTime<3:
+            if time.time()-startTime<5:
                 self.u=self.umax
             else:
                 self.setUmax()
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrttRef])
+                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -196,19 +197,19 @@ class UDPsender(threading.Thread):
                 lastPeers[p]['count'] +=1
                 lastPeers[p]['rtt'] +=r
                 
-        
+        self.rttRef=self.refRtt
         self.lrefRtt=0
         self.avRtt=0
         sum2=0
-        for p,v in lastPeers:
+        for p,v in lastPeers.items():
             av=v['rtt']/v['count']
             ref=PeerRtt[p]['ref']
             self.lrefRtt += v['count']*(ref-av)
             self.avRtt +=v['rtt']
             sum2 +=v['count']
         Plock.release()
-        
         self.avRtt=self.avRtt/sum2
+	print 'average:',self.avRtt        
         if not self.lrefRtt:
             self.lrefRtt=self.refRtt  
             
@@ -219,10 +220,12 @@ class UDPsender(threading.Thread):
          #   self.f1final=1
         
      
-	
-        self.window=(self.umax*(self.rttRef+self.Tsend)+(self.lrttRef-self.avRtt)*self.umax*(self.rttRef+self.Tsend))
+	#print 'umax:',self.umax
+	#print 'ref:',self.rttRef
+	#print 'lref:',self.lrefRtt	
+        self.window=(self.umax*(self.rttRef+self.Tsend)+(self.lrefRtt-self.avRtt)*self.umax*(self.rttRef+self.Tsend))
         try:
-            self.window=round(self.winOld+0.3*(self.window-self.winOld))
+            self.window=ceil(self.winOld+0.3*(self.window-self.winOld))
         except:
             pass
         self.winOld=self.window
@@ -245,7 +248,7 @@ class UDPsender(threading.Thread):
             
 class Producer(threading.Thread):
     
-    def __init__(self, nreceivers=1):
+    def __init__(self, nreceivers=2):
         threading.Thread.__init__(self)
         self.nb = 7
         self.fperb=(Srate/self.nb)/1500
@@ -330,6 +333,8 @@ class ACKreceiver(threading.Thread):
             else:
                 er=PeerRtt[peer]['max']
             PeerRtt[peer]['ref']=minRtt+3*(er-minRtt)/4
+	    #print 'min:',minRtt
+	    #print 'max:',er
             Plock.release()        
       
             
