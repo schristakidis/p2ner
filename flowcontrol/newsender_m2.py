@@ -232,7 +232,7 @@ class UDPsender(threading.Thread):
 	#print 'umax:',self.umax
 	#print 'ref:',self.rttRef
 	#print 'lref:',self.lrefRtt	
-        self.window=(self.umax*(self.rttRef+self.Tsend)+(self.lrefRtt-self.avRtt)*self.umax*(self.rttRef+self.Tsend))
+        self.window=(self.umax*(self.rttRef+self.Tsend)+(self.lrefRtt)*self.umax*(self.rttRef+self.Tsend))
         try:
             self.window=ceil(self.winOld+0.3*(self.window-self.winOld))
         except:
