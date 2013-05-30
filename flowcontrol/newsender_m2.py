@@ -21,6 +21,8 @@ START = threading.Event()
 PeerRtt={}
 LastAck=[]
 GTsend=0
+RTT1=0
+RTT2=0
 
 class XMLRPCserver(threading.Thread):
 
@@ -51,7 +53,7 @@ class XMLRPCserver(threading.Thread):
 class UDPsender(threading.Thread):
     
     def __init__(self, fsize=1400, ack=10, bsize=10):
-	global GTsend
+	global GTsend,RTT1,RTT2
         threading.Thread.__init__(self)
         self.ack = ack
         self.bsize = bsize
@@ -102,7 +104,7 @@ class UDPsender(threading.Thread):
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt])
+                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt,RTT1,RTT2])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -327,6 +329,21 @@ class ACKreceiver(threading.Thread):
             PeerRtt[peer]['last']=PeerRtt[peer]['last'][-5:]
             LastAck.append((peer,rtt))
             LastAck=LastAck[-5:]
+            if not peer in self.peers.keys():
+                self.peers[peer]={}
+                
+                if not RTT1:
+                    self.peers[peer]['p']=1
+                else:
+                    self.peers[peer]['p']=2
+            self.peers[peer]['av']=sum(LastAck)/len(LastAck)
+            
+            for p in self.peers.values():
+                if p['p']==1:
+                    RTT1=p['av']
+                else:
+                    RTT2=p['av']   
+                    
             minRtt=PeerRtt[peer]['min']
             if not PeerRtt[peer].has_key('meanmax'):
                 er=minRtt+GTsend
