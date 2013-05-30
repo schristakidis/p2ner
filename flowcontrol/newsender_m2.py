@@ -211,7 +211,14 @@ class UDPsender(threading.Thread):
             sum2 +=v['count']
         Plock.release()
         self.avRtt=self.avRtt/sum2
-	print 'average:',self.avRtt        
+        print 'average:',self.avRtt
+        
+        try:
+            self.lrefRtt=self.lrefRtt/sum2
+        except:
+            self.lrefRtt=0
+            print 'fffffffffffffffffffffffffffffffffffffffffffffffffff'        
+        
         if not self.lrefRtt:
             self.lrefRtt=self.refRtt  
             
