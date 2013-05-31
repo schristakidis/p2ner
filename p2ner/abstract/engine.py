@@ -97,6 +97,10 @@ class Engine(Namespace):
         self.log.debug('trying to load pipeline element headerparser')
         hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.controlPipe)
         
+        self.log.debug('trying to load pipeline element bandwidth')
+        bwid = loadComponent("pipeelement", "BandwidthElement")(_parent=self.contolPipe)
+       
+        
         if "control" not in kwargs:
             control = defaultControl
         else:
@@ -123,6 +127,7 @@ class Engine(Namespace):
         self.controlPipe.append(multiparser)
         self.controlPipe.append(ackparser)
         self.controlPipe.append(hparser)
+        self.controlPipe.append(bwid)
         self.controlPipe.append(udpparser)
         
         #self.controlPipe.printall()
