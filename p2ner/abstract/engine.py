@@ -98,7 +98,7 @@ class Engine(Namespace):
         hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.controlPipe)
         
         self.log.debug('trying to load pipeline element bandwidth')
-        bwid = loadComponent("pipeelement", "BandwidthElement")(_parent=self.contolPipe)
+        bwid = loadComponent("pipeelement", "BandwidthElement")(_parent=self.controlPipe)
        
         
         if "control" not in kwargs:
