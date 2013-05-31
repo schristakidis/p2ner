@@ -77,7 +77,10 @@ class CentralServer(Overlay):
                 newPeerNeighs = self.findNeighbours(self.maxPeers)
             for p in newPeerNeighs:
                 self.log.debug('adding %s to the neighborhood of %s',peer,p)
-                self.neighbourhoods[p].append(peer)
+                try:
+                    self.neighbourhoods[p].append(peer)
+                except:
+                    self.log.error('no peer in neighbourhoods')
                 self.log.debug('sending peerlist message to %s containing %s',p,peer)
                 #PeerListMessage.send(self.stream.id, [peer], p, self.controlPipe)
             self.neighbourhoods[peer] = newPeerNeighs
