@@ -36,6 +36,7 @@ class Logger(object):
     def __init__(self,level='debug',name='p2ner'):
         self.log = logging.getLogger(name)
         name=name+'.'
+        self.lname=name
         userdatadir = get_user_data_dir()
         if not os.path.isdir(userdatadir):
             os.mkdir(userdatadir)
@@ -84,7 +85,7 @@ class Logger(object):
         try:
             log=self.log.getChild(name)
         except:
-            log=logging.getLogger('p2ner.'+name)
+            log=logging.getLogger(self.lname+name)
         
         if interface:
             self.add_handler(log,level,interfaceHandler(interface))
@@ -109,7 +110,6 @@ class Logger(object):
         if level not in levels:
             level='debug'
         handler.setLevel(levels[level])
-
         log.addHandler(handler)
 
     
