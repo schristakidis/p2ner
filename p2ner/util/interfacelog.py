@@ -18,7 +18,11 @@ from p2ner.abstract.interface import Interface
 import os
 
 class DatabaseLog(Interface):
-    def initInterface(self):
+    def initInterface(self,server=False):
+        if server:
+            self.defaultIp='server'
+        else:
+            self.defaultIp='peer'
         userdatadir = get_user_data_dir()
         if not os.path.isdir(userdatadir):
             os.mkdir(userdatadir)
@@ -40,7 +44,7 @@ class DatabaseLog(Interface):
             ip=self.root.netChecker.externalIp
             port=self.root.netChecker.controlPort
         except:
-            ip='peer'
+            ip=self.defaultIp
             port=0
         args=(ip,port,record.levelname,record.name,record.asctime,record.created,record.msecs,record.module,record.funcName,record.lineno,record.getMessage())
         with self.con:

@@ -18,15 +18,17 @@ from twisted.internet import reactor,defer
 from cPickle import dumps,loads
 from p2ner.util.utilities import findNextTCPPort,getIP
 from twisted.web.xmlrpc import Proxy
+from p2ner.util.interfacelog import DatabaseLog
 
 class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     
     def initInterface(self,*args,**kwargs):
         xmlrpc.XMLRPC.__init__(self)
+        self.logger=DatabaseLog(_parent=self,server=True)
         print 'should register to ',kwargs['vizirIP'],kwargs['vizirPort']
         url="http://"+kwargs['vizirIP']+':'+str(kwargs['vizirPort'])+"/XMLRPC"
         self.proxy=Proxy(url)
-
+        
             
     def start(self):
         print 'start listening xmlrpc'
@@ -49,3 +51,16 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         print 'restarting server'
         self.root.restartServer()
         return 1
+    
+    def logRecord(self,record):
+         reactor.callLater(0,self.logger.addRecord,record)
+        
+    def xmlrpc_getRecords(self):
+        ret=self.logger.getRecords()
+        if ret:
+            ret=[dict(r) for r in ret]
+            ret= [dumps(r) for r in ret]
+        else:
+            ret=[]
+        return ret
+        

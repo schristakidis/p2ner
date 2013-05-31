@@ -117,8 +117,7 @@ class Interface(Interface):
         
     def loadRecords(self,records):
         return [loads(r) for r in records]
-        
-        
+
     def requestFiles(self,rcom,arg,lcom):
         d=self.proxy.callRemote(rcom,arg)
         d.addCallback(self.loadRecords)

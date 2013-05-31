@@ -164,8 +164,9 @@ class LoggerGui(UI):
         if not model.get_value(iter,len(self.cols)):
             return False 
         
-        if not self.local and (model.get_value(iter,0),model.get_value(iter,1)) not in self.filters['peer']:
-            return False
+        if not self.local and (model.get_value(iter,0),model.get_value(iter,1)) not in self.filters['peer']: 
+            if model.get_value(iter,0)!='server':
+                return False
         if levels[model.get_value(iter,2).lower()]<levels[self.filters['level'].lower()]:
             return False
         if self.filters['log'] and  self.filters['log']!='p2ner' and model.get_value(iter,3)!=self.filters['log']:
