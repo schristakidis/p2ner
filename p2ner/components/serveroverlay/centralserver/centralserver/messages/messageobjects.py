@@ -26,7 +26,7 @@ class StreamMessage(BaseControlMessage):
     @classmethod
     def send(cls, stream, peer, out,func,err_func):
         #cls.log.debug('sending stream message to %s',peer)
-        return out.send(cls, Container(stream=stream), peer).addErrback(probe_all,suc_func=func,err_func=err_func)
+        return out.send(cls, Container(stream=stream), peer).addErrback(probe_all,err_func=err_func,suc_func=func)
         
 
 class PeerListMessage(BaseControlMessage):

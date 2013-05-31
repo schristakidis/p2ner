@@ -69,7 +69,7 @@ class CentralServer(Overlay):
         StreamMessage.send(self.stream, peer, self.controlPipe,self._addNeighbour,self.addFailed)
         
     def addFailed(self,peer):
-        self.log.error('failed to add %s to overlay'.peer)
+        self.log.error('failed to add %s to overlay',peer)
         self.log.error('sending server stop message')
         ServerStoppedMessage.send(self.stream.id,self.controlPipe)
         

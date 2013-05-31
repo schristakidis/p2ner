@@ -65,6 +65,7 @@ class StreamClient(Stream):
     
     def stop(self):
         if True:#self.running:
+            self.log.info('should stop stream')
             d=self['overlay'].stop()
             d.addCallback(self._stop)
             return d
