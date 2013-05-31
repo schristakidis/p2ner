@@ -29,6 +29,7 @@ class BandwidthElement(PipeElement):
         self.stuck = True
         self.thres = thres
         self.bwSet=False
+        
     
     def send(self, res, msg, data, peer):
         for r in res:
@@ -63,7 +64,7 @@ class BandwidthElement(PipeElement):
             bw=self.bw
             peer.bw=bw
             
-        #print bw,peer.bw
+        print bw,peer.bw
         nextiter=1.0*len(res)/bw
         #print 'next iter:',nextiter
         reactor.callLater(nextiter, self.sendfromque)
