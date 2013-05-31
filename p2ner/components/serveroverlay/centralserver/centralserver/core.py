@@ -66,7 +66,13 @@ class CentralServer(Overlay):
     
     def addNeighbour(self, peer):
         self.log.debug('sending stream message to %s',peer)
-        StreamMessage.send(self.stream, peer, self.controlPipe,self._addNeighbour)
+        StreamMessage.send(self.stream, peer, self.controlPipe,self._addNeighbour,self.addFailed)
+        
+    def addFailed(self,peer):
+        self.log.error('failed to add %s to overlay'.peer)
+        self.log.error('sending server stop message')
+        ServerStoppedMessage.send(self.stream.id,self.controlPipe)
+        
         
     def _addNeighbour(self,peer):
         newPeerNeighs = []

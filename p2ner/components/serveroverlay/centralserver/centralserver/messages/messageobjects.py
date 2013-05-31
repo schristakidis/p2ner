@@ -16,7 +16,7 @@
 
 from construct import Container
 from p2ner.base.Consts import MessageCodes as MSG
-from p2ner.base.ControlMessage import trap_sent, BaseControlMessage,probe_rec,ControlMessage
+from p2ner.base.ControlMessage import trap_sent, BaseControlMessage,probe_all,ControlMessage
 
 class StreamMessage(BaseControlMessage):
     type = "streammessage"
@@ -24,9 +24,9 @@ class StreamMessage(BaseControlMessage):
     ack = True
 
     @classmethod
-    def send(cls, stream, peer, out,func):
+    def send(cls, stream, peer, out,func,err_func):
         #cls.log.debug('sending stream message to %s',peer)
-        return out.send(cls, Container(stream=stream), peer).addErrback(probe_rec,func)
+        return out.send(cls, Container(stream=stream), peer).addErrback(probe_all,suc_func=func,err_func=err_func)
         
 
 class PeerListMessage(BaseControlMessage):
