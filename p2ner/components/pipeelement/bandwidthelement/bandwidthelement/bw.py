@@ -23,7 +23,7 @@ import time
 class BandwidthElement(PipeElement):
 
     def initElement(self, bw=200000, thres=3):
-        self.log.info('BlockHeaderElement loaded')
+        self.log.info('BandwidthElement loaded')
         self.bw = bw
         self.que = deque()
         self.stuck = True
@@ -64,7 +64,7 @@ class BandwidthElement(PipeElement):
             bw=self.bw
             peer.bw=bw
             
-        print bw,peer.bw
+        #print bw,peer.bw
         nextiter=1.0*len(res)/bw
         #print 'next iter:',nextiter
         reactor.callLater(nextiter, self.sendfromque)

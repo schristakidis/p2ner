@@ -14,7 +14,7 @@ URI = "https://api.bonfire-project.eu"
 
 NAME = "PyExp"
 DESCRIPTION = "Test experiment"
-WALLTIME = 24*60*60
+WALLTIME = 24*60*60*3
 
 brokerargs = {'username': USER,
               'password': PASSWORD,

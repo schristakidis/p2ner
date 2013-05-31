@@ -18,10 +18,10 @@ brokerargs = {'username': USER,
 broker = Broker(**brokerargs)
 
 experiment = broker.get_experiments()[0]
-#net1 = broker.get_networks(location = "/locations/be-ibbt", experiment = experiment)[1]
-net1 = "/locations/be-ibbt/networks/1287"
-newres = VirtualWallNetworkResource("producer", "/locations/be-ibbt", experiment)
-newres.latency = LATENCY
-newres.bandwidth = BANDWIDTH
-broker.occi("PUT", str(net1), toprettyxml(newres), validate = False)
+net1 = broker.get_networks(location = "/locations/be-ibbt", experiment = experiment)[1]
+#net1 = "/locations/be-ibbt/networks/1287"
+#newres = VirtualWallNetworkResource("producer", "/locations/be-ibbt", experiment)
+net1.latency = LATENCY
+net1.bandwidth = BANDWIDTH
+broker.occi("PUT", str(net1), toprettyxml(net1), validate = False)
 

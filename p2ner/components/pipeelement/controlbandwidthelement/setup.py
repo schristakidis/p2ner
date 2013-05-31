@@ -16,7 +16,7 @@
 
 from setuptools import setup
 
-__component_name__ = "BandwidthElement"
+__component_name__ = "ControlBandwidthElement"
 __author__ = "Loris Corazza"
 __author_email__ = "loox@ece.upatras.gr"
 __version__ = "0.1"

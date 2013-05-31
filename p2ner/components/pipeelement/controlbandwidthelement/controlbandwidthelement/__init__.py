@@ -14,4 +14,4 @@
 #   limitations under the License.
 
 
-from bw import BandwidthElement
+from bw import ControlBandwidthElement

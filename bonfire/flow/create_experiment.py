@@ -8,7 +8,7 @@ from bonfire.broker import Experiment, ComputeResource, Disk, Nic, DynamicRefere
 from bonfire.broker.occi import toprettyxml
 from bonfire_cli import Formatter, Field
         
-USER = "loox"
+USER = "schristakidis"
 PASSWORD = "sakis4440"
 URI = "https://api.bonfire-project.eu"
 

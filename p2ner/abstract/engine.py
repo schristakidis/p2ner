@@ -96,6 +96,10 @@ class Engine(Namespace):
         
         self.log.debug('trying to load pipeline element headerparser')
         hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.controlPipe)
+
+        self.log.debug('trying to load pipeline element controlbandwidth')
+        bw = loadComponent("pipeelement", "ControlBandwidthElement")(_parent=self.controlPipe)
+
         
       
         
@@ -125,6 +129,7 @@ class Engine(Namespace):
         self.controlPipe.append(multiparser)
         self.controlPipe.append(ackparser)
         self.controlPipe.append(hparser)
+	self.controlPipe.append(bw)
         self.controlPipe.append(udpparser)
         
         #self.controlPipe.printall()
