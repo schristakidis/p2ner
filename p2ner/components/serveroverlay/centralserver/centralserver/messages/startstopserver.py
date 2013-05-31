@@ -17,6 +17,7 @@
 from p2ner.base.ControlMessage import ControlMessage, trap_sent
 from p2ner.base.Consts import MessageCodes as MSG
 from twisted.internet import reactor
+from construct import Container
 
 class ServerStartedMessage(ControlMessage):
     type = "sidmessage"
