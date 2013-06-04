@@ -48,7 +48,7 @@ class PeerListMessage(ControlMessage):
         for p in message.peer:
             p.learnedFrom=peer
             print 'sending add message to ',p
-            AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self['overlay'].addNeighbour,self['overlay'].failedNeighbour,self.root.controlPipe)
+            AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.root.controlPipe)
                    
         
     @classmethod
@@ -101,14 +101,34 @@ class AddNeighbourMessage(ControlMessage):
         self.log.debug('received add neigh message from %s',peer)
         print 'received neigh message from ',peer
         self['overlay'].addNeighbour(peer)
+        ConfirmNeighbourMessage.send(self.stream.id,peer,self.controlPipe)
         
     @classmethod
-    def send(cls, id,port,bw, inpeer, peer,suc_func,err_func, out):
+    def send(cls, id,port,bw, inpeer, peer, out):
         msg = Container(streamid=id,port=int(port), bw=bw,peer=inpeer)
         d=out.send(cls, msg, peer)
-        d.addErrback(probe_all,suc_func=suc_func,err_func=err_func)
+        d.addErrback(trap_sent)
         return d
         
+class ConfirmNeighbourMessage(ControlMessage):
+    type = "sidmessage"
+    code = MSG.CONFIRM_NEIGH
+    ack = True
+    
+    def trigger(self, message):
+        if self.stream.id != message.streamid:
+            return False
+        return True   
+    
+    def action(self, message, peer):
+        self['overlay'].addNeighbour(peer)
+        
+    @classmethod
+    def send(cls, sid, peer, out):
+        d=out.send(cls, Container(streamid = sid), peer)
+        d.addErrback(trap_sent)
+        return d
+    
 class AddProducerMessage(BaseControlMessage):   
     type = "overlaymessage"
     code = MSG.ADD_PRODUCER

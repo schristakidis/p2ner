@@ -57,6 +57,7 @@ class DistributedClient(Overlay):
         self.messages.append(GetNeighsMessage())
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(SuggestMessage())
+        self.messages.append(ConfirmNeighbourMessage())
         
     def initOverlay(self):
         self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
@@ -102,6 +103,7 @@ class DistributedClient(Overlay):
             else:
                 self.neighbours.append(peer)
                 self.log.info('adding %s to neighborhood',peer)
+                print 'adding ',peer,' to neighborhood'
             PingMessage.send(peer,self.controlPipe)
         else:
             self.log.error("%s  yet in overlay" ,peer)
@@ -113,10 +115,10 @@ class DistributedClient(Overlay):
             print p,p.useLocalIp,p.lip
             print p.reportedBW
             
-    def failedNeighbour(self,peer):
-        self.log.warning('failed to add %s to neighborhood',peer)
-        print 'failed to add ',peer,' to neighbourhood'
-        setValue(self,'log','failed to add peer to neighbourhood')
+    #def failedNeighbour(self,peer):
+     #   self.log.warning('failed to add %s to neighborhood',peer)
+     #   print 'failed to add ',peer,' to neighbourhood'
+      #  setValue(self,'log','failed to add peer to neighbourhood')
         
     def addProducer(self,peer):
         self.producer=peer
@@ -208,7 +210,7 @@ class DistributedClient(Overlay):
         AskSwapMessage.send(self.stream.id,peer,self.controlPipe,err_func=self.askFailed,suc_func=self.askReceived)
         
     def askFailed(self,peer):
-        self.log.debug('ask swap to %s failed',peer)
+        self.log.error('ask swap to %s failed',peer)
         print 'ask swap to ',peer,'failed'
         setValue(self,'log','ask swap failed')
         self.initiator=False
@@ -559,6 +561,10 @@ class DistributedClient(Overlay):
     def recAskSwap(self,peer):
         self.log.debug('received ask swap from %s',peer)
         print 'received ask swap from ',peer
+        if peer not in self.getNeighbours():
+            self.log.error('he is not my neighbor so rejecting the swap') ####need to chnage and take action
+            RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
+            return
         if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop:
             RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
             self.log.debug('and rejected it')
@@ -837,7 +843,7 @@ class DistributedClient(Overlay):
         print 'receive  available peers message from ',peer,' with ',newPeer
         inpeer,port=self.root.checkNatPeer()
         bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
-        AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.addNeighbour,self.failedNeighbour,self.root.controlPipe)
+        AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.root.controlPipe)
         
             
     def checkDuplicates(self):
