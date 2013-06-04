@@ -20,7 +20,7 @@ from p2ner.base.Peer import Peer
 from collections import deque
 import time
 
-class ControlBandwidthElement(PipeElement):
+class BandwidthElement(PipeElement):
 
     def initElement(self, bw=200000):
         self.log.info('ControlBandwidthElement loaded')
