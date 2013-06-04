@@ -98,7 +98,7 @@ class Engine(Namespace):
         hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.controlPipe)
 
         self.log.debug('trying to load pipeline element controlbandwidth')
-        bw = loadComponent("pipeelement", "ControlBandwidthElement")(_parent=self.controlPipe)
+        bw = loadComponent("pipeelement", "UDPBandwidthElement")(_parent=self.controlPipe)
 
         
       
@@ -108,7 +108,7 @@ class Engine(Namespace):
         else:
             control = kwargs["control"]
         c, a, k = control
-        p=50028
+        p=50000
         if "port" in kwargs:
             p=kwargs["port"]
             
@@ -129,7 +129,7 @@ class Engine(Namespace):
         self.controlPipe.append(multiparser)
         self.controlPipe.append(ackparser)
         self.controlPipe.append(hparser)
-	self.controlPipe.append(bw)
+        self.controlPipe.append(bw)
         self.controlPipe.append(udpparser)
         
         #self.controlPipe.printall()
