@@ -17,7 +17,7 @@
 from twisted.internet import reactor
 from p2ner.abstract.overlay import Overlay
 from p2ner.base.Stream import Stream
-from messages.requeststream import RequestStreamMessage
+from messages.requeststream import RequestStreamMessage,AskInitNeighsMessage
 from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage, StartRemoteMessage
 from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage,SuggestNewPeerMessage,SuggestMessage
 from messages.startstopclient import ClientStoppedMessage
@@ -36,7 +36,8 @@ class CentralServer(Overlay):
         self.messagess.append(StartRemoteMessage())
         self.messagess.append(ClientStoppedMessage())
         self.messages.append(SuggestNewPeerMessage())
-    
+        self.messages.append(AskInitNeighsMessage())
+        
     def initOverlay(self, producer, stream):
         self.log=self.logger.getLoggerChild(('s'+str(stream.id)),self.interface)
         self.log.info('initing overlay')
@@ -64,17 +65,12 @@ class CentralServer(Overlay):
         print "UAZ"
         return None
     
-    def addNeighbour(self, peer):
+    def sendStream(self, peer):
         self.log.debug('sending stream message to %s',peer)
-        StreamMessage.send(self.stream, peer, self.controlPipe,self._addNeighbour,self.addFailed)
-        
-    def addFailed(self,peer):
-        self.log.error('failed to add %s to overlay',peer)
-        self.log.error('sending server stop message')
-        ServerStoppedMessage.send(self.stream.id,self.controlPipe)
+        StreamMessage.send(self.stream, peer, self.controlPipe)
         
         
-    def _addNeighbour(self,peer):
+    def addNeighbour(self,peer):
         newPeerNeighs = []
         if len(self.neighbourhoods) > 0:
             if len(self.neighbourhoods) < self.maxPeers:

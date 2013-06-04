@@ -82,3 +82,4 @@ class MessageCodes(object):
     RETURN_NEIGHS=101
     SUGGEST_NEW_PEER=102
     SUGGEST=103
+    ASK_INIT_NEIGHS=104

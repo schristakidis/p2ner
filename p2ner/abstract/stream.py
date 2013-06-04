@@ -37,7 +37,6 @@ class Stream(Namespace):
             raise ValueError('you definetely need a stream')
         
         self.server=Peer(self.stream.server[0],self.stream.server[1])
-        
         output = defaultOutput
         if "output" in kwargs:
             output = kwargs["output"]

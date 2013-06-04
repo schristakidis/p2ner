@@ -18,6 +18,17 @@ from p2ner.base.ControlMessage import ControlMessage, trap_sent,probe_all,BaseCo
 from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
 
+class AskInitNeighs(BaseControlMessage):
+    type = "sidmessage"
+    code = MSG.ASK_INIT_NEIGHS
+    ack = True
+    
+    @classmethod
+    def send(cls, sid, peer, out):
+        d=out.send(cls, Container(streamid = sid), peer)
+        d.addErrback(trap_sent)
+        return d
+    
 class PeerListMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SEND_IP_LIST

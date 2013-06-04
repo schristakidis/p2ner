@@ -85,6 +85,7 @@ class DistributedClient(Overlay):
         self.tempSwaps=0
         self.tempLastSatelite=0
         self.tempLastSwap=0
+        AskInitNeighs.send(self.stream.id,self.server,self.controlPipe)
         
     def getNeighbours(self):
         return self.neighbours[:]

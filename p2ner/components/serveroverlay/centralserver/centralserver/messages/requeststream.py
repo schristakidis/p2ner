@@ -28,6 +28,17 @@ class RequestStreamMessage(ControlMessage):
 
     def action(self, message, peer):
         self.log.debug('received request stream message from %s',peer)
+        self.overlay.sendStream(peer)
+
+
+class AskInitNeighsMessage(ControlMessage):
+    type = "sidmessage"
+    code = MSG.ASK_INIT_NEIGHS
+    ack = True
+    
+    def trigger(self, message):
+        return self.stream.id == message.streamid
+
+    def action(self, message, peer):
+        #self.log.debug('received request stream message from %s',peer)
         self.overlay.addNeighbour(peer)
-
-

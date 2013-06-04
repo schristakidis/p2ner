@@ -60,9 +60,6 @@ class ServerStoppedMessage(ServerStartedMessage):
             ServerStoppedMessage.send(message, self.overlay.getNeighbours(), self.controlPipe)
             #ServerStartedMessage.send(message, self.overlay.producer, self.controlPipe)
 
-    @classmethod
-    def send(cls, sid, server, out):
-        return out.send(cls, Container(streamid=sid), server).addErrback(trap_sent)
     
 class StartRemoteMessage(ControlMessage):
     type='sidmessage'
