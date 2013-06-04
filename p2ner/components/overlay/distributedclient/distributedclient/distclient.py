@@ -235,6 +235,7 @@ class DistributedClient(Overlay):
     def recAcceptSwap(self,peer,peerlist):
         if peer!=self.passiveInitPeer:
             #raise ValueError('problem in receive accept swap. Accepting peer is not the passive initiator')
+            self.log.error('problem in receive accept swap. Accepting peer %s is not the passive initiator %s',peer,self.passiveInitPeer)
             print 'problem in receive accept swap. Accepting peer is not the passive initiator'
             setValue(self,'log','problem in receive accept swap. Accepting peer is not the passive initiator')
             #reactor.stop()
@@ -295,6 +296,7 @@ class DistributedClient(Overlay):
             
     def lockFailed(self,peer):
         peer.participateSwap=False
+        peer.partnerParticipateSwap=False
         self.checkLockFinished()
         
     def lockSent(self,peer):
@@ -305,6 +307,7 @@ class DistributedClient(Overlay):
         peer.checkResponse.cancel()
         if not peer.participateSwap:
             #raise ValueError('got an unexpected lock response from %s',peer)
+            self.log.error('got an unexpected lock response from  %s',peer)
             print 'got an unexpected lock response from ',peer
             setValue(self,'log','got an unexpected lock response')
             #reactor.stop()
@@ -660,6 +663,7 @@ class DistributedClient(Overlay):
             self.log.debug('with action continue')
             if peer not in self.getNeighbours():
                 #raise ValueError('got continue satelite from %s while he is not my neighbour',peer)
+                self.log.error('got continue satelite from %s while he is not my neighbour',peer)
                 print 'got continue satelite from %s while he is not my neighbour'
                 setValue(self,'log','got continue satelite  while he is not my neighbour')
                 #reactor.stop()
@@ -679,6 +683,7 @@ class DistributedClient(Overlay):
             self.log.debug('with action dummy substitute with %s',partner)
             if partner not in self.getNeighbours():
                 #raise ValueError('got substitute satelite from %s while %s is not my neighbour',peer,partner)
+                self.log.error( 'got dummy substitute satelite from %s while %s is not my neighbour',peer,partner)
                 print 'got dummy substitute satelite from s while s is not my neighbour'
                 #reactor.stop()
                 setValue(self,'log','got dummy substitute satelite from s while s is not my neighbour')
