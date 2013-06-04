@@ -116,7 +116,7 @@ class DistributedClient(Overlay):
     def failedNeighbour(self,peer):
         self.log.warning('failed to add %s to neighborhood',peer)
         print 'failed to add ',peer,' to neighbourhood'
-        setValue(self,'log','failed to add peer to neighbourhoud')
+        setValue(self,'log','failed to add peer to neighbourhood')
         
     def addProducer(self,peer):
         self.producer=peer
@@ -223,6 +223,7 @@ class DistributedClient(Overlay):
     def recRejectSwap(self,peer):
         if peer!=self.passiveInitPeer:
             #raise ValueError('problem in receive reject swap. Rejecting peer is not the passive initiator')
+            self.log.error('problem in receive reject swap. Rejecting peer %s is not the passive initiator %s',peer,self.passiveInitPeer)
             print 'problem in receive reject swap. Rejecting peer is not the passive initiator'
             setValue(self,'log','problem in receive reject swap. Rejecting peer is not the passive initiator')
             #reactor.stop()
