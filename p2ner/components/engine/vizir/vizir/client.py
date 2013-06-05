@@ -93,3 +93,5 @@ class PClient(Interface):
     def getLog(self,func,ip,port):
         self.interface.getVizirLogRecords(func,ip,port)
         
+    def stopSwapping(self,stop,id):
+        self.interface.stopSwapping(stop,id)

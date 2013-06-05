@@ -295,4 +295,9 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         stats=strm['overlay'].getVizirStats()
         return (ret,en,stats)
     
+    def xmlrpc_stopSwapping(self,stop,id):
+        strm=self.root.getStream(id)
+        strm['overlay'].toggleSwap(stop)
+        return 1
+    
    

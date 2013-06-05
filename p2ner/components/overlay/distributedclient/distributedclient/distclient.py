@@ -863,3 +863,11 @@ class DistributedClient(Overlay):
         self.tempSwaps=0
         self.tempSatelites=0
         return ret
+    
+    def toggleSwap(self,stop):
+        if stop:
+            if self.loopingCall.running:
+                self.loopingCall.stop()
+        else:
+            if not self.loopingCall.running:
+                self.loopingCall.start(self.stream.overlay['swapFreq'])

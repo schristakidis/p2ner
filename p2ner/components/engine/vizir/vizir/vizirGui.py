@@ -71,6 +71,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         setUploadBW = self.builder.get_object("setUploadBW")
         startProducer = self.builder.get_object("startProducer")
         showOverlay = self.builder.get_object("showOverlay")
+        swapButton=self.builder.get_object("swapButton")
         showLog=self.builder.get_object("showLog")
         startNclients.connect("clicked", self.startNclients)
         stopNclients.connect("clicked", self.stopNclients)
@@ -78,6 +79,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         startProducer.connect("clicked", self.startProducing)
         showOverlay.connect("clicked", self.showOverlay)
         showLog.connect('clicked',self.logger.start)
+        swapButton.connect('clicked',self.swapToggle)
         self.win.set_title("VizEW - Control Center")
         pixbuf = self.win.render_icon(gtk.STOCK_FIND, gtk.ICON_SIZE_MENU)
         self.win.set_icon(pixbuf)
@@ -385,7 +387,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
     def getRunningClients(self,id):
         return [m for m in self.treemodel if m[3]==ON and m[4]=='client' and m[6]==id]
-    
+      
+        
     def popupMenu(self, event,iter,right=True):
         menu = gtk.Menu()
         if self.treemodel.get_value(iter,4)=='server':
@@ -505,7 +508,30 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         
     def getPeers(self):
         return [(m[0],m[1]) for m in self.treemodel]
-                
+    
+    def swapToggle(self,widget):
+        if widget.get_stock_id()=='gtk-cancel':
+            stop=True
+            widget.set_stock_id('gtk-execute')
+        elif widget.get_stock_id()=='gtk-execute':
+            stop=False
+            widget.set_stock_id('gtk-cancel')
+             
+        id=self.getProducingId()
+        if not id:   
+            widget.set_stock_id('gtk-cancel')
+            return
+        
+        id=id[0][1]
+        clients=self.getRunningClients(id)
+        
+        if not clients:
+            widget.set_stock_id('gtk-cancel')
+            return
+        
+        for cl in clients:
+            cl[7].stopSwapping(stop,id)
+            
 def startVizirGui():
     from twisted.internet import reactor
     import sys,getopt

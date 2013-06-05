@@ -217,4 +217,7 @@ class Interface(Interface):
         d.addCallback(func,ip,port)
         d.addErrback(self.failedXMLRPC)
             
+    def stopSwapping(self,stop,id):
+        d=self.proxy.callRemote('stopSwapping',stop,id)
+        d.addErrback(self.failedXMLRPC)
         
