@@ -200,7 +200,7 @@ class DistributedClient(Overlay):
     def startSwap(self):
         self.log.debug('starting swap')
         if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop:
-            self.log.debug('no available conditions for swap')
+            self.log.debug('no available conditions for swap %d,%d,%d,%d',self.satelite,self.initiator,self.passiveInitiator,len(self.neighbours))
             return
         
         self.initiator=True
@@ -567,7 +567,7 @@ class DistributedClient(Overlay):
             return
         if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop:
             RejectSwapMessage.send(self.stream.id,peer,self.controlPipe)
-            self.log.debug('and rejected it')
+            self.log.debug('and rejected it %d,%d,%d',self.satelite,self.initiator,self.passiveInitiator)
         else:
             counter(self,'swapInitiators')
             self.log.debug('and accepted it')
