@@ -74,12 +74,13 @@ class BandwidthElement(PipeElement):
         
     def setBW(self, d, bw):
         self.bwSet=True
-        self.bw=bw
+        self.bw=bw/8
         if self.bw>2*1024:
             self.bw=2*1024
             
-        self.bw =0.9 * self.bw*1024
+        self.bw =self.bw*1024
         print 'setting bw to ',self.bw
+        self.log.info('setting bw to %f',self.bw)
         return self.bw
 
 
