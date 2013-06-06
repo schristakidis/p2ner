@@ -77,6 +77,7 @@ class PullClient(Scheduler):
                 self.running = False
                 #print "STOP SERVING\n\n"
                 return None
+            self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
             if len(bl) > 0:
                 blockID = choice(bl)
@@ -154,6 +155,7 @@ class PullClient(Scheduler):
                 del requestableBlocks[block]
                 blocksToRequest[peer].append(block)
             #print "BLOCKSTOREQUESTSSSS", blocksToRequest
+            self.log.debug('requesting blocks %s',blocksToRequest)
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
