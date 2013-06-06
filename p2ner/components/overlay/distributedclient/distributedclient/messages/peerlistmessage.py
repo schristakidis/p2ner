@@ -95,7 +95,7 @@ class AddNeighbourMessage(ControlMessage):
             peer.hpunch=message.peer.hpunch
         self.log.debug('received add neigh message from %s',peer)
         print 'received neigh message from ',peer
-        self['overlay'].addNeighbour(peer)
+        self['overlay'].addNeighbour(peer,temp=False)
         ConfirmNeighbourMessage.send(self.stream.id,peer,self.controlPipe)
         
     @classmethod

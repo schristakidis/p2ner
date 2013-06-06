@@ -149,10 +149,24 @@ class SateliteMessage(ControlMessage):
         return True
     
     def action(self,message,peer):
+        if message.overlaymessage:
+            p=message.overlaymessage
+            peer.dataPort=p.port
+            peer.reportedBW=p.bw
+            if p.peer:
+                peer.lip=p.peer.ip
+                peer.lport=p.peer.port
+                peer.ldataPort=p.peer.dataPort
+                peer.hpunch=p.peer.hpunch
+
         self['overlay'].recUpdateSatelite(peer,message.action,message.peer) 
 
     @classmethod
-    def send(cls, sid, action, partner, peer, out,err_func=None,suc_func=None):
-        msg = Container(streamid = sid, action=action,peer = partner)
+    def send(cls, sid, action, partner,inform, peer, out,err_func=None,suc_func=None):
+        if inform:
+            m=Container(streamid = sid,port=inform['port'],bw=inform['bw'],peer=inform['peer'])
+        else:
+            m=None
+        msg = Container(streamid = sid, action=action,peer = partner,overlaymessage=m)
         return out.send(cls, msg, peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func)  
     

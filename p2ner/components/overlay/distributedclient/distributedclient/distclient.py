@@ -95,13 +95,13 @@ class DistributedClient(Overlay):
     
     def sendAddNeighbour(self,peer,originalPeer):
         inpeer,port=self.root.checkNatPeer()
-        self.log.info('my details %s port:%d',inpeer,port)
+        #self.log.info('my details %s port:%d',inpeer,port)
         bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         peer.learnedFrom=originalPeer
         self.tempPossibleNeighs.append(peer)
         AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,peer,self.root.controlPipe)
         
-    def addNeighbour(self, peer):
+    def addNeighbour(self, peer,temp=True):
         if not self.isNeighbour(peer):
             #if self.netChecker.nat and peer.ip==self.netChecker.externalIp:
              #   peer.useLocalIp=True
@@ -125,10 +125,11 @@ class DistributedClient(Overlay):
             print p,p.useLocalIp,p.lip
             print p.reportedBW
             
-        try:
-            self.tempPossibleNeighs.remove(peer)
-        except:
-            self.log.error('new peer %s is not in temp neighs %s',peer,self.tempPossibleNeighs)
+        if temp:
+            try:
+                self.tempPossibleNeighs.remove(peer)
+            except:
+                self.log.error('new peer %s is not in temp neighs %s',peer,self.tempPossibleNeighs)
         
             
     #def failedNeighbour(self,peer):
@@ -508,15 +509,25 @@ class DistributedClient(Overlay):
             setValue(self,'log','duplicates in update satelites')
             print self.newTable
             #reactor.stop()
-            
+        
+        inpeer,port=self.root.checkNatPeer()
+        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        
         for p in available:
             if p in self.getNeighbours():
                 p.swapAction=CONTINUE
+                inform=None
             elif p in self.duringSwapNeighbours:
                 p.swapAction=DUMMY_SUBSTITUTE
+                inform=None
             else:
+                inform={}
+                inform['streamid']=self.stream.id
+                inform['port']=port
+                inform['bw']=bw
+                inform['peer']=inpeer
                 p.swapAction=SUBSTITUTE
-            SateliteMessage.send(self.stream.id,p.swapAction,self.partnerPeer,p,self.controlPipe,err_func=self.satUpdateFailed,suc_func=self.satUpdateSuccess)
+            SateliteMessage.send(self.stream.id,p.swapAction,self.partnerPeer,inform,p,self.controlPipe,err_func=self.satUpdateFailed,suc_func=self.satUpdateSuccess)
             self.log.debug('sending update satelite to %s',p)
             print 'sending update satelite to ',p,' with action ',p.swapAction
             

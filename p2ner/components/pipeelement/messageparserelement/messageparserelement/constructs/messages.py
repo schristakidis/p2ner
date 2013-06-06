@@ -112,6 +112,7 @@ SateliteMessage=Struct('satelitemessage',
         UBInt16('streamid'),
         UBInt8('action'),
         PeerAdapter(PeerStruct),
+        Optional(OverlayMessage)
         )
         
 class RawMessage(object):
