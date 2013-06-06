@@ -86,11 +86,21 @@ class DistributedClient(Overlay):
         self.tempSwaps=0
         self.tempLastSatelite=0
         self.tempLastSwap=0
+        
+        self.tempPossibleNeighs=[]
         AskInitNeighs.send(self.stream.id,self.server,self.controlPipe)
         
     def getNeighbours(self):
         return self.neighbours[:]
     
+    def sendAddNeighbour(self,peer,originalPeer):
+        inpeer,port=self.root.checkNatPeer()
+        self.log.info('my details %s port:%d',inpeer,port)
+        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        peer.learnedFrom=originalPeer
+        self.tempPossibleNeighs.append(peer)
+        AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,peer,self.root.controlPipe)
+        
     def addNeighbour(self, peer):
         if not self.isNeighbour(peer):
             #if self.netChecker.nat and peer.ip==self.netChecker.externalIp:
@@ -114,6 +124,12 @@ class DistributedClient(Overlay):
         for p in self.neighbours:
             print p,p.useLocalIp,p.lip
             print p.reportedBW
+            
+        try:
+            self.tempPossibleNeighs.remove(peer)
+        except:
+            self.log.error('new peer %s is not in temp neighs %s',peer,self.tempPossibleNeighs)
+        
             
     #def failedNeighbour(self,peer):
      #   self.log.warning('failed to add %s to neighborhood',peer)
@@ -838,12 +854,10 @@ class DistributedClient(Overlay):
             return
         
         newPeer=choice(avNeighs)
-        newPeer.learnedFrom=peer
         self.log.debug('received available peers message from %s with %s',peer,newPeer)
-        print 'receive  available peers message from ',peer,' with ',newPeer
-        inpeer,port=self.root.checkNatPeer()
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
-        AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.root.controlPipe)
+        sendAddNeighbour(newPeer,peer)
+  
+       
         
             
     def checkDuplicates(self):

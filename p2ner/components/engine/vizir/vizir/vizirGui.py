@@ -454,7 +454,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
     def setBW(self,peer,bw):
         p=self.findPeer(peer)
         if p:
-            p[2]='%.2f'%(bw/1024)
+            p[2]='%.2f'%(8*bw/1024)
         
     def restartServer(self,args,iters):
         iter=iters[0]

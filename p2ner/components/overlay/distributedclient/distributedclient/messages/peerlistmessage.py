@@ -41,14 +41,9 @@ class PeerListMessage(ControlMessage):
 
     def action(self, message, peer):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
-        print 'received peerList message from ',peer,' for ',message.peer
-        inpeer,port=self.root.checkNatPeer()
-        self.log.info('my details %s port:%d',inpeer,port)
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         for p in message.peer:
-            p.learnedFrom=peer
-            print 'sending add message to ',p
-            AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,p,self.root.controlPipe)
+            self['overlay'].sendAddNeighbour(p,peer)
+            
                    
         
     @classmethod
