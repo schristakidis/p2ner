@@ -73,6 +73,9 @@ class Peer(object):
         port = int(port)
         dataPort = int(dataPort)
         obj = findPeer(ip, port, dataPort)
+        if obj and obj.dataPort==0 and dataPort!=-1:
+            obj.dataPort=dataPort
+            
         if not obj:
             obj = object.__new__(cls)
             Peer._peerPool[(ip, port)] = obj
