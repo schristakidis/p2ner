@@ -218,6 +218,7 @@ class Client(Engine):
     def exiting(self):
         for s in self.getAllStreams():
             s.stop()
+        self.interface.stop()
         reactor.callLater(1,self.quit)
         
     def quiting(self):

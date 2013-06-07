@@ -105,15 +105,6 @@ class Interface(Interface):
     def quit(self,d):
         reactor.stop()
         
-    def send(self,rcom,arg,lcom):
-        if arg:
-            d = self.proxy.callRemote(rcom,arg)
-            d.addCallback(lcom)
-        else:
-            d = self.proxy.callRemote(rcom)  #only for logger
-            d.addCallback(self.loadRecords)
-            d.addCallback(lcom)
-        d.addErrback(self.failedXMLRPC)
         
     def loadRecords(self,records):
         return [loads(r) for r in records]
@@ -221,3 +212,8 @@ class Interface(Interface):
         d=self.proxy.callRemote('stopSwapping',stop,id)
         d.addErrback(self.failedXMLRPC)
         
+    def getLogRecords(self,func):
+        d=self.proxy.callRemote('getRecords')
+        d.addCallback(self.loadRecords)
+        d.addCallback(func)
+        d.addErrback(self.failedXMLRPC)

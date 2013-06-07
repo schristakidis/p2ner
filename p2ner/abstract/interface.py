@@ -51,3 +51,8 @@ class Interface(Namespace):
         self.stats[stat]['values']=self.stats[stat]['values'][-100:]
         self.stats[stat]['count'] +=1
         
+    def stop(self):
+        try:
+            self.logger.stop()
+        except:
+            pass

@@ -191,7 +191,7 @@ class LoggerGui(UI):
         self.tfilter.refilter()
 
     def getLogEntries(self):
-        self.interface.send('getRecords',None,self.updateView)
+        self.interface.getLogRecords(self.updateView)
     
     def updateView(self,records):
         if not records:

@@ -130,14 +130,17 @@ class VizirLoggerGui(LoggerGui):
                     self.filters['peer'].append((ip,port))
                     break
 
-        self.db.addRecord(records)
-        
+        d=self.db.addRecord(records)
+        d.addCallback(self._getRecords)
         self.tmodel.clear()
         self.tfilter=self.tmodel.filter_new()
         self.tfilter.set_visible_func(self.filterFunc)
         self.tview.set_model(self.tfilter)
         
-        self.updateView(self.db.getRecords())
+        
+    def _getRecords(self,d):
+        d=self.db.getRecords()
+        d.addCallback(self.updateView)
         
         
     def on_buttonpress(self, widget, event, model):

@@ -53,10 +53,14 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         return 1
     
     def logRecord(self,record):
-         reactor.callLater(0,self.logger.addRecord,record)
+         self.logger.addRecord(record)
         
     def xmlrpc_getRecords(self):
-        ret=self.logger.getRecords()
+        d=self.logger.getRecords()
+        d.addCallback(self.dumpRecords)
+        return d
+    
+    def dumpRecords(self,ret):
         if ret:
             ret=[dict(r) for r in ret]
             ret= [dumps(r) for r in ret]

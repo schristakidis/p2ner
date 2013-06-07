@@ -30,7 +30,6 @@ class VizXMLInterface(Interface):
             ip=peer[0]
             port=peer[1]
             p=peer[7]
-            
             self.neighs[(ip,port)]={}
             self.neighs[(ip,port)]['response']=False
             self.neighs[(ip,port)]['neighs']={}

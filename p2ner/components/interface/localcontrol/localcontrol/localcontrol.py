@@ -96,10 +96,11 @@ class localControl(Interface):
             return
         elif record.name=='p2ner.network':
             self.controlUI.logNGui(record.getMessage())
-        reactor.callLater(0,self.logger.addRecord,record)
+        self.logger.addRecord(record)
         
-    def getRecords(self):
-        return self.logger.getRecords()
+    def getLogRecords(self,func):
+        d=self.logger.getRecords()
+        d.addCallback(func)
     
     def exiting(self):
         self.root.exiting()
@@ -172,13 +173,7 @@ class localControl(Interface):
     
     def leaveChatRoom(self,id,username,server):
         self.chatClient.leaveChatRoom(id,username,server)
-        
-    def send(self,rcom,arg,lcom):
-        rcom=eval('self.'+rcom)
-        if arg:
-            lcom(rcom(arg))
-        else:
-            lcom(rcom())
+
             
     def startBWMeasurement(self,ip,gui):
         self.root.startBWMeasurement(ip,gui)

@@ -79,6 +79,7 @@ class PullClient(Scheduler):
                 return None
             self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
+            #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 blockID = choice(bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
@@ -208,10 +209,12 @@ class PullClient(Scheduler):
     
     def askFragments(self,bid,fragments,peer):
         print 'should ask from ',peer,fragments,bid
+        self.log.debug('should ask from %s,%s,%d',peer,fragments,bid)
         RetransmitMessage.send(self.stream.id,fragments,bid,peer,self.controlPipe)
 
     def retransmit(self,block,fragments,peer):
         print 'should retransmit to ',peer,block,fragments
+        self.log.debug('should retransmit to %s,%d,%s',peer,block,fragments)
         b={}
         b['blockid']=block
         b['fragments']=fragments

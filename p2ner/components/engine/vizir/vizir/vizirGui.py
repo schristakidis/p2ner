@@ -449,7 +449,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             return
         for iterator in iters:
             c = self.treemodel.get_value(iterator, 7)
-            c.sendNewBW(bw)
+            c.sendNewBW(bw/8)
             
     def setBW(self,peer,bw):
         p=self.findPeer(peer)

@@ -16,6 +16,7 @@ import sqlite3 as lite
 from p2ner.util.utilities import get_user_data_dir
 from p2ner.abstract.interface import Interface
 import os
+from twisted.enterprise import adbapi
 
 class DatabaseLog(Interface):
     def initInterface(self):
@@ -24,30 +25,55 @@ class DatabaseLog(Interface):
             os.mkdir(userdatadir)
         if not os.path.isdir(os.path.join(userdatadir, "log")):
             os.mkdir(os.path.join(userdatadir, "log"))
-        self.db= os.path.join(get_user_data_dir(), "log",'vizir.db')
-        self.con=lite.connect(self.db)
+        dbname= os.path.join(get_user_data_dir(), "log",'vizir.db')
+
+        self.dbpool=adbapi.ConnectionPool('sqlite3',dbname)
         self.id=0
         self.lastId=0
-        with self.con:
-            cur =self.con.cursor()   
-            cur.execute('DROP TABLE IF EXISTS log')
-            cur.execute('CREATE TABLE log(id INTEGER PRIMARY KEY AUTOINCREMENT, ip Text, port INTEGER, level TEXT, log TEXT, time TEXT, epoch REAL, msecs REAL,module TEXT, func TEXT, lineno INTEGER, msg TEXT) ')
-
+        d=self.deleteDB()
+        d.addCallback(self.createDB)
+        #d.addCallback(self.setReady)
+        
+        
+    def deleteDB(self):
+        return self.dbpool.runOperation('DROP TABLE IF EXISTS log')
+        
+    def createDB(self,d):
+        return self.dbpool.runOperation('CREATE TABLE log(id INTEGER PRIMARY KEY AUTOINCREMENT, ip Text, port INTEGER, level TEXT, log TEXT, time TEXT, epoch REAL, msecs REAL,module TEXT, func TEXT, lineno INTEGER, msg TEXT) ')
+        
         
     def addRecord(self,records):
-        if not records:
-            return
-        with self.con:
-            for r in records:
-                args=(r['ip'],r['port'],r['level'],r['log'],r['time'],r['epoch'],r['msecs'],r['module'],r['func'],r['lineno'],r['msg'])
-                cur =self.con.cursor()   
-                cur.execute('INSERT INTO log(ip,port,level,log,time,epoch,msecs,module,func,lineno,msg) VALUES(?,?,?,?,?,?,?,?,?,?,?)',args)
-        
-        
+        d=self.dbpool.runInteraction(self._commitRecords,records)
+        return d
+    
+    def _commitRecords(self,txn,records):
+        for r in records:
+            args=(r['ip'],r['port'],r['level'],r['log'],r['time'],r['epoch'],r['msecs'],r['module'],r['func'],r['lineno'],r['msg'])
+            txn.execute('INSERT INTO log(ip,port,level,log,time,epoch,msecs,module,func,lineno,msg) VALUES(?,?,?,?,?,?,?,?,?,?,?)',args)
+    
     def getRecords(self):
-        with self.con:
-            self.con.row_factory = lite.Row
-            cur =self.con.cursor() 
-            cur.execute('SELECT * FROM log ORDER by epoch')
-            rows=cur.fetchall() 
-        return rows
+        d=self._getRecords()
+        d.addCallback(self.updateId)
+        return d   
+     
+    def _getRecords(self):
+        return self.dbpool.runQuery('SELECT * FROM log ORDER by epoch')
+    
+    def updateId(self,records):
+        dictR=[]
+        self.id +=(len(records)+0)
+        for r in records:
+            dr={}
+            dr['ip']=r[1]
+            dr['port']=r[2]
+            dr['level']=r[3]
+            dr['log']=r[4]
+            dr['time']=r[5]
+            dr['epoch']=r[6]
+            dr['msecs']=r[7]
+            dr['module']=r[8]
+            dr['func']=r[9]
+            dr['lineno']=r[10]
+            dr['msg']=r[11]
+            dictR.append(dr)
+        return dictR
