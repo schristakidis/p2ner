@@ -49,6 +49,9 @@ class PullClient(Scheduler):
         self.buffer = Buffer(buffersize=self.stream.scheduler['bufsize'],log=self.log)
         self.countHit=0
         self.countMiss=0
+        self.startTime=0
+        self.idleTime=0
+        self.lastIdleTime=0
         
     def errback(self, failure): return failure
 
@@ -62,7 +65,11 @@ class PullClient(Scheduler):
     def sendBlock(self, req):
         if not req:
             self.running = False
+            self.lastIdleTime=time()
             return None
+        if self.lastIdleTime:
+            self.idleTime +=self.lastIdleTime
+            self.lastIdleTime=0
         bid, peer = req
         self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
@@ -91,9 +98,12 @@ class PullClient(Scheduler):
         
     
     def start(self):
+        self.startTime=time()
+        self.idleTime=0
+        self.lastIdleTime=0
         self.log.info('scheduler is starting')
         self.loopingCall.start(self.frequency)
-
+        
         
     def stop(self):
         self.log.info('scheduler is stopping')
@@ -197,6 +207,10 @@ class PullClient(Scheduler):
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
         
         self.log.debug('%s',self.buffer)
+        
+        idleRatio=self.idleTime/(time()-self.startTime)
+        self.log.debug('idle:%f',idleRatio)
+        setValue(self,'idle',idleRatio*1000)
         #print self.buffer
         #push block to output
 
