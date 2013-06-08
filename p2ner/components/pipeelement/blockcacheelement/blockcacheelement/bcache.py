@@ -23,6 +23,7 @@ from p2ner.base.BlockMessage import BlockMessage
 from random import choice
 import time
 from messages.rttmessage import RTTMessage
+from p2ner.core.statsFunctions import setValue
 
 class Fragment(object):
     type = "blockfragment"
@@ -107,6 +108,8 @@ class BlockCache(PipeElement):
         self.schedulers = {} #weakref.WeakKeyDictionary()
         self.timeout = timeout
         self.receiving={}
+        self.receivedFragments=0
+        self.duplicateFragments=0
         self.loopingCall = task.LoopingCall(self.checkLost)
         self.loopingCall.start(self.timeout)
         
@@ -216,6 +219,7 @@ class BlockCache(PipeElement):
         s = self.getscheduler(ret.streamid)
         if s is None:
             self.breakCall()
+        self.receivedFragments +=1
         if ret.blockid not in self.schedulers[s]:
             self.schedulers[s][ret.blockid] = CBlock(ret.streamid, ret.blockid, ret.fragments)
             
@@ -239,7 +243,8 @@ class BlockCache(PipeElement):
                 print ret.blockid
                 print ret.fragmentid
                 print recTime
-        
+            self.duplicateFragments+=1
+            
         if not self.schedulers[s][ret.blockid].complete:
             complete = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)
             if complete:
@@ -248,6 +253,8 @@ class BlockCache(PipeElement):
                 self.checkRate(self.schedulers[s][ret.blockid])
                 d = deferToThread(scanBlocks, message, peer)
                 d.addCallback(self.triggerActions, message, peer)
+                dup=1.0*self.duplicateFragments/self.receivedFragments
+                setValue(self,'duplicates',dup*1000)
         else:
             print 'received duplicate fragment ',ret.blockid,ret.fragmentid
         self.breakCall()
