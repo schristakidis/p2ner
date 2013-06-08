@@ -132,13 +132,14 @@ class VizirLoggerGui(LoggerGui):
 
         d=self.db.addRecord(records)
         d.addCallback(self._getRecords)
+        
+        
+        
+    def _getRecords(self,d):
         self.tmodel.clear()
         self.tfilter=self.tmodel.filter_new()
         self.tfilter.set_visible_func(self.filterFunc)
         self.tview.set_model(self.tfilter)
-        
-        
-    def _getRecords(self,d):
         d=self.db.getRecords()
         d.addCallback(self.updateView)
         

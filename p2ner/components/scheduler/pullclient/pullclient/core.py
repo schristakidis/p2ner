@@ -77,7 +77,7 @@ class PullClient(Scheduler):
                 self.running = False
                 #print "STOP SERVING\n\n"
                 return None
-            self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
+            #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
@@ -156,7 +156,7 @@ class PullClient(Scheduler):
                 del requestableBlocks[block]
                 blocksToRequest[peer].append(block)
             #print "BLOCKSTOREQUESTSSSS", blocksToRequest
-            self.log.debug('requesting blocks %s',blocksToRequest)
+            #self.log.debug('requesting blocks %s',blocksToRequest)
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
@@ -181,7 +181,7 @@ class PullClient(Scheduler):
             else:
                 self.countHit +=1
             hitRatio=self.countHit/float(self.countHit+self.countMiss)
-            setValue(self,'scheduler',hitRatio)
+            setValue(self,'scheduler',hitRatio*1000)
             self.log.debug('hit ratio %f',hitRatio)
       
         
@@ -209,12 +209,12 @@ class PullClient(Scheduler):
     
     def askFragments(self,bid,fragments,peer):
         print 'should ask from ',peer,fragments,bid
-        self.log.debug('should ask from %s,%s,%d',peer,fragments,bid)
+        self.log.warning('should ask from %s,%s,%d',peer,fragments,bid)
         RetransmitMessage.send(self.stream.id,fragments,bid,peer,self.controlPipe)
 
     def retransmit(self,block,fragments,peer):
         print 'should retransmit to ',peer,block,fragments
-        self.log.debug('should retransmit to %s,%d,%s',peer,block,fragments)
+        self.log.warning('should retransmit to %s,%d,%s',peer,block,fragments)
         b={}
         b['blockid']=block
         b['fragments']=fragments
