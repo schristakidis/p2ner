@@ -101,6 +101,8 @@ class PullClient(Scheduler):
         self.startTime=time()
         self.idleTime=0
         self.lastIdleTime=0
+        self.countHit=0
+        self.countMiss=0
         self.log.info('scheduler is starting')
         self.loopingCall.start(self.frequency)
         

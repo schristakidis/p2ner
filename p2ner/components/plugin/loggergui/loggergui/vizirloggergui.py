@@ -133,17 +133,18 @@ class VizirLoggerGui(LoggerGui):
         d=self.db.addRecord(records)
         d.addCallback(self._getRecords)
         
-        
-        
     def _getRecords(self,d):
+        d=self.db.getRecords()
+        d.addCallback(self.clearView)
+        d.addCallback(self.updateView)
+        
+    def clearView(self,records):
         self.tmodel.clear()
         self.tfilter=self.tmodel.filter_new()
         self.tfilter.set_visible_func(self.filterFunc)
         self.tview.set_model(self.tfilter)
-        d=self.db.getRecords()
-        d.addCallback(self.updateView)
-        
-        
+        return records
+    
     def on_buttonpress(self, widget, event, model):
         try:
             (path, column, x, y) = widget.get_path_at_pos(int(event.x), int(event.y))

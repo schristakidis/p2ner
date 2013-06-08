@@ -129,6 +129,8 @@ class BlockCache(PipeElement):
             raise IndexError("You don't want to stream and subscribe the same stream")
         else:
             self.schedulers[scheduler] = {}
+            self.receivedFragments=0
+            self.duplicateFragments=0
             
     def unregisterScheduler(self, r, scheduler):
         if scheduler in self.schedulers:
