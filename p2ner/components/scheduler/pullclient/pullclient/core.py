@@ -68,7 +68,7 @@ class PullClient(Scheduler):
             self.lastIdleTime=time()
             return None
         if self.lastIdleTime:
-            self.idleTime +=self.lastIdleTime
+            self.idleTime +=(time()-self.lastIdleTime)
             self.lastIdleTime=0
         bid, peer = req
         self.log.debug('sending block %d to %s',bid,peer)
