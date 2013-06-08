@@ -72,11 +72,12 @@ class BandwidthElement(PipeElement):
         #print 'total:',time.time()+nextiter
         self.forwardnext("send", None, None, peer).callback(res)
         
+    #accpets KBytes/sec    
     def setBW(self, d, bw):
         self.bwSet=True
-       
-        if self.bw>2*1024:
-            self.bw=2*1024
+        self.bw=bw
+        if self.bw>4*1024:
+            self.bw=4*1024
             
         self.bw =self.bw*1024
         print 'setting bw to ',self.bw
