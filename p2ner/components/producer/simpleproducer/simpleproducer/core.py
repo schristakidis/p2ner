@@ -21,7 +21,7 @@ from p2ner.base.Buffer import Buffer
 from messages.messageobjects import  ServerLPBMessage
 from messages.retransmitmessage import RetransmitMessage
 from p2ner.base.Peer import Peer
-from p2ner.core.statsFunctions import setLPB, counter
+from p2ner.core.statsFunctions import setLPB, counter,setValue
 
 
 class SimpleProducer(Scheduler):
@@ -95,6 +95,7 @@ class SimpleProducer(Scheduler):
         outdata = self.trafficPipe.call("popblockdata", self, outID)
         outdata.addCallback(self.output.write)
         counter(self, "sent_block")
+        setValue(self,'scheduler',1000)
         
     def sendblock(self, r, bid, peer):
         return self.trafficPipe.call("sendblock", self, bid, peer)
