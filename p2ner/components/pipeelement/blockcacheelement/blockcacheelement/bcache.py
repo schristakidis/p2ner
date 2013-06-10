@@ -60,13 +60,13 @@ class CBlock(object):
         if self.fragments.has_key(fragment.fragmentid):
             print 'duplicate fragmentttttt ', self.block['blockid'], fragment.fragmentid
             dup=True
-            return False
+            return False,dup
         else:
             self.fragments[fragment.fragmentid] = (encodedfragment, fragment, peer)
         ret = self.complete
         if ret and not dup:
             self.setblockdata()
-        return ret
+        return ret,dup
         
     def getLenBlockData(self):
         ret=0
@@ -245,10 +245,10 @@ class BlockCache(PipeElement):
                 print ret.blockid
                 print ret.fragmentid
                 print recTime
-            self.duplicateFragments+=1
+            
             
         if not self.schedulers[s][ret.blockid].complete:
-            complete = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)
+            complete,dup = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)
             if complete:
                 self.receiving.pop(ret.blockid)
                 message = self.schedulers[s][ret.blockid].block
@@ -257,7 +257,10 @@ class BlockCache(PipeElement):
                 d.addCallback(self.triggerActions, message, peer)
                 dup=1.0*self.duplicateFragments/self.receivedFragments
                 setValue(self,'duplicates',dup*1000)
+            if dup:
+                self.duplicateFragments =+1
         else:
+            self.duplicateFragments =+1
             print 'received duplicate fragment ',ret.blockid,ret.fragmentid
         self.breakCall()
     
