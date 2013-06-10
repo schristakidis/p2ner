@@ -29,9 +29,10 @@ class BandwidthElement(PipeElement):
         self.stuck = True
         self.thres = thres
         self.bwSet=False
-        
+        self.asked=False
     
     def send(self, res, msg, data, peer):
+        self.asked=True
         for r in res:
             pack = (r, peer)
             self.que.append(pack)
@@ -50,7 +51,8 @@ class BandwidthElement(PipeElement):
             self.askdata()
             return
         res, peer = self.que.popleft()
-        if len(self.que) <= self.thres:
+        if len(self.que) <= self.thres and self.asked:
+            self.asked=False
             self.askdata()
         #CHECK IF PEER BW IS SET
         #bw = getattr(peer, "bw", self.bw)
