@@ -32,10 +32,10 @@ class BandwidthElement(PipeElement):
         self.asked=False
     
     def send(self, res, msg, data, peer):
-        self.asked=True
         for r in res:
             pack = (r, peer)
             self.que.append(pack)
+            self.asked=True
         if self.stuck:
             self.stuck = False
             reactor.callLater(0, self.sendfromque)
