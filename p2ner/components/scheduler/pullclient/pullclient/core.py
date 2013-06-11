@@ -86,10 +86,11 @@ class PullClient(Scheduler):
             if peer is None:
                 self.running = False
                 #print "STOP SERVING\n\n"
+                self.log.warning('no deprived peer')
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
-            #self.log.debug('possible blocks to send %s',bl)
+            self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 blockID = choice(bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
