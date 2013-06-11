@@ -68,7 +68,7 @@ class PullClient(Scheduler):
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
-            self.log.warning('no blocks to send')
+            self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
             tempidle=time()-self.lastIdleTime
