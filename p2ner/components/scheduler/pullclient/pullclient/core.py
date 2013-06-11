@@ -187,8 +187,10 @@ class PullClient(Scheduler):
             if not r:
                 r=[-1]
             #self.log.debug('sending requests to %s %s',peer,r)
-            BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
-    
+            try:
+                BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
+            except:
+                self.log.error("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff %s",r)
     def sendLPB(self, peer):
         self.log.warning('sending LPB message to %s',peer)
         LPBMessage.send(self.stream.id, self.buffer.lpb, peer, self.controlPipe)
