@@ -71,8 +71,9 @@ class PullClient(Scheduler):
             self.log.warning('no blocks to send')
             return None
         if self.lastIdleTime:
-            self.idleTime +=(time()-self.lastIdleTime)
-            self.log.debug('idle for %f',self.lastIdleTime)
+            tempidle=time()-self.lastIdleTime
+            self.idleTime +=tempidle
+            self.log.debug('idle for %f',tempidle)
             self.lastIdleTime=0
         self.running=True
         bid, peer = req

@@ -54,8 +54,11 @@ class BufferMessage(ControlMessage):
             if not self.scheduler.running:
                 #"RESTART SCHEDULER"
                 #self.log.debug('received buffer message from %s and should start scheduler',peer)
-                self.scheduler.running = True
-                reactor.callLater(0,self.scheduler.produceBlock)
+                #self.scheduler.running = True
+                maxlpb=max([p.s[sid]['buffer'].lpb for p in self.scheduler.bufferlist.values()])
+                waitPeer=[p for p in self.scheduler.bufferlist.values() if p.s[sid]['buffer'].lpb!=maxlpb]
+                if not waitPeer:
+                    reactor.callLater(0,self.scheduler.produceBlock)
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
