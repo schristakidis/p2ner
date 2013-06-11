@@ -19,6 +19,7 @@ from twisted.internet import reactor
 from p2ner.base.Peer import Peer
 from collections import deque
 import time
+from p2ner.core.statsFunctions import setValue
 
 class BandwidthElement(PipeElement):
 
@@ -30,13 +31,23 @@ class BandwidthElement(PipeElement):
         self.thres = thres
         self.bwSet=False
         self.asked=False
+        self.startTime=0
+        self.idleTime=0
+        self.lastIdleTime=0
         
     def send(self, res, msg, data, peer):
+        if not self.startTime:
+            self.startTime=time.time()
         for r in res:
             pack = (r, peer)
             self.que.append(pack)
         self.asked=False
         if self.stuck:
+            if self.lastIdleTime:
+                self.idleTime +=(time.time()-self.lastIdleTime)
+                idle=self.idleTime/(time.time()-self.startTime)
+                setValue(self,'netIdle',1000*idle)
+            self.lastIdleTime=0
             self.stuck = False
             reactor.callLater(0, self.sendfromque)
         self.breakCall()
@@ -47,6 +58,7 @@ class BandwidthElement(PipeElement):
     
     def sendfromque(self):
         if len(self.que) == 0:
+            self.lastIdleTime=time.time()
             self.stuck = True
             self.askdata()
             return
