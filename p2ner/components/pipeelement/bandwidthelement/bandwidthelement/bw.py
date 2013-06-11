@@ -68,7 +68,7 @@ class BandwidthElement(PipeElement):
         if len(self.que) <= self.thres and self.asked==False:
             self.askdata()
             self.asked=True
-            self.log.error('asking for data %d',len)
+            self.log.error('asking for data %d',l)
         #CHECK IF PEER BW IS SET
         #bw = getattr(peer, "bw", self.bw)
         bw=peer.bw
