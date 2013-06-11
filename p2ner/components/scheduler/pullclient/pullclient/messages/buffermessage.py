@@ -41,7 +41,7 @@ class BufferMessage(ControlMessage):
             peer.s[sid] = {}
         if "buffer" in peer.s[sid]:
             if message.buffer.lpb-1!=peer.s[sid]["buffer"].lpb:
-                self.log.warning('problem in receiver buffer %d,%d',message.buffer.lpb,peer.s[sid]['buffer'].lpb)
+                self.log.warning('problem in receiver buffer %s %d,%d',peer,message.buffer.lpb,peer.s[sid]['buffer'].lpb)
             if message.buffer.lpb > peer.s[sid]["buffer"].lpb:
                 peer.s[sid]["buffer"] = message.buffer
         else:
@@ -66,6 +66,8 @@ class BufferMessage(ControlMessage):
                 if not waitPeer:
                     self.log.warning('starting scheduler')
                     reactor.callLater(0,self.scheduler.produceBlock)
+        else:
+            self.log.debug('received buffer message from %s %s',peer,peer.s[sid]['buffer'])
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
