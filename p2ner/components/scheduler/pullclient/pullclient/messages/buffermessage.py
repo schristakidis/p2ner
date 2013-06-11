@@ -40,6 +40,8 @@ class BufferMessage(ControlMessage):
         if sid not in peer.s:
             peer.s[sid] = {}
         if "buffer" in peer.s[sid]:
+            if message.buffer.lpb-1!=peer.s[sid]["buffer"].lpb:
+                self.log.warning('problem in receiver buffer %d,%d',message.buffer.lpb,peer.s[sid]['buffer'].lpb)
             if message.buffer.lpb > peer.s[sid]["buffer"].lpb:
                 peer.s[sid]["buffer"] = message.buffer
         else:

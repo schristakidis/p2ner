@@ -68,9 +68,11 @@ class PullClient(Scheduler):
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
+            self.log.warning('no blocks to send')
             return None
         if self.lastIdleTime:
             self.idleTime +=(time()-self.lastIdleTime)
+            self.log.debug('idle for %f',self.lastIdleTime)
             self.lastIdleTime=0
         self.running=True
         bid, peer = req
@@ -90,7 +92,7 @@ class PullClient(Scheduler):
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
-            self.log.debug('possible blocks to send %s',bl)
+            #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 blockID = choice(bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
