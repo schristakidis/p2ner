@@ -47,12 +47,12 @@ class BufferMessage(ControlMessage):
         if isinstance(message.request, list):
             peer.s[sid]["request"] = message.request
             #self.log.debug('requests:%s',str(message.request))
-        #print "RUNNING", self.scheduler.running
-        if not self.scheduler.running:
-            #"RESTART SCHEDULER"
-            #self.log.debug('received buffer message from %s and should start scheduler',peer)
-            self.scheduler.running = True
-            self.scheduler.produceBlock()
+            #print "RUNNING", self.scheduler.running
+            if not self.scheduler.running:
+                #"RESTART SCHEDULER"
+                #self.log.debug('received buffer message from %s and should start scheduler',peer)
+                #self.scheduler.running = True
+                self.scheduler.produceBlock()
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
