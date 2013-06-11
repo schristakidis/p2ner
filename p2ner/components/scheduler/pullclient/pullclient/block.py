@@ -35,8 +35,8 @@ class Block(BlockMessage):
             self.scheduler.shift(norequests=True) 
         #print fragment.blockid,fragment.fragmentid,fragment.fragments
         self.scheduler.buffer.updateBlock(block.blockid)
-        if not self.scheduler.running:
+        #if not self.scheduler.running: #probably just for the push scheduler
             #print "RESUSCITATE SCHEDULER"
-            self.scheduler.running = True
-            self.scheduler.produceBlock()
+            #self.scheduler.running = True
+            #self.scheduler.produceBlock()
             
