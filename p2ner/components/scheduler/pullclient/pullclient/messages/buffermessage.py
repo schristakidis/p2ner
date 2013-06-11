@@ -50,6 +50,8 @@ class BufferMessage(ControlMessage):
         if isinstance(message.request, list):
             if message.request[0]!=-1:
                 peer.s[sid]["request"] = message.request
+            else:
+                peer.s[sid]["request"]=[]
             #self.log.debug('requests:%s',str(message.request))
             #print "RUNNING", self.scheduler.running
             self.log.debug('received buffer message from %s %s %s',peer,peer.s[sid]['buffer'],message.request)

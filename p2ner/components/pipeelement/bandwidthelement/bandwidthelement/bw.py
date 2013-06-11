@@ -49,6 +49,7 @@ class BandwidthElement(PipeElement):
                 setValue(self,'netIdle',1000*idle)
             self.lastIdleTime=0
             self.stuck = False
+            self.log.debug('queue size %d',len(self.que))
             reactor.callLater(0, self.sendfromque)
         self.breakCall()
         return res
@@ -65,7 +66,7 @@ class BandwidthElement(PipeElement):
             return
         res, peer = self.que.popleft()
         l=len(self.que)
-        if len(self.que) <= self.thres and self.asked==False:
+        if len(self.que) <= self.thres: # and self.asked==False:
             self.askdata()
             self.asked=True
             self.log.error('asking for data %d',l)
