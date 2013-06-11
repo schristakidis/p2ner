@@ -65,7 +65,8 @@ class PullClient(Scheduler):
     def sendBlock(self, req):
         if not req:
             self.running = False
-            self.lastIdleTime=time()
+            if not self.lastIdleTime:
+                self.lastIdleTime=time()
             return None
         if self.lastIdleTime:
             self.idleTime +=(time()-self.lastIdleTime)
