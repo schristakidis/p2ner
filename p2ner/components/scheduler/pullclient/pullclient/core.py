@@ -57,6 +57,7 @@ class PullClient(Scheduler):
 
     def produceBlock(self):
         #print "PRODUCEBLOCK"
+        self.running=True
         d = deferToThread(self.getRequestedBID)
         d.addCallback(self.sendBlock)
         d.addErrback(self.errback)

@@ -17,6 +17,7 @@
 from p2ner.base.ControlMessage import ControlMessage
 from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
+from twisted.internet import reactor
 
 class BufferMessage(ControlMessage):
     type = "buffermessage"
@@ -51,8 +52,8 @@ class BufferMessage(ControlMessage):
             if not self.scheduler.running:
                 #"RESTART SCHEDULER"
                 #self.log.debug('received buffer message from %s and should start scheduler',peer)
-                #self.scheduler.running = True
-                self.scheduler.produceBlock()
+                self.scheduler.running = True
+                reactor.callLater(0,self.scheduler.produceBlock)
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
