@@ -248,7 +248,7 @@ class BlockCache(PipeElement):
             
             
         if not self.schedulers[s][ret.blockid].complete:
-            complete,dup = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)
+            complete,duplicate = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)
             if complete:
                 self.receiving.pop(ret.blockid)
                 message = self.schedulers[s][ret.blockid].block
@@ -257,7 +257,7 @@ class BlockCache(PipeElement):
                 d.addCallback(self.triggerActions, message, peer)
                 dup=1.0*self.duplicateFragments/self.receivedFragments
                 setValue(self,'duplicates',dup*1000)
-            if dup:
+            if duplicate:
                 self.duplicateFragments =+1
         else:
             self.duplicateFragments =+1
