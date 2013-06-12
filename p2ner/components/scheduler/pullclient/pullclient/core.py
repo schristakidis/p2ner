@@ -52,7 +52,7 @@ class PullClient(Scheduler):
         self.startTime=0
         self.idleTime=0
         self.lastIdleTime=0
-        self.requestFreqeuncy=self.frequency*self.reqInterval
+        self.requestFrequency=self.frequency*self.reqInterval
         
     def errback(self, failure): return failure
 
