@@ -69,16 +69,16 @@ class PullClient(Scheduler):
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
-            self.log.warning('no blocks to send. stopping scheduler')
+            #self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
             tempidle=time()-self.lastIdleTime
             self.idleTime +=tempidle
-            self.log.debug('idle for %f',tempidle)
+            #self.log.debug('idle for %f',tempidle)
             self.lastIdleTime=0
         self.running=True
         bid, peer = req
-        self.log.debug('sending block %d to %s',bid,peer)
+        #self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
         
@@ -90,7 +90,7 @@ class PullClient(Scheduler):
             if peer is None:
                 self.running = False
                 #print "STOP SERVING\n\n"
-                self.log.warning('no deprived peer')
+                #self.log.warning('no deprived peer')
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
@@ -185,7 +185,7 @@ class PullClient(Scheduler):
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
-            self.log.debug('sending requests to %s %s',peer,r)
+            #self.log.debug('sending requests to %s %s',peer,r)
             BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
@@ -218,7 +218,7 @@ class PullClient(Scheduler):
                 #print 'sending buffer'
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
         
-        self.log.debug('%s',self.buffer)
+        #self.log.debug('%s',self.buffer)
         
         idleRatio=self.idleTime/(time()-self.startTime)
         self.log.debug('idle:%f',idleRatio)
