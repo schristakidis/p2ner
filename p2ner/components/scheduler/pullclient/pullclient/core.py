@@ -185,13 +185,9 @@ class PullClient(Scheduler):
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
-            if not r:
-                r=[0]
             self.log.debug('sending requests to %s %s',peer,r)
-            try:
-                BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
-            except:
-                self.log.error("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff %s",r)
+            BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
+
     def sendLPB(self, peer):
         self.log.warning('sending LPB message to %s',peer)
         LPBMessage.send(self.stream.id, self.buffer.lpb, peer, self.controlPipe)

@@ -49,19 +49,20 @@ class BufferMessage(ControlMessage):
             peer.s[sid]["buffer"] = message.buffer
             peer.s[sid]['lastRequest']=time()
         #self.log.debug('buffer:%s',str(message.buffer))
-        if isinstance(message.request, list):
-            try:
-                if message.request[0]!=0:
-                    peer.s[sid]["request"] = message.request
-                else:
-                    peer.s[sid]["request"]=[]
-            except:
-                self.log.error('gggggggggggggggggggggggggggg')
+        #if isinstance(message.request, list):
+        if message.buffer.lpb%self.scheduler.reqInterval ==0:
+            if isinstance(message.request, list):
+                peer.s[sid]["request"] = message.request
+                check=True
+            else:
+                peer.s[sid]["request"]=[]
+                check=False
+
             #self.log.debug('requests:%s',str(message.request))
             #print "RUNNING", self.scheduler.running
             peer.s[sid]['lastRequest']=time()
-            self.log.debug('received buffer message from %s %s %s',peer,peer.s[sid]['buffer'],message.request)
-            if not self.scheduler.running:
+            self.log.debug('received buffer message from %s %s %s',peer,peer.s[sid]['buffer'],peer.s[sid]["request"])
+            if not self.scheduler.running and check:
                 self.log.warning('scheduler is not running')
                 #"RESTART SCHEDULER"
                 #self.log.debug('received buffer message from %s and should start scheduler',peer)
@@ -72,8 +73,7 @@ class BufferMessage(ControlMessage):
                 if not waitPeer:
                     self.log.warning('starting scheduler')
                     reactor.callLater(0,self.scheduler.produceBlock)
-        else:
-            self.log.debug('received buffer message from %s %s',peer,peer.s[sid]['buffer'])
+     
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
