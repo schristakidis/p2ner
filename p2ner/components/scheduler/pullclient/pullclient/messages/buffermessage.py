@@ -50,10 +50,13 @@ class BufferMessage(ControlMessage):
             peer.s[sid]['lastRequest']=time()
         #self.log.debug('buffer:%s',str(message.buffer))
         if isinstance(message.request, list):
-            if message.request[0]!=-1:
-                peer.s[sid]["request"] = message.request
-            else:
-                peer.s[sid]["request"]=[]
+            try:
+                if message.request[0]!=0:
+                    peer.s[sid]["request"] = message.request
+                else:
+                    peer.s[sid]["request"]=[]
+            except:
+                self.log.error('gggggggggggggggggggggggggggg')
             #self.log.debug('requests:%s',str(message.request))
             #print "RUNNING", self.scheduler.running
             peer.s[sid]['lastRequest']=time()
