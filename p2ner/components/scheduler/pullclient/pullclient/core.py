@@ -185,8 +185,8 @@ class PullClient(Scheduler):
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
-            if not r:
-                r=[-1]
+            #if not r:
+            #    r=[-1]
             #self.log.debug('sending requests to %s %s',peer,r)
             try:
                 BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
