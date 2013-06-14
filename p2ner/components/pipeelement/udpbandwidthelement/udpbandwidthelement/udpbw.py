@@ -63,5 +63,5 @@ class BandwidthElement(PipeElement):
         
 
     def writeStat(self):
-        setValue(self,'controlOverhead',self.countBytes*8/(2.0*1024))
+        setValue(self,'controlOverhead',self.countBytes*8/(2.0))
         self.countBytes=0
