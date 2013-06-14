@@ -7,10 +7,10 @@ import struct
 #import time
 #from cPickle import dumps
 
-IP = '192.168.1.2'
+IP = '150.140.187.171'
 PORT = 30000
 
-serverIP = '192.168.0.1'
+serverIP = '94.64.199.248'
 serverXport = 8000
 proxy = xmlrpclib.ServerProxy("http://%s:%d/" % (serverIP, serverXport), allow_none=True)
 
@@ -31,12 +31,13 @@ class UDPreceiver(object):
             #print len(data)
             
             try:
-                seq = str(struct.unpack("l", data[0:4])[0])
+                seq = str(struct.unpack("l", data[0:8])[0])
                 #self.receivedTime[seq]=time.time()
-                #print 'received:',seq
+                print 'received:',seq
             except:
-                print data[0]
-                print data[1:]
+                print 'fail'
+                #print data[0]
+                #print data[1:]
             
 	    if int(seq)!=self.lastAcked+1:
 		print 'missed packet'

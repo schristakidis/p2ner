@@ -171,33 +171,7 @@ class UDPsender(threading.Thread):
         for k,v in sendPeers.items():
             Plock.acquire()
             r=PeerRtt[k]['min']
-            #try:
-                #av=sum(PeerRtt[k]['last'])/len(PeerRtt[k]['last'])
-                #self.avRtt=av
-                #self.minRtt=r
-                #self.f1=2-3*(av-r)/av
-                #self.f1error=2
-		#self.maxRtt=0
-		#self.congRtt=PeerRtt[k]['congRtt']
-                #if PeerRtt[k].has_key('max'):
-                #    self.f1error=1+2*(PeerRtt[k]['max']-av)/PeerRtt[k]['max']
-		#    self.maxRtt=PeerRtt[k]['max']
-                #print 'factor error:',self.f1error
-                #self.f1final=min(self.f1,self.f1error)
-                #print 'factor normal:',self.f1
-                #print 'final factor:',self.f1final
-		#if self.f1final<1:
-		#	if self.f1error!=2:
-		#		self.f1final=self.f1error
-		#	else:
-		#		self.f1final=1+2*(PeerRtt[k]['congRtt']-av)/PeerRtt[k]['congRtt']
-			#self.f1final=1
-                #print 'average:',av
-                #print 'min:',r
-                #print 'final factor:',self.f1final
-                
-            #except:
-            #    print 'in except'
+    
             Plock.release()
             if not r:
                 print 'no min'
@@ -217,31 +191,37 @@ class UDPsender(threading.Thread):
                 prtt+=p['min']
             prtt=prtt/len(PeerRtt)
             Plock.release()
-	self.avRtt=prtt
+	
+        self.avRtt=prtt
         print 'final final prtt:',prtt    
         prtt +=self.Tsend
         print 'prtt+Tsend:',prtt
-	Plock.acquire()
-	f=0
-	for l in LastAck:
-		f += (l[1]-PeerRtt[l[0]]['min'])/l[1]
-	try:
-		f=f/len(LastAck)
-	except:
-		f=1
-	Plock.release()
-	self.f1final=2-1*f		
-	print 'f:',self.f1final
-	if self.f1final<1:
-		self.f1final=1
-	print 'final f:',self.f1final
+        Plock.acquire()
+        f=0
+        
+        for l in LastAck:
+            f += (l[1]-PeerRtt[l[0]]['min'])/l[1]
+        
         try:
-		  self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
+            f=f/len(LastAck)
+        except:
+            f=1
+            
+        Plock.release()
+        self.f1final=2-1*f	
+        print 'f:',self.f1final
+        if self.f1final<1:
+            self.f1final=1
+        
+        print 'final f:',self.f1final
+        try:
+            self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
         except:
             pass
+        
         self.window=ceil(self.umax*prtt*self.f1final)
         self.f1old=self.f1final        
-
+        
         print 'window is :',self.window
         
     def setU(self):

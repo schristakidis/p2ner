@@ -77,7 +77,8 @@ class UDPsender(threading.Thread):
             self.setU()
             if not btosend:
                 try:
-		    break=False
+		            break
+                    False
                     to, i = queue.get_nowait()
 	            rem = i
 		    btosend.append(to,i)	

@@ -201,22 +201,8 @@ class UDPsender(threading.Thread):
         print 'final final prtt:',prtt    
         prtt +=self.Tsend
         print 'prtt+Tsend:',prtt
-        """
-        Plock.acquire()
-        f=0
-        
-        for l in LastAck:
-            f += (l[1]-PeerRtt[l[0]]['min'])/l[1]
-        
-        try:
-            f=f/len(LastAck)
-        except:
-            f=1
-            
-        Plock.release()
-        self.f1final=2-1*f    
-        print 'f:',self.f1final
-        """
+      
+      
     	if not self.errorRtt:
         	self.errorRtt=self.minRtt+self.Tsend
         if self.errorRtt:
@@ -225,25 +211,13 @@ class UDPsender(threading.Thread):
                 rttRef=self.minRtt+2*self.Tsend
             
         self.f1final=1+(self.errorRtt-self.avRtt)/(self.errorRtt-self.minRtt)
-    	#if self.avRtt>rttRef+0.03:
-        #	rttRef=self.errorRtt
-        #rttRef=rttRef+0.01
-	self.rttRef=rttRef
+        
+        self.rttRef=rttRef
         self.f1final=1+rttRef-self.avRtt
         if self.f1final<1:
             self.f1final=1
         
-       # print 'final f:',self.f1final
-       # try:
-       #     self.f1final=0.3*(self.f1final-self.f1old)+self.f1old
-       # except:
-       #     pass
-        
-       # self.window=ceil(self.umax*prtt*self.f1final)
-       # self.f1old=self.f1final
-        #if self.avRtt>rttRef:
-    #    self.window=ceil(self.maxumax*self.minRtt)
-    #else:
+     
 	
         self.window=(self.umax*(rttRef+self.Tsend)+(rttRef-self.avRtt)*self.umax*(rttRef+self.Tsend))
         try:

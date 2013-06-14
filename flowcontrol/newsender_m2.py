@@ -286,7 +286,8 @@ class ACKreceiver(threading.Thread):
         threading.Thread.__init__(self)
         self.socketUDPdata = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socketUDPdata.bind(("0.0.0.0", port))
-	self.peers={}        
+        self.peers={}        
+    
     def run(self):
         global History,LastAck,GTsend,RTT1,RTT2
         while True:

@@ -204,8 +204,8 @@ class UDPsender(threading.Thread):
 		self.f1=0.3*(self.f1-self.f1old)+self.f1old
 	except:
 		pass
-        self.window=ceil(self.umax*prtt*self.f1)
-	self.f1old=self.f1        
+    self.window=ceil(self.umax*prtt*self.f1)
+    self.f1old=self.f1        
         """
         if self.umax<self.preUmax:
 			self.slowStart=False
