@@ -15,10 +15,11 @@
 
 
 from p2ner.abstract.pipeelement import PipeElement
-from twisted.internet import reactor
+from twisted.internet import reactor,task
 from p2ner.base.Peer import Peer
 from collections import deque
 import time
+from p2ner.core.statsFunctions import setValue
 
 class BandwidthElement(PipeElement):
 
@@ -27,7 +28,10 @@ class BandwidthElement(PipeElement):
         self.bw = bw
         self.que = deque()
         self.stuck = True
-    
+        self.countBytes=0
+        self.loopingCall=task.LoopingCall(self.writeStat)
+        self.loopingCall.start(2)
+        
     def send(self, res, msg, data, peer):
         if isinstance(res, (list, tuple)):
             for r in res:
@@ -48,7 +52,8 @@ class BandwidthElement(PipeElement):
             return
         res, peer = self.que.popleft()
         bw=self.bw
-            
+        
+        self.countBytes +=len(res)    
         nextiter=1.0*len(res)/bw
         #print 'next iter:',nextiter
         reactor.callLater(nextiter, self.sendfromque)
@@ -57,3 +62,6 @@ class BandwidthElement(PipeElement):
         self.forwardnext("send", None, None, peer).callback(res)
         
 
+    def writeStat(self):
+        setValue(self,'controlOverhead',self.countBytes*8/(2.0*1024))
+        self.countBytes=0
