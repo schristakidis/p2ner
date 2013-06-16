@@ -379,8 +379,16 @@ if __name__ == '__main__':
     UDPs = UDPsender()
     ACK = ACKreceiver()
     P=Producer()
+
+    P.setDaemon(True)
+    UDPs.setDaemon(True)
+    ACK.setDaemon(True)
+    XMLRPC.setDaemon(True)
     
     XMLRPC.start()
     UDPs.start()
     ACK.start()
     P.start()
+
+    while True:
+      time.sleep(100)
