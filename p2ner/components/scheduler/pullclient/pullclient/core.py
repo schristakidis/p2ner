@@ -52,6 +52,7 @@ class PullClient(Scheduler):
         self.startTime=0
         self.idleTime=0
         self.lastIdleTime=0
+        self.lastReqCheck=0
         self.requestFrequency=self.frequency*self.reqInterval
         
     def errback(self, failure): return failure
@@ -91,6 +92,7 @@ class PullClient(Scheduler):
                 self.running = False
                 #print "STOP SERVING\n\n"
                 #self.log.warning('no deprived peer')
+                self.lastReqCheck=time()
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
@@ -100,6 +102,7 @@ class PullClient(Scheduler):
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
                 #print "SENDING BLOCK", blockID, peer
+                self.lastReqCheck=time()
                 return (blockID, peer)
             else:
                 peer.s[self.stream.id]["request"]=[]
