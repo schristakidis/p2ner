@@ -100,7 +100,8 @@ class PullClient(Scheduler):
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
-                blockID = choice(bl)
+                #blockID = choice(bl)
+                blockID=bl[0]
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
                 #print "SENDING BLOCK", blockID, peer
@@ -181,14 +182,14 @@ class PullClient(Scheduler):
                 G.add_edge(id,'e')
             
             blocksToRequest={}
-            #try:
-            flow, F = nx.ford_fulkerson(G, 's', 'e')
-            #except:
-            #    print 'eeeeeeeeeeeeeeeeee'
-             #   self.log.error('scheduler matching failed')
+            try:
+                flow, F = nx.ford_fulkerson(G, 's', 'e')
+            except:
+               self.log.error('scheduler matching failed')
                 
             for peer,id in ids.items():
-                blocksToRequest[peer]=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                blocksToRequest[peer]=[(len(requestableBlocks[b]),b) for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1].sort()
+                blocksToRequest[peer]=[p[1] for p in blocksToRequest[peer]]
                 
                 
             """
