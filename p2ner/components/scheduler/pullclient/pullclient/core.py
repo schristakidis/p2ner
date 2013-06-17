@@ -26,6 +26,7 @@ from messages.lpbmsg import LPBMessage
 from messages.retransmitmessage import RetransmitMessage
 from block import Block
 from p2ner.core.statsFunctions import counter, setLPB,setValue
+import networkx as nx
 
 EXPIRE_TIME = 0.5
 
@@ -102,7 +103,7 @@ class PullClient(Scheduler):
                 blockID = choice(bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
-                print "SENDING BLOCK", blockID, peer
+                #print "SENDING BLOCK", blockID, peer
                 self.lastReqCheck=time()
                 return (blockID, peer)
             else:
@@ -134,6 +135,8 @@ class PullClient(Scheduler):
         #print missingBlocks
         #exclude receiving
         def dd(self, receivingBlocks, missingBlocks, neighbours):
+            if not neighbours:
+                return
             for bid in missingBlocks:
                 if bid in receivingBlocks:
                     missingBlocks.remove(bid)
@@ -143,6 +146,8 @@ class PullClient(Scheduler):
             #print 'missing blocks:',missingBlocks
             tmpBlocksToRequest = {}
             requestableBlocks = {}
+            ids={}
+            countIds=0
             for peer in neighbours:
                 if self.stream.id not in peer.s:
                     print 'in cotinue 1'
@@ -160,6 +165,33 @@ class PullClient(Scheduler):
                         requestableBlocks[b].append(peer)
                     else:
                         requestableBlocks[b] = [peer]
+                ids[peer]='p'+str(countIds)
+                countIds+=1   
+                        
+            if not requestableBlocks:
+                return {}
+            
+            G=nx.DiGraph()
+            for b,peers in requestableBlocks.items():
+                G.add_edge('s',b,capacity=1)
+                for p in peers:
+                    G.add_edge(b,ids[p],capacity=1)
+
+            for id in ids.values():
+                G.add_edge(id,'e')
+            
+            blocksToRequest={}
+            #try:
+            flow, F = nx.ford_fulkerson(G, 's', 'e')
+            #except:
+            #    print 'eeeeeeeeeeeeeeeeee'
+             #   self.log.error('scheduler matching failed')
+                
+            for peer,id in ids.items():
+                blocksToRequest[peer]=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                
+                
+            """
             keys = tmpBlocksToRequest.keys()
             blocksToRequest = {}
             for k in keys:
@@ -179,6 +211,7 @@ class PullClient(Scheduler):
                 peer = min([ (min(len(tmpBlocksToRequest[x]),len(blocksToRequest[x])),x) for x in tmpBlocksToRequest if block in tmpBlocksToRequest[x]])[1]
                 del requestableBlocks[block]
                 blocksToRequest[peer].append(block)
+            """
             #print "BLOCKSTOREQUESTSSSS", blocksToRequest
             self.log.debug('requesting blocks %s',blocksToRequest)
             return blocksToRequest
