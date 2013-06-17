@@ -85,7 +85,8 @@ class SimpleProducer(Scheduler):
                     #p=[p for p in destination if p.getIP()=='150.140.186.112']
                     #if p:
                     #   peer=p[0]
-                    peer=sorted(destination, key=lambda p:p.reportedBW)[-1]
+                    #peer=sorted(destination, key=lambda p:p.reportedBW)[-1]
+                    peer=choice(destination)
                     self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
                     d.addCallback(self.sendblock, lpb, peer)
         
