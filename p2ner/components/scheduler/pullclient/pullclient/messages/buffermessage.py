@@ -68,7 +68,7 @@ class BufferMessage(ControlMessage):
                 #self.log.debug('received buffer message from %s and should start scheduler',peer)
                 #self.scheduler.running = True
                 #maxlpb=max([p.s[sid]['buffer'].lpb for p in self.scheduler.bufferlist.values()])
-                waitPeer=[p for p in self.scheduler.bufferlist.values() if time()-p.s[sid]['lastRequest']<self.scheduler.lastReqCheck]
+                waitPeer=[p for p in self.scheduler.bufferlist.values() if p.s[sid]['lastRequest']<self.scheduler.lastReqCheck]
                 #self.log.warning('waiting for %s',waitPeer)
                 if not waitPeer:
                     #self.log.warning('starting scheduler')
