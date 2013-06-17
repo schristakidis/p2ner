@@ -70,7 +70,7 @@ class PullClient(Scheduler):
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
-            #self.log.warning('no blocks to send. stopping scheduler')
+            self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
             tempidle=time()-self.lastIdleTime
@@ -101,7 +101,7 @@ class PullClient(Scheduler):
                 blockID = choice(bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
-                #print "SENDING BLOCK", blockID, peer
+                print "SENDING BLOCK", blockID, peer
                 self.lastReqCheck=time()
                 return (blockID, peer)
             else:
@@ -188,7 +188,7 @@ class PullClient(Scheduler):
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
-            #self.log.debug('sending requests to %s %s',peer,r)
+            self.log.debug('sending requests to %s %s',peer,r)
             BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
@@ -221,7 +221,7 @@ class PullClient(Scheduler):
                 #print 'sending buffer'
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
         
-        #self.log.debug('%s',self.buffer)
+        self.log.debug('%s',self.buffer)
         
         idleRatio=self.idleTime/(time()-self.startTime)
         self.log.debug('idle:%f',idleRatio)
