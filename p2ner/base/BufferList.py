@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
+import random
 
 #TODO: CHECK    normalizeTokens
 def normalizeTokens(self, neighlist):
@@ -52,6 +52,22 @@ def getMostDeprivedReq(bufferlist, myBuffer):
     d = bl[-1]
     return bufferlist[d]
 
+def getRarestRequest(bufferlist, myBuffer, deprivedReq):
+    requestedBlocks={}
+    max=0
+    for p in bufferlist.keys():
+        for b in p.request:
+            if requestedBlocks.has_key(b):
+                requestedBlocks[b]+=1
+            else:
+                requestedBlocks[b]=1
+            if max<requestedBlocks[b]:
+                max=requestedBlocks[b]
+                
+    reqs=[k for k,v in requestedBlocks.items() if v==max and k in deprivedReq]
+    random.shuffle(reqs)
+    return reqs[0]
+    
 #TODO: CHECK   getNDeprived         
 def getNDeprived(self, n):
     '''Return the Nth most deprived Buffer'''

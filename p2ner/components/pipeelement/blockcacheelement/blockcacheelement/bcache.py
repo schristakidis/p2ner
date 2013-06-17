@@ -245,7 +245,7 @@ class BlockCache(PipeElement):
                 print ret.blockid
                 print ret.fragmentid
                 print recTime
-            
+
             
         if not self.schedulers[s][ret.blockid].complete:
             complete,duplicate = self.schedulers[s][ret.blockid].receive(encodedfragment, ret, peer)

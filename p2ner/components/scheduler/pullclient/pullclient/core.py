@@ -20,7 +20,7 @@ from random import choice
 from time import time
 from p2ner.abstract.scheduler import Scheduler
 from p2ner.base.Buffer import Buffer
-from p2ner.base.BufferList import getMostDeprivedReq
+from p2ner.base.BufferList import getMostDeprivedReq,getRarestRequest
 from messages.buffermessage import BufferMessage
 from messages.lpbmsg import LPBMessage
 from messages.retransmitmessage import RetransmitMessage
@@ -101,7 +101,7 @@ class PullClient(Scheduler):
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 #blockID = choice(bl)
-                blockID=bl[0]
+                blockID=getRarestRequest(self.bufferlist,self.buffer,bl)
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
                 #print "SENDING BLOCK", blockID, peer
@@ -188,12 +188,8 @@ class PullClient(Scheduler):
                self.log.error('scheduler matching failed')
                 
             for peer,id in ids.items():
-                bls=[(len(requestableBlocks[b]),b) for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
-                bls.sort()
-                if bls:
-                    blocksToRequest[peer]=[bls[0][1]]
-                else:
-                    blocksToRequest[peer]=[]
+                blocksToRequest[peer]=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                
                 
             """
             keys = tmpBlocksToRequest.keys()
