@@ -191,7 +191,7 @@ class PullClient(Scheduler):
                 bls=[(len(requestableBlocks[b]),b) for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
                 bls.sort()
                 if bls:
-                    blocksToRequest[peer]=[p[1] for p in bls]
+                    blocksToRequest[peer]=[p[0][1]]
                 else:
                     blocksToRequest[peer]=[]
                 
