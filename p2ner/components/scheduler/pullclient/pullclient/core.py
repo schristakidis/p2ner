@@ -182,14 +182,15 @@ class PullClient(Scheduler):
             for b,peers in requestableBlocks.items():
                 G.add_edge('s',b,capacity=1)
                 for p in peers:
-                    G.add_edge(b,ids[p],capacity=1)
+                    G.add_edge(b,ids[p],capacity=1,weight=len(peers))
 
             for id in ids.values():
                 G.add_edge(id,'e',capacity=1)
             
             blocksToRequest={}
             try:
-                flow, F = nx.ford_fulkerson(G, 's', 'e')
+                #flow, F = nx.ford_fulkerson(G, 's', 'e')
+                F=nx.max_flow_min_cost(G,'s','e')
             except:
                self.log.error('scheduler matching failed')
                 
