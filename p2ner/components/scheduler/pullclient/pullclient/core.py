@@ -101,7 +101,13 @@ class PullClient(Scheduler):
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 #blockID = choice(bl)
-                blockID=getRarestRequest(self.bufferlist,self.buffer,bl)
+                """
+                try:
+                    blockID=getRarestRequest(self.bufferlist,self.buffer,bl)
+                except:
+                    blockID = choice(bl)
+                """
+                blockID=bl[0]
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
                 #print "SENDING BLOCK", blockID, peer
@@ -179,7 +185,7 @@ class PullClient(Scheduler):
                     G.add_edge(b,ids[p],capacity=1)
 
             for id in ids.values():
-                G.add_edge(id,'e')
+                G.add_edge(id,'e',capacity=1)
             
             blocksToRequest={}
             try:
