@@ -1,6 +1,6 @@
 ---
 experiment:
-    name: P2_zabbix_test
+    name: P2_SOverlay_test
     description: P2PClouds overlay experiment 
     walltime: 3600000 #seconds
 
@@ -15,13 +15,31 @@ experiment:
                  type: 2
                  value_type: 0
                  percentile: True
-
+                 
                - key: p2ner.scheduler
                  description: 'peer scheduler'
                  type: 2
                  value_type: 0
                  percentile: True
-                
+                 
+               - key: p2ner.netIdle
+                 description: 'peer netIdle'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+                 
+               - key: p2ner.controlover
+                 description: 'peer control overhead'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+
+               - key: p2ner.duplicates
+                 description: 'duplicate packets'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+
                - key: p2ner.swapInitiators
                  description: 'number of initiating swap'
                  type: 2
@@ -33,27 +51,23 @@ experiment:
                  type: 2
                  value_type: 3
                  percentile: True
-                   
+                 
                - key: p2ner.neighbors
                  description: 'number of neighbors'
                  type: 2
                  value_type: 3
                  percentile: True
-                
-               - key: p2ner.log
-                 description: 'log messages'
-                 type: 2
-                 value_type: 4
-                 percentile: False
+
+
 
     vizir:
         site: fr-inria
-        img: p2pcloudsV3
+        img: p2pcloudsV6
 
     clients:
         - site: fr-inria
-          number: 1
-          img: p2pcloudsV3
+          number: 15
+          img: p2pcloudsV6
           net: "BonFIRE WAN"
 
         - site: be-ibbt
@@ -62,17 +76,17 @@ experiment:
           net: "BonFIRE WAN"
 
         - site: de-hlrs
-          number: 0
-          img: p2pcloudsV3
+          number: 15
+          img: p2pcloudsV6
           net: "BonFIRE WAN"
 
         - site: uk-epcc
-          number: 0
-          img: p2pcloudsV3
+          number: 15
+          img: p2pcloudsV6
           net: "BonFIRE WAN"
 
         - site: uk-hplabs
-          number: 1
+          number: 15
           img: p2pcloudsV1
           net: "BonFIRE WAN"
 

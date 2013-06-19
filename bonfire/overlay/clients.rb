@@ -55,7 +55,7 @@ begin
     puts ssh.exec!("echo 1 > /proc/sys/net/ipv4/ip_forward")
   end
   vizirIP=vizir['context']['wan_ip']
-  vizirGui='150.140.186.118'
+  vizirGui='150.140.187.171'
   len=experiment.computes.length
   
   ###start vizir

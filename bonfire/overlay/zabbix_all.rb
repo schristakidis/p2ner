@@ -56,7 +56,7 @@ begin
         }
   end
 
-  until ['RUNNING', 'ACTIVE'].include?(zabbix.reload['state']) && zabbix.ssh.accessible?
+  until ['RUNNING', 'ACTIVE','up'].include?(zabbix.reload['state']) && zabbix.ssh.accessible?
     
     session.logger.info "Zabbix is not ready. Waiting..."
     sleep 5
@@ -84,16 +84,16 @@ begin
   
   until hosts.length == clientsnum
      session.logger.info "Waiting for #{clientsnum-hosts.length} client(s) to be up..."
-     sleep 15
+    sleep 15
      hosts = experiment.zabbix.request("host.get",
-         {"output" => "extend",
-          "search" => {"host" => "P2P-Client#{experiment['id']}"}
-     })
+        {"output" => "extend",
+         "search" => {"host" => "P2P-Client#{experiment['id']}"}
+    })
   end
       
   hosts.each{ |host|
 
-       session.logger.info "Setting trappers for host: \"#{host["host"]}\""
+        session.logger.info "Setting trappers for host: \"#{host["host"]}\""
          #vmid = host["host"].split(pattern='-')[-1]
          #vmip = computes.find{|h|
          #   h["id"].end_with?(vmid)
@@ -117,9 +117,15 @@ begin
             }
 
         }
+        session.logger.info "Finish setting trappers for host: \"#{host["host"]}\""
       }
-  item = experiment.zabbix.request("item.create",items)
+      
+  session.logger.info " Finish setting trappers "
+  pp items
 
+  item = experiment.zabbix.request("item.create",item)
+
+  session.logger.info " Staring percentile "
   ###
   # PERCENTILE
   ###
@@ -128,6 +134,7 @@ begin
        "search" => {"host" => "BonFIRE-Monitor#{experiment['id']}"}
       })[0]
 
+  session.logger.info "Zabbix host: \"#{host["host"]}\""
   hostid = host["hostid"]
   appli = experiment.zabbix.request("application.create",
       {"name" => conf["monitoring"]["application"]["name"],
@@ -135,6 +142,7 @@ begin
       }
       )["applicationids"][0]
 
+  session.logger.info "Application created"
   conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
         if trapper_conf["percentile"]
           session.logger.info "Setting percentile trappers for \"#{trapper_conf["description"]}\""
@@ -212,85 +220,7 @@ begin
       
   }
   
-  ###
-  # Network overhead percentiles
-  ###
-  [{"key" => "net.if.in[eth0,bytes]", "description" => "Incoming bandwidth"}, 
-       {"key" => "net.if.out[eth0,bytes]", "description" => "Outgoing bandwidth"}].each {|trapper_conf|
-          session.logger.info "Setting percentile trappers for \"#{trapper_conf["description"]}\""
-          line = line << trapper_conf["key"] << " "
-          itemids = []
-          gitems = []
-          PERCENTILE.each {|perc_val|
-           kval = "#{trapper_conf["key"]}#{perc_val}percentile"
-           item = experiment.zabbix.request("item.create",
-             {"description" => "#{trapper_conf["description"]} #{perc_val}th percentile",
-              "key_" => kval,
-              "hostid" => hostid,
-              "applications" => [appli],
-              "type" => 2,
-              "trapper_hosts" => "127.0.0.1",
-              "value_type" => 0
-            })
 
-        itemids << item["itemids"][0]
-
-          }
-
-        itemids.each_with_index {|v, i|
-            p = PERCENTILE[i]
-            gitems << {"type" => "0",
-                     "sortorder" => i.to_s(),
-                     "periods_cnt" => "5",
-                     "calc_fnc" => "2",
-                     "drawtype"=> DRAWTYPE[p],
-                     "color" => COLORS[p],
-                     "yaxisside" => "0",
-                     "itemid" => v
-                    }
-    
-        }
-
-          kval = "#{trapper_conf["key"]}average"
-          item = experiment.zabbix.request("item.create",
-             {"description" => "#{trapper_conf["description"]} average",
-              "key_" => kval,
-              "hostid" => hostid,
-              "applications" => [appli],
-              "type" => 2,
-              "trapper_hosts" => "127.0.0.1",
-              "value_type" => 0
-            })
-
-          p = "avg"
-          gitems << {"type" => "0",
-                     "sortorder" => itemids.length.to_s(),
-                     "periods_cnt" => "5",
-                     "calc_fnc" => "2",
-                     "drawtype"=> DRAWTYPE[p],
-                     "color" => COLORS[p],
-                     "yaxisside" => "0",
-                     "itemid" => item["itemids"][0]
-                    }
-
-        session.logger.info "Creating graph for \"#{trapper_conf["description"]}\""
-        graph = experiment.zabbix.request("graph.create",
-              {"gitems" => gitems,
-               "name" => "#{trapper_conf["description"]} percentiles",
-               "width" => "900",
-               "height" => "400",
-               "show_legend"=>"0",
-               "show_work_period"=>"1",
-               "graphtype"=>"0",
-               "show_3d" => "0",
-               "ymin_type" => "0",
-               "ymax_type" => "0",
-               "ymin_itemid" => "0",
-               "ymax_itemid" => "0"
-            })
-      
-  }
-  
   if line.length >0
      perc = PERCENTILE*","
      session.logger.info "Uploading patches to aggregator"
