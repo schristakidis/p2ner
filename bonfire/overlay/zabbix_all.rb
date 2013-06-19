@@ -93,7 +93,7 @@ begin
     })
   end
       
-  hosts{ |host|
+  hosts.each{ |host|
           session.logger.info "Setting trappers for host: \"#{host["host"]}\""
            #vmid = host["host"].split(pattern='-')[-1]
            #vmip = computes.find{|h|
@@ -125,7 +125,7 @@ begin
   #pp items
 
   #item = experiment.zabbix.request("item.create",item)
-  item.each_slice(5) { |itemslice|
+  items.each_slice(5) { |itemslice|
     ret = experiment.zabbix.request("item.create",itemislice)
 
   }
