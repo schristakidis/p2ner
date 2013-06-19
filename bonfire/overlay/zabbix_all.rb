@@ -91,7 +91,7 @@ begin
     })
   end
       
-  hosts.each{ |host|
+  hosts{ |host|
 
         session.logger.info "Setting trappers for host: \"#{host["host"]}\""
          #vmid = host["host"].split(pattern='-')[-1]
@@ -121,9 +121,13 @@ begin
       }
       
   session.logger.info " Finish setting trappers "
-  pp items
+  #pp items
 
-  item = experiment.zabbix.request("item.create",item)
+  #item = experiment.zabbix.request("item.create",item)
+  item.each_slice(5) { |itemslice|
+    ret = experiment.zabbix.request("item.create",itemislice)
+
+  }
 
   session.logger.info " Staring percentile "
   ###
