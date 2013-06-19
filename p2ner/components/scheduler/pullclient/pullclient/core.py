@@ -60,7 +60,7 @@ class PullClient(Scheduler):
 
     def produceBlock(self):
         #print "PRODUCEBLOCK"
-        self.log.debug('trying to produce block')
+        #self.log.debug('trying to produce block')
         self.running=True
         d = deferToThread(self.getRequestedBID)
         d.addCallback(self.sendBlock)
@@ -72,7 +72,7 @@ class PullClient(Scheduler):
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
-            self.log.warning('no blocks to send. stopping scheduler')
+            #self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
             tempidle=time()-self.lastIdleTime
@@ -81,7 +81,7 @@ class PullClient(Scheduler):
             self.lastIdleTime=0
         self.running=True
         bid, peer = req
-        self.log.debug('sending block %d to %s',bid,peer)
+        #self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
         
@@ -235,7 +235,7 @@ class PullClient(Scheduler):
                 blocksToRequest[peer].append(block)
             
             #print "BLOCKSTOREQUESTSSSS", blocksToRequest
-            self.log.debug('requesting blocks %s',blocksToRequest)
+            #self.log.debug('requesting blocks %s',blocksToRequest)
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
@@ -244,7 +244,7 @@ class PullClient(Scheduler):
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
-            self.log.debug('sending requests to %s %s',peer,r)
+            #self.log.debug('sending requests to %s %s',peer,r)
             BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
@@ -263,7 +263,7 @@ class PullClient(Scheduler):
                 self.countHit +=1
             hitRatio=self.countHit/float(self.countHit+self.countMiss)
             setValue(self,'scheduler',hitRatio*1000)
-            self.log.debug('hit ratio %f',hitRatio)
+            #self.log.debug('hit ratio %f',hitRatio)
       
         
         if not norequests:
@@ -277,10 +277,10 @@ class PullClient(Scheduler):
                 #print 'sending buffer'
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
         
-        self.log.debug('%s',self.buffer)
+        #self.log.debug('%s',self.buffer)
         
         idleRatio=self.idleTime/(time()-self.startTime)
-        self.log.debug('idle:%f',idleRatio)
+        #self.log.debug('idle:%f',idleRatio)
         setValue(self,'idle',idleRatio*1000)
         #print self.buffer
         #push block to output
