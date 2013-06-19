@@ -76,8 +76,10 @@ begin
   conf['clients'].each { |client_s|
         clientsnum += client_s['number'].to_i()
   }
-  
-  clientsnum -= ARGV.length - 1
+
+  if ARGV.length > 1 
+    clientsnum -= ARGV[1]
+  end
 
   hosts = experiment.zabbix.request("host.get",
       {"output" => "extend",
