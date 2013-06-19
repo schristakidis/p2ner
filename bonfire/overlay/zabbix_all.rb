@@ -76,6 +76,8 @@ begin
   conf['clients'].each { |client_s|
         clientsnum += client_s['number'].to_i()
   }
+  
+  clientsnum -= ARGV.length - 1
 
   hosts = experiment.zabbix.request("host.get",
       {"output" => "extend",
@@ -92,21 +94,20 @@ begin
   end
       
   hosts{ |host|
+          session.logger.info "Setting trappers for host: \"#{host["host"]}\""
+           #vmid = host["host"].split(pattern='-')[-1]
+           #vmip = computes.find{|h|
+           #   h["id"].end_with?(vmid)
+           #   }["nic"][0]["ip"]
 
-        session.logger.info "Setting trappers for host: \"#{host["host"]}\""
-         #vmid = host["host"].split(pattern='-')[-1]
-         #vmip = computes.find{|h|
-         #   h["id"].end_with?(vmid)
-         #   }["nic"][0]["ip"]
-
-         appli = experiment.zabbix.request("application.create",
-           {"name" => conf["monitoring"]["application"]["name"],
-           "hostid" => host["hostid"]
-           }
-           )["applicationids"][0]
+           appli = experiment.zabbix.request("application.create",
+             {"name" => conf["monitoring"]["application"]["name"],
+             "hostid" => host["hostid"]
+             }
+             )["applicationids"][0]
          
-         conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
-       items <<
+           conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
+           items <<
              {"description" => trapper_conf["description"],
              "key_" => trapper_conf["key"],
              "hostid" => host["hostid"],
@@ -114,10 +115,10 @@ begin
              "type" => trapper_conf["type"],
              #"trapper_hosts" => "#{vmip}",
              "value_type" => trapper_conf["value_type"]
-            }
+             }
 
-        }
-        session.logger.info "Finish setting trappers for host: \"#{host["host"]}\""
+            }
+          session.logger.info "Finish setting trappers for host: \"#{host["host"]}\""
       }
       
   session.logger.info " Finish setting trappers "
