@@ -79,7 +79,7 @@ class SimpleProducer(Scheduler):
             d = self.trafficPipe.call("inputblock", self, lpb, chunk)
             destination = self.overlay.getNeighbours()
             if len(destination)>0:
-                for i in range(1):
+                for i in range(2):
                     #peer = choice(destination)
                     #ip='150.140.186.112'
                     #p=[p for p in destination if p.getIP()=='150.140.186.112']
