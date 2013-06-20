@@ -121,7 +121,7 @@ class CentralServer(Overlay):
         
     def findNeighbours(self, number):
         list = self.neighbourhoods.keys()
-        #list.sort(key = lambda a: len(self.neighbourhoods[a]))
+        list.sort(key = lambda a: len(self.neighbourhoods[a]))
         return list[:number]
     
     def capConnections(self):
