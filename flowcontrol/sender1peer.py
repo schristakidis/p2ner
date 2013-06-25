@@ -16,13 +16,14 @@ queue = Queue()
 AckHistory=[]
 Hlock = threading.RLock()
 Plock = threading.RLock()
-Srate=700000/2 
+Srate=700000 
 START = threading.Event()
 PeerRtt={}
 LastAck=[]
 GTsend=0
 RTT1=0
 RTT2=0
+t0 = time.time()
 
 class XMLRPCserver(threading.Thread):
 
@@ -64,7 +65,7 @@ class UDPsender(threading.Thread):
         self.seq = 0
         self.Tsend = 0.1
         GTsend=self.Tsend
-        history=4
+        history=1
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
         self.sum_idle = 0
@@ -81,6 +82,7 @@ class UDPsender(threading.Thread):
         self.countPlot=0
         self.minRtt = 0
         self.errorRtt = 0
+        self.lastumax = 0
         
     def run(self):
         global History, queue,AckHistory,RTT1,RTT2
@@ -106,7 +108,7 @@ class UDPsender(threading.Thread):
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt,RTT1,RTT2,self.minRtt,self.errorRtt])
+                writer.writerow([time.time()-t0,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt,RTT1,RTT2,self.minRtt,self.errorRtt,self.lastumax])
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -147,6 +149,7 @@ class UDPsender(threading.Thread):
         Hlock.acquire()
        
         sum2=sum(AckHistory)
+        self.lastumax = AckHistory[-2]
         Hlock.release()
         print 'in umax ack is:',sum2
         self.umax=1.0*sum2/(self.Tsend*len(AckHistory))

@@ -16,12 +16,15 @@ queue = Queue()
 AckHistory=[]
 Hlock = threading.RLock()
 Plock = threading.RLock()
+Block = threading.RLock()
 Srate=700000/2 
 START = threading.Event()
 PeerRtt={}
 LastAck=[]
 GTsend=0
 RTT=[0,0,0,0]
+BW = 0
+t0 = time.time()
 
 class XMLRPCserver(threading.Thread):
 
@@ -48,7 +51,8 @@ class XMLRPCserver(threading.Thread):
     def run(self):
         self.server.serve_forever()
         print 'XMLRPC is over!'
-        
+
+
 class UDPsender(threading.Thread):
     
     def __init__(self, fsize=1400, ack=10, bsize=10):
@@ -63,7 +67,7 @@ class UDPsender(threading.Thread):
         self.seq = 0
         self.Tsend = 0.1
         GTsend=self.Tsend
-        history=2
+        history=3
         self.history_size=int(history/self.Tsend)
         self.not_ack = 0
         self.sum_idle = 0
@@ -79,9 +83,10 @@ class UDPsender(threading.Thread):
         self.slowStart=True
         self.countPlot=0
         self.dREF = 0
+        self.lastumax = 0
         
     def run(self):
-        global History, queue,AckHistory,RTT
+        global History, queue,AckHistory,RTT,BW
         START.wait()
         i = 0
         startTime=time.time()
@@ -104,7 +109,9 @@ class UDPsender(threading.Thread):
                 self.setW()
                 self.setU()
                 self.countPlot +=1
-                writer.writerow([self.countPlot,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt,RTT[0],RTT[1],RTT[2],RTT[3], self.dREF])
+                Block.acquire()
+                writer.writerow([time.time()-t0,self.u,self.f1final,self.umax,self.maxumax,self.window,len(History),self.avRtt,self.rttRef,self.lrefRtt,RTT[0],RTT[1],RTT[2],RTT[3], self.dREF, self.lastumax, BW])
+                Block.release()
             if i == 0:
                 try:
                     to, i = queue.get_nowait()
@@ -145,6 +152,7 @@ class UDPsender(threading.Thread):
         Hlock.acquire()
        
         sum2=sum(AckHistory)
+        self.lastumax = AckHistory[-2]
         Hlock.release()
         print 'in umax ack is:',sum2
         self.umax=1.0*sum2/(self.Tsend*len(AckHistory))
