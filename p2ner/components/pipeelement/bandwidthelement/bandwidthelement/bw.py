@@ -103,3 +103,7 @@ class BandwidthElement(PipeElement):
         return self.bw
 
 
+    def resetIdleStat(self,d):
+        self.startTime=0
+        self.idleTime=0
+        self.lastIdleTime=0

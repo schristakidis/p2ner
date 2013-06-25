@@ -125,7 +125,7 @@ class PullClient(Scheduler):
         self.countMiss=0
         self.log.info('scheduler is starting')
         self.loopingCall.start(self.frequency)
-        
+        self.trafficPipe.call('resetIdleStat')
         
     def stop(self):
         self.log.info('scheduler is stopping')
