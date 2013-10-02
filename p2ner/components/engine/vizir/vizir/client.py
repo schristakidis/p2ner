@@ -86,6 +86,8 @@ class PClient(Interface):
             self.output['comp']='PureVlcOutput'
         elif 'Null' in output:
             self.output['comp']='NullOutput'
+        elif 'Flv' in output:
+            self.output['comp']='FlvOutput'
         
     def getNeighbours(self,id,ip,port,func):
         self.interface.getNeighbours(id,ip,port,func)

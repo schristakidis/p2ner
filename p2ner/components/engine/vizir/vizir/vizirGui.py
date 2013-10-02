@@ -413,6 +413,11 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             menu_item1.show()
             outputMenu.append(menu_item1)
             
+            menu_item2=gtk.RadioMenuItem(menu_item,'Flv Output')
+            menu_item2.connect('toggled',self.on_output_menu_toggled,iters)
+            menu_item2.show()
+            outputMenu.append(menu_item2)
+            
             outputsItem=gtk.MenuItem('Select Output')
             outputsItem.set_submenu(outputMenu)
             menu.append(outputsItem)
