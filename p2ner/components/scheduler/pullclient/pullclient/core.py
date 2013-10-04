@@ -81,7 +81,7 @@ class PullClient(Scheduler):
             self.lastIdleTime=0
         self.running=True
         bid, peer = req
-        #self.log.debug('sending block %d to %s',bid,peer)
+        self.log.debug('sending block %d to %s',bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
         

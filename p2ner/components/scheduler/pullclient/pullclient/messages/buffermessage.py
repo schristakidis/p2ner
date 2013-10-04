@@ -71,7 +71,7 @@ class BufferMessage(ControlMessage):
                 waitPeer=[p for p in self.scheduler.bufferlist.values() if p.s[sid]['lastRequest']<self.scheduler.lastReqCheck and time()-p.s[sid]['lastRequest']<self.scheduler.requestFrequency]
                 #self.log.warning('waiting for %s',waitPeer)
                 if not waitPeer:
-                    self.log.warning('starting scheduler')
+                    #self.log.warning('starting scheduler')
                     reactor.callLater(0,self.scheduler.produceBlock)
      
 
