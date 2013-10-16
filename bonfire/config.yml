@@ -1,0 +1,88 @@
+---
+experiment:
+    name: P2_SOverlay_test
+    description: P2PClouds overlay experiment 
+    walltime: 3600000 #seconds
+
+    monitoring:
+        site: fr-inria
+        img: BonFIRE Zabbix Aggregator v7 
+        application:
+           name: p2ner
+           trappers:
+               - key: p2ner.energy
+                 description: 'peer energy'
+                 type: 2
+                 value_type: 0
+                 percentile: True
+
+               - key: p2ner.scheduler
+                 description: 'peer scheduler'
+                 type: 2
+                 value_type: 0
+                 percentile: True
+                
+               - key: p2ner.swapInitiators
+                 description: 'number of initiating swap'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+                 
+               - key: p2ner.swapSatelites
+                 description: 'number of being a satelite'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+                   
+               - key: p2ner.neighbors
+                 description: 'number of neighbors'
+                 type: 2
+                 value_type: 3
+                 percentile: True
+                
+               - key: p2ner.log
+                 description: 'log messages'
+                 type: 2
+                 value_type: 4
+                 percentile: False
+
+    vizir:
+        site: fr-inria
+        img: p2pcloudsV6
+
+    clients:
+        - site: fr-inria
+          number: 5
+          img: p2pcloudsV6
+          net: "BonFIRE WAN"
+
+        - site: be-ibbt
+          number: 0
+          img: BonFIRE Debian Squeeze 2G v4
+          net: "BonFIRE WAN"
+
+        - site: de-hlrs
+          number: 2
+          img: p2pcloudsV6
+          net: "BonFIRE WAN"
+
+        - site: uk-epcc
+          number: 2
+          img: p2pcloudsV6
+          net: "BonFIRE WAN"
+
+        - site: uk-hplabs
+          number: 0
+          img: p2pcloudsV1
+          net: "BonFIRE WAN"
+
+        - site: federica
+          number: 0
+          img: none
+          net: none
+
+        - site: useast-aws
+          number: 0
+          img: none
+          net: none
+

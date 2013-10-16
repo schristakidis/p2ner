@@ -56,7 +56,7 @@ begin
         }
   end
 
-  until ['RUNNING', 'ACTIVE','up'].include?(zabbix.reload['state']) && zabbix.ssh.accessible?
+  until ['RUNNING', 'ACTIVE'].include?(zabbix.reload['state']) && zabbix.ssh.accessible?
     
     session.logger.info "Zabbix is not ready. Waiting..."
     sleep 5
@@ -77,12 +77,6 @@ begin
         clientsnum += client_s['number'].to_i()
   }
 
-  
-  if ARGV.length > 0 
-    clientsnum -= ARGV[0].to_i()
-    pp ARGV[0]
-  end
-
   hosts = experiment.zabbix.request("host.get",
       {"output" => "extend",
        "search" => {"host" => "P2P-Client#{experiment['id']}"}
@@ -90,28 +84,29 @@ begin
   
   until hosts.length == clientsnum
      session.logger.info "Waiting for #{clientsnum-hosts.length} client(s) to be up..."
-    sleep 15
+     sleep 15
      hosts = experiment.zabbix.request("host.get",
-        {"output" => "extend",
-         "search" => {"host" => "P2P-Client#{experiment['id']}"}
-    })
+         {"output" => "extend",
+          "search" => {"host" => "P2P-Client#{experiment['id']}"}
+     })
   end
       
   hosts.each{ |host|
-          session.logger.info "Setting trappers for host: \"#{host["host"]}\""
-           #vmid = host["host"].split(pattern='-')[-1]
-           #vmip = computes.find{|h|
-           #   h["id"].end_with?(vmid)
-           #   }["nic"][0]["ip"]
 
-           appli = experiment.zabbix.request("application.create",
-             {"name" => conf["monitoring"]["application"]["name"],
-             "hostid" => host["hostid"]
-             }
-             )["applicationids"][0]
-        
-           conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
-           items <<
+       session.logger.info "Setting trappers for host: \"#{host["host"]}\""
+         #vmid = host["host"].split(pattern='-')[-1]
+         #vmip = computes.find{|h|
+         #   h["id"].end_with?(vmid)
+         #   }["nic"][0]["ip"]
+
+         appli = experiment.zabbix.request("application.create",
+           {"name" => conf["monitoring"]["application"]["name"],
+           "hostid" => host["hostid"]
+           }
+           )["applicationids"][0]
+         
+         conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
+       items <<
              {"description" => trapper_conf["description"],
              "key_" => trapper_conf["key"],
              "hostid" => host["hostid"],
@@ -119,22 +114,12 @@ begin
              "type" => trapper_conf["type"],
              #"trapper_hosts" => "#{vmip}",
              "value_type" => trapper_conf["value_type"]
-             }
             }
-          session.logger.info "Finish setting trappers for host: \"#{host["host"]}\""
+
+        }
       }
-      
-  session.logger.info " Finish setting trappers "
-  #pp items
+  item = experiment.zabbix.request("item.create",items)
 
-  #item = experiment.zabbix.request("item.create",item)
-  items.each_slice(5) { |itemslice|
-    pp itemslice
-    ret = experiment.zabbix.request("item.create",itemslice)
-
-  }
-
-  session.logger.info " Staring percentile "
   ###
   # PERCENTILE
   ###
@@ -143,7 +128,6 @@ begin
        "search" => {"host" => "BonFIRE-Monitor#{experiment['id']}"}
       })[0]
 
-  session.logger.info "Zabbix host: \"#{host["host"]}\""
   hostid = host["hostid"]
   appli = experiment.zabbix.request("application.create",
       {"name" => conf["monitoring"]["application"]["name"],
@@ -151,7 +135,6 @@ begin
       }
       )["applicationids"][0]
 
-  session.logger.info "Application created"
   conf["monitoring"]["application"]["trappers"].each {|trapper_conf|
         if trapper_conf["percentile"]
           session.logger.info "Setting percentile trappers for \"#{trapper_conf["description"]}\""
@@ -230,6 +213,7 @@ begin
   }
   
 
+  
   if line.length >0
      perc = PERCENTILE*","
      session.logger.info "Uploading patches to aggregator"

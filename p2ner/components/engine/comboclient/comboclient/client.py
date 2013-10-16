@@ -122,12 +122,13 @@ class Client(Engine):
       
         reactor.callLater(0.1, ClientStartedMessage.send, port, None,server, self.controlPipe)
         """
-        
+
+
         m=ContentsMessage(server)    
         self.checkServers[server]=m
         
         self.log.debug('sending check contents message to %s',server)
-        reactor.callLater(0.1, CheckContentsMessage.send,server,self.controlPipe,m.checkResponse)
+        reactor.callLater(0.5, CheckContentsMessage.send,server,self.controlPipe,m.checkResponse)
         
     
     def startProducing(self,id):

@@ -47,7 +47,7 @@ class NetworkChecker(Namespace):
                 self.networkUnreichable()
  
         self.log.info('local ip is %s',self.localIp)
-        
+        print 'ippppppppppppppppppp:',self.localIp
         
     def check(self):
         if not self.localIp and not self.basic:
@@ -265,6 +265,7 @@ class NetworkChecker(Namespace):
         self.root.controlPipe.call('listen')
         self.root.trafficPipe.call('listen')
         print 'network conditions are excellent'
+        print 'external ipppppppppp:',self.externalIp
         print 'upnp:',self.upnp
         print 'nat:',self.nat
         print 'hole punching:',self.hpunching

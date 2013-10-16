@@ -12,7 +12,7 @@ USER = "schristakidis"
 PASSWORD = "sakis4440"
 URI = "https://api.bonfire-project.eu"
 
-NAME = "PyExp"
+NAME = "PyExp2"
 DESCRIPTION = "Test experiment"
 WALLTIME = 24*60*60
 
