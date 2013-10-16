@@ -1,5 +1,0 @@
-#! /usr/bin/env python
-
-from bonfire_cli.bfexperiment import BFExperimentTool
-
-BFExperimentTool.run_once()
