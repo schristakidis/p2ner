@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 from p2ner.base import *
 import p2ner.abstract.engine
 import p2ner.base.messages.bootstrap, twisted.application.internet, twisted.web.xmlrpc
