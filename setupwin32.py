@@ -50,7 +50,7 @@ class Deploy():
         from sys import executable
         excludes=['vlcoutput', 'gstinput']
         cd =  os.path.dirname( os.path.realpath( __file__ ) )
-        COMPONENTS_DIR = os.path.join(cd, "p2ner", "components") 
+        COMPONENTS_DIR = os.path.join(cd, "p2ner", "components")
         os.system(executable + " setup.py bdist_egg --exclude-source-files")
         for name in glob.glob(os.path.join(cd, 'dist', '*.egg')):
             shutil.copy (os.path.join(cd, 'dist', name),
@@ -65,7 +65,7 @@ class Deploy():
                 for name in glob.glob(os.path.join(cpath, 'dist', '*.egg')):
                     shutil.copy (os.path.join(cpath, 'dist', name),
                     self.dist_dir)
-        
+
     def close(self, message=None):
         if message is not None:
             print 'ERROR: %s' % message
@@ -75,7 +75,7 @@ class Deploy():
 
     def setPathVariables(self):
         self.curr_dir = os.getcwd()
-      
+
         self.root_dir = os.path.abspath(self.curr_dir)
         self.installer_dir = os.path.join (self.root_dir, 'win32')
         self.dist_dir = os.path.join (self.root_dir, 'win32', 'dist')
@@ -89,7 +89,7 @@ class Deploy():
         # Add root folder to the python path for p2ner
         sys.path.insert(0, self.root_dir)
         # Add site-packages folrder for pygst
-        sys.path.insert(0, os.path.join(self.gstPath, 'lib', 'site-packages'))
+        # sys.path.insert(0, os.path.join(self.gstPath, 'lib', 'site-packages'))
         # Add Gtk and GStreamer folder to the system path
         for folder in [self.gtkPath]:
             os.environ['PATH'] = os.environ['PATH']+';'+os.path.join(folder, 'bin')
@@ -109,7 +109,7 @@ class Deploy():
                 os.remove(installer)
             except:
                 self.close("ERROR: Can't delete %s"%installer)
-            
+
         os.makedirs(self.dist_dir)
 
     def checkDependencies(self):
@@ -155,7 +155,7 @@ class Deploy():
         #ertfile = open(os.path.join(self.crt_dir, 'Microsoft.VC90.CRT.manifest'), 'w')
         #ertfile.write(crtManifest)
         #ertfile.close()
-             
+
     def deployGTK(self):
         print ('Deploying Gtk dependencies')
         # Copy Gtk files to the dist folder
@@ -179,11 +179,12 @@ class Deploy():
 
     def runCx_FreezeSetup(self):
         sys.argv.insert(1, 'build')
+
         P2NER_Target = Executable(
         script = "startClient.py",
         packages = find_packages(),
         initScript = None,
-        base = 'Win32GUI',
+        # base = 'Win32GUI',
         targetDir = self.dist_dir,
         targetName = "p2ner.exe",
         compress = True,
@@ -192,7 +193,7 @@ class Deploy():
         appendScriptToLibrary = True,
         icon = None
         )
-        
+
         P2NER_SERVER = Executable(
         script = "startServer.py",
         packages = find_packages(),
@@ -219,7 +220,7 @@ class Deploy():
         appendScriptToLibrary = True,
         icon = None
         )
-        
+
         P2NER_GUI = Executable(
         script = "startGui.py",
         packages = find_packages(),
@@ -233,8 +234,8 @@ class Deploy():
         appendScriptToLibrary = True,
         icon = None
         )
-        
-        
+
+
         setup(
             name = 'P2NER',
             description = 'P2P Client',
@@ -243,9 +244,9 @@ class Deploy():
                             "build_exe": self.dist_dir,
                             "packages": find_packages(),
                             "includes": ['gtk', 'cairo', 'pangocairo', 'pango', 'atk', 'gobject','logging.handlers',
-                                        'gio', 'zlib','wmi','matplotlib','matplotlib.backends.backend_gtkagg','code','pylab','xml.dom.minidom','twisted.web.client','miniupnpc','twisted.web.static','twisted.web.resource','twisted.web.server'], #'gst', 'pygst'
+                                        'gio', 'zlib','wmi','matplotlib','matplotlib.backends.backend_gtkagg','code','pylab','xml.dom.minidom','twisted.web.client','miniupnpc','twisted.web.static','twisted.web.resource','twisted.web.server','networkx','sqlite3'], #'gst', 'pygst'
                             "bin_excludes": ["tcl85.dll", "tk85.dll", "gdiplus.dll", "mfc90.dll", "gst-inspect.exe", "gst-launch.exe", "gst-typefind.exe", "gst-xmlinspect.exe"],
-                            "excludes": ["pywin.debugger", "pywin.debugger.dbgcon","bz2", 
+                            "excludes": ["pywin.debugger", "pywin.debugger.dbgcon","bz2",
                                         "pywin.dialogs", "pywin.dialogs.list", "py2exe", "compiler", "email",
                                         "Tkconstants","Tkinter","tcl","tk", "wx", "_tkinter", "_ssl",
                                         "doctest","macpath","ssl","win32ui",
@@ -257,7 +258,7 @@ class Deploy():
                     },
             executables = [P2NER_Target, P2NER_SERVER,P2NER_GUI,P2NER_BASICNET],
         )
-        
+
     def makeInstaller(self):
         print ("Creating installer..")
         setupscript = 'setupscript.iss'

@@ -22,5 +22,5 @@ from p2ner.core.components import getComponents, _entry_points, loadComponent
 import weakref, twisted.internet, bitarray, construct
 Client = loadComponent("engine", "ComboClient")
 from twisted.internet import reactor
-P2NER = Client(_parent=None,UI=('GtkGui',[],{}))
-reactor.run()  
+P2NER = Client(_parent=None,interface=('LocalControl',[],{}),UI=('GtkGui',[],{}),basic=False,port=50000)
+reactor.run()
