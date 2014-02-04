@@ -20,28 +20,25 @@ import gtk
 import gobject
 from twisted.web.xmlrpc import Proxy
 from hashlib import md5
+from pkg_resources import resource_string
 
 class ConnectGui(object):
-    
+
     def __init__(self,parent):
         self.parent=parent
-        
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+
+        path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
-        try:
-            self.builder.add_from_file(os.path.join(path,'connect2.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'connect2.glade'))
-            
+
+        self.builder.add_from_string(resource_string(__name__, 'connect2.glade'))
         self.builder.connect_signals(self)
-        
+
         self.statusbar = self.builder.get_object("statusbar")
         self.context_id = self.statusbar.get_context_id("Statusbar")
-        
+
         self.ui = self.builder.get_object("ui")
         self.ui.show()
-        
+
     def on_connectButton_clicked(self,widget):
         self.ip=self.builder.get_object('ipEntry').get_text()
         port=self.builder.get_object('portEntry').get_text()
@@ -54,7 +51,7 @@ class ConnectGui(object):
         d =proxy.callRemote('connect',password)
         d.addCallback(self.succesfulConnection)
         d.addErrback(self.failedConnection)
-        
+
     def succesfulConnection(self,d):
         if d:
             self.parent.setURL(self.url,self.ip)
@@ -62,11 +59,11 @@ class ConnectGui(object):
             self.ui.destroy()
         else:
             self.statusbar.push(self.context_id, "wrong password")
-        
+
     def failedConnection(self,f):
         self.statusbar.push(self.context_id, "Can't connect to server")
         print f
-        
+
     def on_exitButton_clicked(self,widget):
         self.ui.destroy()
- 
+
