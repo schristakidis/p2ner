@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 
-from setuptools import setup
+from setuptools import setup,find_packages
 
 __component_name__ = "RemoteProducerUI"
 __author__ = "Sakis Christakiidis"
@@ -34,7 +34,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    limitations under the License."""
 __description__ = "remote producer user interface"
 __long_description__ = """"""
-__pkg_data__ = {} #__component_name__.lower(): ["template/*", "data/*"]}
+__pkg_data__ = {'':['*.glade']}
 
 setup(
     name=__component_name__,
@@ -46,7 +46,7 @@ setup(
     license=__license__,
     long_description=__long_description__ if __long_description__ else __description__,
 
-    packages=[__component_name__.lower()],
+    packages=find_packages('.'),
     package_data = __pkg_data__,
 
     entry_points="""

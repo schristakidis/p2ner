@@ -35,7 +35,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    limitations under the License."""
 __description__ = "logger GUI component"
 __long_description__ = """"""
-__pkg_data__ = ('':[*.glade])
+__pkg_data__ = {'':['*.glade']}
 
 setup(
     name=__component_name__,
@@ -74,7 +74,7 @@ setup(
     license=__license__,
     long_description=__long_description__ if __long_description__ else __description2__,
 
-    packages=[__component_name__.lower()],
+    packages=find_packages('.'),
     package_data = __pkg_data__,
 
 
