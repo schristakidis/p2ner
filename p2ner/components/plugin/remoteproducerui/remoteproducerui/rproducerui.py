@@ -30,6 +30,7 @@ from connectgui import ConnectGui
 from twisted.web.xmlrpc import Proxy
 from gtkgui.settings import SettingsGui
 import getpass
+from pkg_resources import resource_string
 
 class RemoteProducerUI(UI):
     def initUI(self,parent):
@@ -37,34 +38,35 @@ class RemoteProducerUI(UI):
         self.ui=None
         self.gotSettings=False
         self.proxy=None
-        
+
     def constructUI(self):
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+        path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
-        try:
-            self.builder.add_from_file(os.path.join(path,'viewer.glade'))
-        except:
-            path = os.path.dirname( os.path.realpath( __file__ ) )
-            self.builder.add_from_file(os.path.join(path, 'viewer.glade'))
-            
-        self.ui=self.builder.get_object('ui')
-        
+
+        path = os.path.realpath(os.path.dirname(sys.argv[0]))
+        self.builder = gtk.Builder()
+
+        self.builder.add_from_string(resource_string(__name__, 'viewer.glade'))
         self.builder.connect_signals(self)
-        
+
+        self.ui=self.builder.get_object('ui')
+
+        self.builder.connect_signals(self)
+
         self.model = gtk.TreeStore(gobject.TYPE_STRING)#,gobject.TYPE_BOOLEAN )
-        
+
         self.tVideo=self.model.append(None,('Videos',))
-        self.tChannel=self.model.append(None,('Channels',))        
- 
-        
+        self.tChannel=self.model.append(None,('Channels',))
+
+
         self.treeview=self.builder.get_object('treeview')
         self.treeview.set_model(self.model)
         self.treeview.set_headers_visible(False)
-        
+
         renderer=gtk.CellRendererText()
         column=gtk.TreeViewColumn('streams',renderer, text=0)
         self.treeview.append_column(column)
-        
+
     def startUI(self):
         if not self.proxy:
             ConnectGui(self)
@@ -72,11 +74,11 @@ class RemoteProducerUI(UI):
         self.constructUI()
         self.getContents()
         self.ui.show()
-        
+
     def setURL(self,url,ip):
         self.proxy = Proxy(url)
         self.server=ip
-        
+
     def on_treeview_row_activated(self,widget,path,col):
         if len(path)==1:
             if self.treeview.row_expanded(path):
@@ -91,16 +93,16 @@ class RemoteProducerUI(UI):
                 type='tv'
             self.treeview.set_sensitive(False)
             self.registerStream(type,stream)
-            
-            
+
+
     def getContents(self):
         d=self.proxy.callRemote('getContents')
         d.addCallback(self.updateView)
         d.addErrback(self.XMLRPCFailed)
-        
+
     def XMLRPCFailed(self,reason):
         print reason
-        
+
     def updateView(self,contents):
         videos=contents[0]
         channels=contents[1]
@@ -108,18 +110,18 @@ class RemoteProducerUI(UI):
             self.model.append(self.tVideo,(v,))
         for ch in channels:
             self.model.append(self.tChannel,(ch,))
-            
+
     def on_closeButton_clicked(self,widget):
         self.ui.destroy()
-        
+
     def on_settingsButton_clicked(self,widget):
         SettingsGui(self,True,_parent=self)
-        
+
     def setSettings(self,settings):
         self.gotSettings=True
         self.settings=settings
         print self.settings
-        
+
     def registerStream(self,type,stream):
         if not self.gotSettings:
             s=SettingsGui(self,False,_parent=self)
@@ -127,17 +129,17 @@ class RemoteProducerUI(UI):
             if not self.settings:
                 SettingsGui(self,True,_parent=self)
                 return
-        
-        self.settings['input']['advanced']=False 
-   
+
+        self.settings['input']['advanced']=False
+
         self.settings['type']=type
         self.settings['author']=getpass.getuser()
         self.settings['title']=stream
         self.settings['description']=''
         self.settings['filename']=stream
 
-        
-        
+
+
         port=16000
         self.settings['server']=(self.server,port)
 
@@ -146,11 +148,11 @@ class RemoteProducerUI(UI):
         output={}
         output['comp']='NullOutput'
         output['kwargs']=None
-        
+
         d = self.proxy.callRemote('registerStream', dumps(self.settings),dumps(input),dumps(output))
         d.addCallback(self.subscribeStream,self.server,port)
         d.addErrback(self.XMLRPCFailed)
-        
+
     def subscribeStream(self,id,ip,port):
         if id==-2:
             print 'failed to register stream'
@@ -160,7 +162,7 @@ class RemoteProducerUI(UI):
             self.parent.on_refreshButton_clicked()
             self.tryCount=0
             reactor.callLater(1,self.checkID,id,ip,port)
-            
+
     def checkID(self,id,ip,port):
         if self.parent.hasID(id):
             self.parent.subscribeStream(id,ip,port,True)
@@ -172,5 +174,5 @@ class RemoteProducerUI(UI):
             else:
                 print 'failed to register stream'
                 self.treeview.set_sensitive(True)
-        
-            
+
+
