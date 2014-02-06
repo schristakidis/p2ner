@@ -28,13 +28,15 @@ vlc_defaults = {
             'file': " -I dummy --dummy-quiet --ignore-config  --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
             'webcam': ' -I dummy --dummy-quiet --ignore-config dshow:// --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
             'stream': ' -I dummy --dummy-quiet --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+            'dstream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
             'tv': " -I dummy --dummy-quiet  --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
                },
     'linux':{
             'cfile': " -I dummy --ignore-config --sout=#duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
             'file': " -I dummy    --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
             'webcam': ' -I dummy --ignore-config v4l2:// :input-slave=alsa://pulse   --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,acodec=mp4a,ab=32,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
-            'stream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
+            'dstream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
+            'stream': ' -I dummy  --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
              'tv': " -I dummy   --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
              }
     }
@@ -115,7 +117,10 @@ class VlcInput(Input):
             elif type=='cfile':
                 proc = ['vlcProcess', filename]+(vlc_defaults[platform][type]).split()
             elif type=='stream':
-                proc = ['vlcProcess', filename,arg1,arg2]+(vlc_defaults[platform][type]).split()
+                if not self.input['transcode']:
+                    proc = ['vlcProcess', filename,arg1,arg2]+(vlc_defaults[platform]['dstream']).split()
+                else:
+                    proc = ['vlcProcess', filename,arg1,arg2]+(vlc_defaults[platform][type]%args).split()
             elif type=='tv':
                 file=filename[0]
                 args=(int(filename[1]),int(self.width),int(self.height),int(videorate),int(videorate),int(self.scheduler.blocksSec))
