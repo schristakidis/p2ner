@@ -33,75 +33,75 @@ class ProducerGui(UI):
         self.gotSettings=False
         self.source='webcam'
         self.advSettings=False
-        
+
         self.builder = gtk.Builder()
 
         self.builder.add_from_string(resource_string(__name__, 'producer.glade'))
         self.builder.connect_signals(self)
 
         self.servers=self.getServers()
-        
-      
+
+
         portListstore=gtk.ListStore(str)
         self.portCombo = gtk.ComboBoxEntry(portListstore, 0)
         portBox = self.builder.get_object("portBox")
         self.portCombo.set_property('width-request',80)
         portBox.pack_start(self.portCombo,True,True,0)
-        
-        self.portCombo.show()  
-        
-     
+
+        self.portCombo.show()
+
+
         servListstore=gtk.ListStore(str)
 
         if self.servers:
             for s in self.servers.keys():
                 servListstore.append([s])
-        
-        
+
+
         self.ipCombo = gtk.ComboBoxEntry(servListstore, 0)
         self.ipCombo.child.connect('changed', self.ip_changed_cb)
         self.ipCombo.set_property('width-request',150)
         ipBox = self.builder.get_object("ipBox")
         ipBox.pack_start(self.ipCombo,True,True,0)
-        self.ipCombo.show()  
+        self.ipCombo.show()
 
 
         if self.servers:
             self.ipCombo.set_active(self.getDefaultServer())
-        
+
         streamBox=self.builder.get_object('streamBox')
         self.streamCombo=gtk.combo_box_new_text()
         streamBox.pack_start(self.streamCombo,True,True,0)
-       
+
         for p in ('http','udp','rtp'):
             self.streamCombo.append_text(p)
-        
-        self.streamCombo.connect('changed', self.stream_changed_cb)    
+
+        self.streamCombo.connect('changed', self.stream_changed_cb)
         self.streamCombo.set_active(0)
         self.streamCombo.show()
-        
+
         channelsBox=self.builder.get_object('channelsCombo')
         self.channelsCombo=gtk.combo_box_new_text()
         channelsBox.pack_start(self.channelsCombo,True,True,0)
-       
+
         self.channels=self.getChannels()
-        
+
         if self.channels:
             for ch in self.channels:
                 self.channelsCombo.append_text(ch)
-        
-                self.channelsCombo.connect('changed', self.dvb_changed_cb)    
+
+                self.channelsCombo.connect('changed', self.dvb_changed_cb)
                 #self.channelsCombo.set_active(0)
                 self.channelsCombo.show()
         else:
             self.builder.get_object('dvbButton').set_sensitive(False)
-        
+
         self.ui=self.builder.get_object('ui')
-        self.ui.show()    
-        
+        self.ui.show()
+
         self.builder.get_object('author').set_text(getpass.getuser())
-      
-     
+
+
     def getDefaultServer(self):
         dip=self.preferences.getDefaultServer()
         i=0
@@ -109,12 +109,12 @@ class ProducerGui(UI):
         for k,v in self.servers.items():
             if dip==k:
                     found=i
-            i+=1 
+            i+=1
         return found
-    
+
     def getChannels(self):
         return self.preferences.getChannels()
-    
+
     def getServers(self):
         srv=self.preferences.getServers()
         servers={}
@@ -123,7 +123,7 @@ class ProducerGui(UI):
                 servers[s[0]]=[]
             servers[s[0]].append(s[1])
         return servers
-     
+
     def ip_changed_cb(self,entry):
         en=entry.get_text()
         model=self.portCombo.get_model()
@@ -132,7 +132,7 @@ class ProducerGui(UI):
             for port in self.servers[en]:
                 model.append([port])
             self.portCombo.set_active(0)
-     
+
     def stream_changed_cb(self,combobox):
         proto=self.get_active_text(combobox)
         ipBox=self.builder.get_object('addressBox')
@@ -141,25 +141,25 @@ class ProducerGui(UI):
             ipBox.set_sensitive(False)
             return
         ipBox.set_sensitive(True)
-        
+
     def dvb_changed_cb(self,combobox):
         self.playingChannel=self.get_active_text(combobox)
         self.builder.get_object('dvbButton').set_active(True)
         self.builder.get_object('title').set_text(self.playingChannel)
-        
+
     def get_active_text(self,combobox):
         model = combobox.get_model()
         active = combobox.get_active()
         if active < 0:
             return None
-        return model[active][0] 
-           
+        return model[active][0]
+
     def port_changed_cb(self,entry):
-        print entry.get_text()        
-        
+        print entry.get_text()
+
     def on_ui_destroy(self,widget=None):
         self.ui.destroy()
-        
+
     def on_saveButton_clicked(self,widget):
         ip=self.ipCombo.child.get_text()
         port=self.portCombo.child.get_text()
@@ -177,16 +177,16 @@ class ProducerGui(UI):
                 print 'not saving'
         else:
             print 'not valid'
-            
+
     def on_browse_button_clicked(self,widget,data=None):
         if self.remote:
             self.browseRemote()
         else:
             self.browseLocal()
-            
+
     def browseRemote(self):
         RemoteFileChooser(self.browseFinished,self.interface)
-            
+
     def browseLocal(self):
         filter=gtk.FileFilter()
         filter.set_name('video files')
@@ -203,22 +203,22 @@ class ProducerGui(UI):
                                (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                 gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)
-       
+
         if 'win' not in sys.platform:
             dialog.add_filter(filter)
-        dialog.add_filter(filter3)           
+        dialog.add_filter(filter3)
         dialog.add_filter(filter2)
-        
+
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             #print dialog.get_filename(), 'selected'
-            filename = dialog.get_filename()           
+            filename = dialog.get_filename()
         elif response == gtk.RESPONSE_CANCEL:
             filename=None
             print 'Closed, no files selected'
         self.browseFinished(filename)
         dialog.destroy()
-    
+
     def browseFinished(self,filename=None):
         if filename:
             self.builder.get_object("file_entry").set_text(filename)
@@ -228,30 +228,30 @@ class ProducerGui(UI):
             #n=''.join(name[:-1],'.')
             n=name.rfind('.')
             self.builder.get_object('title').set_text(name[:n])
-            
-            
-        
+
+
+
     def on_webcam_clicked(self,widget,data=None):
         if widget.get_active():
             self.source = 'webcam'
-            
+
 
     def on_file_clicked(self,widget,data=None):
         if widget.get_active():
             self.source = 'file'
-           
+
 
     def on_stream_clicked(self,widget,data=None):
         if widget.get_active():
             self.source = 'stream'
-            
+
     def on_dvbButton_toggled(self,widget,data=None):
         if widget.get_active():
             self.source='tv'
-            
+
     def on_settingsButton_clicked(self,widget):
         SettingsGui(self,True,_parent=self)
-            
+
     def setSettings(self,settings):
         self.gotSettings=True
         self.settings=settings
@@ -261,7 +261,7 @@ class ProducerGui(UI):
         if validateIp(ip):
             self.preferences.setDefaultServer(ip)
             self.preferences.saveServers()
-        
+
     def on_registerButton_clicked(self,widget):
         if not self.gotSettings:
             s=SettingsGui(self,False,_parent=self)
@@ -269,11 +269,11 @@ class ProducerGui(UI):
             if not self.settings:
                 SettingsGui(self,True,_parent=self)
                 return
-        
-        self.settings['input']['advanced']=self.advSettings    
+
+        self.settings['input']['advanced']=self.advSettings
         if self.advSettings and self.source=='file' and self.advSettings['converted']:
             self.source='cfile'
-   
+
         self.settings['type']=self.source
         self.settings['author']=self.builder.get_object('author').get_text()
         self.settings['title']=self.builder.get_object('title').get_text()
@@ -287,17 +287,18 @@ class ProducerGui(UI):
             self.settings['filename']=(self.channels[self.playingChannel]['location'],self.channels[self.playingChannel]['program'])
         elif self.source=='stream':
             self.settings['filename']=self.get_active_text(self.streamCombo)+'://'+self.builder.get_object('addressBox').get_text()+':'+self.builder.get_object('port_entry').get_text()
+            self.settings['input']['transcode']=self.builder.get_object('retranscodeButton').get_active()
             if not self.builder.get_object('addressBox').get_text():
                 return
         self.settings['server']=(self.ipCombo.child.get_text(),self.portCombo.child.get_text())
-           
+
         if self.source=='file' and self.advSettings and self.advSettings['offline']:
             self.on_ui_destroy()
             ConverterGui(self.parent,self.settings)
-        else:   
+        else:
             self.registerStreamSettings()
-            
-    def registerStreamSettings(self):     
+
+    def registerStreamSettings(self):
         self.on_ui_destroy()
         self.parent.registerStreamSettings(self.settings)
 
@@ -305,11 +306,11 @@ class ProducerGui(UI):
     def on_advancedButton_toggled(self,widget):
         if widget.get_active():
             FileGui(self,_parent=self)
-            
+
     def setAdvancedSettings(self,advSettings):
         self.builder.get_object('advancedButton').set_active(False)
         if advSettings:
             self.advSettings=advSettings
             self.builder.get_object('browse_button').set_sensitive(False)
             self.browseFinished(self.advSettings['filename'])
-            
+

@@ -13,9 +13,9 @@ class interface(object):
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-    specs={'sout':""}
+    specs={'ip':"",'port':8880}
 
-    specsGui={'sout':{'name':'VLC sout parameters','tooltip':'If you want to change VLC output put here the string for "sout" parameter'},}
+    specsGui={'ip':{'name':'IP','tooltip':'ip for http streaming'},
+              'port':{'name':'Port','tooltip':'port for http streaming'}}
 
-    optional=['sout']
 

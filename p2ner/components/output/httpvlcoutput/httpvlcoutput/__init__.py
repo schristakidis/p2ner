@@ -1,4 +1,4 @@
-class interface(object):
+# -*- coding: utf-8 -*
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,5 @@ class interface(object):
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-    specs={'sout':""}
-
-    specsGui={'sout':{'name':'VLC sout parameters','tooltip':'If you want to change VLC output put here the string for "sout" parameter'},}
-
-    optional=['sout']
-
+from interface import interface as INTERFACE
+from HttpVlcOutput import HttpVlcOutput
