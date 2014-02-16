@@ -16,7 +16,6 @@ from twisted.internet import gtk2reactor
 gtk2reactor.install()
 from twisted.internet import reactor,task
 import pygst
-print "import"
 pygst.require("0.10")
 import gst
 import sys

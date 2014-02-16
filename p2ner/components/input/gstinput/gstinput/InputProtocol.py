@@ -29,8 +29,8 @@ class InputProto(protocol.ProcessProtocol):
     def childDataReceived(self,childFD, data):
         if  childFD==1:
             self.buffer.append(data)
-        else:
-           print "mes or err",data
+        # else:
+           # print "mes or err",data
 
     def getBuffer(self):
         buf=''
@@ -40,15 +40,18 @@ class InputProto(protocol.ProcessProtocol):
         return buf
 
     def sendData(self,data):
-        print "sending data ",data
+        # print "sending data ",data
         self.transport.write(str(data))
         self.transport.write('\n')
 
 
     def closeInput(self):
         print 'closing inputtttttttttttttttttttttttt'
-        self.transport.signalProcess('TERM')
+        try:
+            self.transport.signalProcess('TERM')
+        except:
+            print 'proccess already exited'
 
     def processEnded(self,status):
-        print 'in input protocolllllllllll'
-        print status
+        print 'process ended'
+        # print status
