@@ -16,6 +16,7 @@ from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
 from cPickle import dumps,loads
 from twisted.web.xmlrpc import Proxy
+from testbed import LTOGIP,GTOLIP
 
 
 class VizirProxy(xmlrpc.XMLRPC):
@@ -26,28 +27,28 @@ class VizirProxy(xmlrpc.XMLRPC):
         url="http://"+vip+':'+str(vport)+"/XMLRPC"
         self.proxy=Proxy(url)
         self.register(port)
-        
+
     def register(self,port):
         self.proxy.callRemote('registerProxy',port)
-        
+
     def xmlrpc_register(self,ip,rpcport,port,bw,server=False):
         print 'registered ',ip,port,bw
-        self.proxy.callRemote('register',ip,rpcport,port,bw,server)
+        self.proxy.callRemote('register',GTOLIP[ip],rpcport,port,bw,server)
         return True
-    
+
     def xmlrpc_getState(self):
         ret=[(dumps(k),dumps(v)) for k,v in self.peers.items()]
         return ret
-        
+
     def xmlrpc_proxyCommand(self,*args):
         #cmd=args.pop(0)
         args=list(args)
         peer=args.pop(-1)
-        url="http://"+peer[0]+':'+str(peer[1])+"/XMLRPC"
+        url="http://"+LTOGIP[peer[0]]+':'+str(peer[1])+"/XMLRPC"
         proxy=Proxy(url)
         d=proxy.callRemote(*args)
         return d
-    
+
 def startVizirProxy():
     from twisted.internet import reactor
     import sys,getopt
@@ -55,7 +56,7 @@ def startVizirProxy():
         optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:h',['port=','vizir=','vizirPort=','help'])
     except getopt.GetoptError as err:
         usage(err=err)
-        
+
     port=9000
     vPort=9000
     vIP=None
@@ -68,13 +69,13 @@ def startVizirProxy():
             vPort=int(a)
         elif opt in ('-h','--help'):
             usage()
-            
+
     if not vIP:
         usage(err='You must set the vizir ip to connect')
-    
+
     VizirProxy(vIP,vPort,port)
     reactor.run()
-    
+
 def usage(err=None,daemon=False):
     import sys
     if err:
@@ -88,6 +89,6 @@ def usage(err=None,daemon=False):
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')
-    
+
 if __name__=='__main__':
     startVizirProxy()
