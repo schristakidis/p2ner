@@ -194,9 +194,7 @@ class LoggerGui(UI):
         self.interface.getLogRecords(self.updateView)
 
     def updateView(self,records):
-        print 'in update view ',len(records)
         if not records:
-            print 'returning'
             return
         for r in records:
             clr='black'
