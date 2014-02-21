@@ -368,6 +368,7 @@ class DistributedClient(Overlay):
         self.passiveInitPeer.participateSwap=False
         partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
 
+        initialHoodEnergy=self.getCustomEnergy(partnerSet)+self.getCustomEnergy(self.partnerTable)
 
         availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
         #tempav=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
@@ -481,6 +482,16 @@ class DistributedClient(Overlay):
         self.log.warning('passive init %s',self.passiveInitPeer)
         self.log.warning('new final %s',self.newTable)
         self.newPartnerTable=newPassiveTable+passiveUnavailablePeers
+
+        finalHoodEnergy=self.getCustomEnergy(newActiveTable+activeUnavailablePeers)+self.getCustomEnergy(self.newPartnerTable)
+
+        if finalHoodEnergy>initialHoodEnergy:
+            self.log.error('major problem in swap')
+            self.log.error('initial hood energy %s',initialHoodEnergy)
+            self.log.error('final hood energy %s',finalHoodEnergy)
+            print('initial hood energy %s',initialHoodEnergy)
+            print('final hood energy %s',finalHoodEnergy)
+
         self.sendFinalTable()
 
     ###SENDING FINAL TABLE TO PASSIVE
@@ -831,6 +842,15 @@ class DistributedClient(Overlay):
                 en +=sum(p.lastRtt)/len(p.lastRtt)
         if len(self.neighbours):
             en=en/len(self.neighbours)
+        return en
+
+    def getCustomEnergy(self,table):
+        en=0
+        for p in table:
+            if len(p.lastRtt):
+                en +=sum(p.lastRtt)/len(p.lastRtt)
+        if len(table):
+            en=en/len(table)
         return en
 
     def returnNeighs(self,peer):
