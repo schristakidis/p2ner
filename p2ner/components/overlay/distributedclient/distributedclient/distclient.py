@@ -486,7 +486,7 @@ class DistributedClient(Overlay):
 
         finalHoodEnergy=self.getCustomEnergy(newActiveTable+activeUnavailablePeers)+self.getCustomEnergy(self.newPartnerTable)
 
-        if finalHoodEnergy>initialHoodEnergy and len(self.neighbours)==len(newTable):
+        if finalHoodEnergy>initialHoodEnergy and len(self.neighbours)==len(self.newTable):
             self.log.error('major problem in swap')
             self.log.error('initial hood energy %s',initialHoodEnergy)
             self.log.error('final hood energy %s',finalHoodEnergy)
