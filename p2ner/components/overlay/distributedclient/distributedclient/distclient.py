@@ -58,7 +58,7 @@ class DistributedClient(Overlay):
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(SuggestMessage())
         self.messages.append(ConfirmNeighbourMessage())
-        self.messages.append(PingSwaPMessage())
+        self.messages.append(PingSwapMessage())
 
     def initOverlay(self):
         self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
