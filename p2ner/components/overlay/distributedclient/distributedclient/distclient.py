@@ -58,6 +58,7 @@ class DistributedClient(Overlay):
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(SuggestMessage())
         self.messages.append(ConfirmNeighbourMessage())
+        self.messages.append(PingSwaPMessage())
 
     def initOverlay(self):
         self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
@@ -81,6 +82,8 @@ class DistributedClient(Overlay):
         self.loopingCall.start(self.stream.overlay['swapFreq'])
         self.statsLoopingCall=task.LoopingCall(self.collectStats)
         self.statsLoopingCall.start(2)
+        self.pingCall=task.LoopingCall(self.sendPing)
+        self.pingCall.start(1)
 
         self.tempSatelites=0
         self.tempSwaps=0
@@ -420,6 +423,7 @@ class DistributedClient(Overlay):
             if len(p.lastRtt):
                 rtt=sum(p.lastRtt)/len(p.lastRtt)
             else:
+                self.log.error("can't perform swap with no rtt for %s",p)
                 #raise ValueError("can't perform swap with no rtt for %s",p)
                 #reactor.stop()
                 pass
@@ -896,3 +900,8 @@ class DistributedClient(Overlay):
         else:
             if not self.loopingCall.running:
                 reactor.callLater(uniform(0.1,0.9),self.loopingCall.start,self.stream.overlay['swapFreq'])
+
+    def sendPing(self):
+        if not self.stream.scheduler.running:
+            for p in self.getNeighbours():
+                PingSwapMessage.send(p,self.controlPipe)

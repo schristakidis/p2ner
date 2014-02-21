@@ -84,3 +84,4 @@ class MessageCodes(object):
     SUGGEST=103
     ASK_INIT_NEIGHS=104
     CONFIRM_NEIGH=105
+    PING_SWAP=106
