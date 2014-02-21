@@ -902,6 +902,11 @@ class DistributedClient(Overlay):
                 reactor.callLater(uniform(0.1,0.9),self.loopingCall.start,self.stream.overlay['swapFreq'])
 
     def sendPing(self):
-        if not self.stream.scheduler.running:
+        try:
+            running=self.scheduler.running
+        except:
+            return
+        if not running:
             for p in self.getNeighbours():
                 PingSwapMessage.send(p,self.controlPipe)
+
