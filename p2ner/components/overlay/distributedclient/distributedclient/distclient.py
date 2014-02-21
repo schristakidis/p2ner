@@ -14,6 +14,7 @@
 #   limitations under the License.
 
 
+import sys
 from p2ner.abstract.overlay import Overlay
 from messages.peerlistmessage import *
 from messages.peerremovemessage import ClientStoppedMessage
@@ -485,12 +486,16 @@ class DistributedClient(Overlay):
 
         finalHoodEnergy=self.getCustomEnergy(newActiveTable+activeUnavailablePeers)+self.getCustomEnergy(self.newPartnerTable)
 
-        if finalHoodEnergy>initialHoodEnergy:
+        if finalHoodEnergy>initialHoodEnergy and len(self.neighbours)==len(newTable):
             self.log.error('major problem in swap')
             self.log.error('initial hood energy %s',initialHoodEnergy)
             self.log.error('final hood energy %s',finalHoodEnergy)
             print('initial hood energy %s',initialHoodEnergy)
             print('final hood energy %s',finalHoodEnergy)
+            sys.stderr.write('problemmmmmmmmmmmmmmmmmmmm')
+        else:
+            self.log.debug('initial hood energy %s',initialHoodEnergy)
+            self.log.debug('final hood energy %s',finalHoodEnergy)
 
         self.sendFinalTable()
 
