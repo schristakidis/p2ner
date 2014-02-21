@@ -16,24 +16,27 @@ from twisted.web import xmlrpc, server
 from twisted.internet import reactor,defer
 from cPickle import dumps,loads
 from twisted.web.xmlrpc import Proxy
-from testbed import LTOGIP,GTOLIP
+from p2ner.util.testbed import LTOGIP,GTOLIP
 
 
 class VizirProxy(xmlrpc.XMLRPC):
-    def __init__(self,vip,vport,port=9000):
+    def __init__(self,vip,vport,port=9000,testbed=False):
         xmlrpc.XMLRPC.__init__(self)
         print 'start listening xmlrpc'
         reactor.listenTCP(port, server.Site(self))
         url="http://"+vip+':'+str(vport)+"/XMLRPC"
         self.proxy=Proxy(url)
         self.register(port)
+        self.testbed=testbed
 
     def register(self,port):
         self.proxy.callRemote('registerProxy',port)
 
     def xmlrpc_register(self,ip,rpcport,port,bw,server=False):
         print 'registered ',ip,port,bw
-        self.proxy.callRemote('register',GTOLIP[ip],rpcport,port,bw,server)
+        if self.testbed:
+            ip=GTOLIP[ip]
+        self.proxy.callRemote('register',ip,rpcport,port,bw,server)
         return True
 
     def xmlrpc_getState(self):
@@ -44,7 +47,9 @@ class VizirProxy(xmlrpc.XMLRPC):
         #cmd=args.pop(0)
         args=list(args)
         peer=args.pop(-1)
-        url="http://"+LTOGIP[peer[0]]+':'+str(peer[1])+"/XMLRPC"
+        if self.testbed:
+            peer[0]=LTOGIP[peer[0]]
+        url="http://"+peer[0]+':'+str(peer[1])+"/XMLRPC"
         proxy=Proxy(url)
         d=proxy.callRemote(*args)
         return d
@@ -53,13 +58,14 @@ def startVizirProxy():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:h',['port=','vizir=','vizirPort=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:th',['port=','vizir=','vizirPort=','testbed','help'])
     except getopt.GetoptError as err:
         usage(err=err)
 
     port=9000
     vPort=9000
     vIP=None
+    testbed=False
     for opt,a in optlist:
         if opt in ('-p','--port'):
             port=int(a)
@@ -67,13 +73,15 @@ def startVizirProxy():
             vIP=a
         elif opt in ('-P','--vizirPort'):
             vPort=int(a)
+        elif opt in ('-t','--testbed'):
+            testbed=True
         elif opt in ('-h','--help'):
             usage()
 
     if not vIP:
         usage(err='You must set the vizir ip to connect')
 
-    VizirProxy(vIP,vPort,port)
+    VizirProxy(vIP,vPort,port,testbed)
     reactor.run()
 
 def usage(err=None,daemon=False):
@@ -86,6 +94,7 @@ def usage(err=None,daemon=False):
     print ' -p, --port port :define port'
     print ' -v, --vizir ip :the vizir ip to connect'
     print ' -P, --vizirPort port :the vizir  port to connect'
+    print ' -t, --testbed enable the ip translation for experiments in UoP testbed'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')

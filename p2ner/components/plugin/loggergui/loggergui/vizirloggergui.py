@@ -43,7 +43,7 @@ class VizirLoggerGui(LoggerGui):
     def start(self,widget):
         self.local=False
         if not self.ui:
-            self.db=DatabaseLog(_parent=self)
+            self.db=DatabaseLog(_parent=self,testbed=self.testbed)
             self.createGui()
             self.createSidePane()
         if not self.showing:
@@ -123,13 +123,11 @@ class VizirLoggerGui(LoggerGui):
         self.ui.resize(1,1)
 
     def newLog(self,records,ip,port):
-        print 'got records ', len(records)
         for m in self.peerStore:
             if m[0]==ip and m[1]==port:
                 if not m[2]:
                     m[2]=True
                     self.filters['peer'].append((ip,port))
-                    print self.filters['peer']
                     break
 
         d=self.db.addRecord(records)
@@ -145,7 +143,6 @@ class VizirLoggerGui(LoggerGui):
         self.tfilter=self.tmodel.filter_new()
         self.tfilter.set_visible_func(self.filterFunc)
         self.tview.set_model(self.tfilter)
-        print 'in clear view ',len(records)
         return records
 
     def on_buttonpress(self, widget, event, model):

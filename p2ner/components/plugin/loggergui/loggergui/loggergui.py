@@ -38,7 +38,7 @@ levelColors = {
 
 class LoggerGui(UI):
 
-    def initUI(self):
+    def initUI(self,testbed):
         self.loggers=['p2ner']
         self.filters={'peer':[],'level':'debug','log':None}
         self.searchText=None
@@ -55,6 +55,9 @@ class LoggerGui(UI):
                 self.frequency=3
         except:
             pass
+
+        self.testbed=testbed
+
 
     def start(self):
         self.local=True

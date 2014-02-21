@@ -45,7 +45,7 @@ PAUSE=3
 
 
 class vizirGui(UI,xmlrpc.XMLRPC):
-    def initUI(self,port=9000):
+    def initUI(self,port=9000,testbed=False):
         xmlrpc.XMLRPC.__init__(self)
         print 'start listening xmlrpc'
         reactor.listenTCP(port, server.Site(self))
@@ -53,12 +53,12 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.remote=True
 
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
-        self.vizPlot= loadComponent('plugin', 'OverlayViz')() 
-        self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self)
+        self.vizPlot= loadComponent('plugin', 'OverlayViz')()
+        self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
         self.constructGui()
-        
-        
-            
+
+
+
     def constructGui(self):
         self.builder = gtk.Builder()
         self.builder.add_from_string(resource_string(__name__, 'cc.glade'))
@@ -89,16 +89,16 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.context_id=self.bar.get_context_id('status bar')
         self.win.connect('destroy',self.on_win_destroy)
         self.win.show_all()
-        
+
     def on_win_destroy(self,*args):
         reactor.stop()
-        
+
     def formatview(self):
         self.treemodel = gtk.ListStore(str, int, str, int, str, int, gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT) #(ip,port,bw,status,type,proxyport, id,object)
         self.treeview.set_model(self.treemodel)
         self.treemodel.set_default_sort_func(self.sort_func)
         self.treemodel.set_sort_column_id(-1,gtk.SORT_ASCENDING)
-        
+
         cell = gtk.CellRendererPixbuf()
         col = gtk.TreeViewColumn("On", cell)
         col.set_cell_data_func(cell, self.ison_pixbuf)
@@ -111,25 +111,25 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         col = gtk.TreeViewColumn("Upload BW", gtk.CellRendererText(), text=2)
         self.treeview.append_column(col)
         self.treeview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
-        
+
         self.clientStore=gtk.ListStore(str)
         for t in ('client','producer'):
             self.clientStore.append([t])
-  
+
         self.serverStore=gtk.ListStore(str)
         self.serverStore.append(['server'])
-        
+
         cell=gtk.CellRendererCombo()
         cell.set_property("editable", True)
         cell.set_property('has_entry',False)
         cell.set_property("text-column", 0)
         cell.connect("edited", self.combo_changed)
-          
+
         col = gtk.TreeViewColumn("Type", cell, text=4)
         col.set_cell_data_func(cell,self.setCellModel)
         self.treeview.append_column(col)
-        
- 
+
+
     def sort_func(self,model,iter1,iter2,data=None):
         t1=model.get_value(iter1,4)
         t2=model.get_value(iter2,4)
@@ -139,14 +139,14 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             return -1
         else:
             return 1
-        
+
     @withRequest
     def xmlrpc_registerProxy(self,request,port):
         print 'using proxy'
         url="http://"+request.getClientIP()+':'+str(port)+"/XMLRPC"
         self.proxy=Proxy(url)
         return True
-    
+
     def xmlrpc_register(self,ip,rpcport,port,bw,server=False):
         if server:
             type='server'
@@ -161,13 +161,13 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         o=PClient(self,peer,_parent=self)
         self.treemodel.append((ip,port,bw,on,type,rpcport,id,o))
         return True
-    
+
     def combo_changed(self, widget, path, text):
         if self.treemodel[path][3]==OFF :
             self.treemodel[path][4] = text
         else:
             self.newStatusMessage("can't change the type of a client if it's not OFF")
-        
+
     def setCellModel(self,col,cell,model,iter):
         t=model.get_value(iter,4)
         if t!='server':
@@ -175,7 +175,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         else:
             m=self.serverStore
         cell.set_property('model',m)
-        
+
     def ison_pixbuf(self, column, cell, model, iter):
         ison = model.get_value(iter, 3)
         if ison==ON:
@@ -192,7 +192,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         try:
             (path, column, x, y) = widget.get_path_at_pos(int(event.x), int(event.y))
             iter = model.get_iter(path)
-        except: 
+        except:
             return
         #send start stop
         if( widget.get_column(0) == column and event.button != 3):
@@ -215,7 +215,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             else:
                 ret[s[0]]=[s[1]]
         return ret
-    
+
     def toggleStartStop(self, iter, id=None):
         c=self.treemodel.get_value(iter,7)
         if self.treemodel.get_value(iter,4)=='producer':
@@ -239,7 +239,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                         self.newStatusMessage('there is no available streams to subscribe')
                         return
                     elif len(id)==1:
-                        id=id[0] 
+                        id=id[0]
                     else:
                         sid=int(getChoice('select which id to subscribe', [i[1] for i in id],None,None))
                         id=[i for i in id if i[1]==sid][0]
@@ -251,7 +251,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 self.treemodel.set_value(iter,3,INPROGRESS)
         return
 
-    def findPeer(self,peer,rpc=False):  
+    def findPeer(self,peer,rpc=False):
         ip=peer[0]
         port=int(peer[1])
         if rpc:
@@ -263,24 +263,24 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             print 'problem in self status find peer'
             print peer
             return None
-        
+
         return peer[0]
-       
+
     def findPeerObject(self,peer):
         return self.findPeer(peer,True)[7]
-    
+
     def setStatus(self,peer,status):
         p=self.findPeer(peer)
         if p:
             p[3]=status
-        
+
     def setId(self,peer,id,rpc=False):
         p=self.findPeer(peer,rpc)
         if p and p[4]!='server':
             p[6]=id
         else:
             p[6].append(id)
-                   
+
     def getProducingId(self):
         peer=[m for m in self.treemodel if m[4]=='producer' and m[6]!=-1]
         ret=[]
@@ -289,7 +289,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             server=self.getServerId(id)
             ret.append((server,id))
         return ret
-    
+
     def getServerId(self,id):
         server=[m for m in self.treemodel if m[4]=='server' and id in m[6]]
         if len(server)==1:
@@ -298,7 +298,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         else:
             raise ValueError('problem in getServerId in vizirGui')
         return None
-    
+
     def producerStopped(self,id):
         clients=[m for m in self.treemodel if m[4]=='client' and m[6]==id]
         for c in clients:
@@ -308,7 +308,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             servers[0][6].remove(id)
         else:
             raise ValueError('problem in producer Stopped in vizirGui')
-        
+
     def newStatusMessage(self,message):
         self.bar.pop(self.context_id)
         self.bar.push(self.context_id, message)
@@ -323,7 +323,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         else:
             sid=int(getChoice('select which id to subscribe', [i[1] for i in id],None,None))
             id=[i for i in id if i[1]==sid][0]
-            
+
         clients = self.getAvailableClients()
         ret = getText("Clients:", "Insert number of clients to start:", "Maximum number is <b>%d</b>" % len(clients))
         try:
@@ -331,9 +331,9 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         except:
             self.newStatusMessage('number of client to start should be an integer')
             return
-        
+
         self._startNclients(num,id)
-        
+
     def _startNclients(self, num ,id=None):
         iterator = self.treemodel.get_iter_first()
         while iterator:
@@ -346,7 +346,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                     iterator = self.treemodel.iter_next(iterator)
             else:
                 break
-    
+
     def stopNclients(self, args):
         id=self.getProducingId()
         if not id:
@@ -357,7 +357,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         else:
             sid=int(getChoice('select which id to stop clients', [i[1] for i in id],None,None))
             id=[i for i in id if i[1]==sid][0][1]
-            
+
         clients = len(self.getRunningClients(id))
 
         ret = getText("Clients:", "Insert number of clients to stop:", "Maximum number is <b>%d</b>" % clients)
@@ -366,9 +366,9 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         except:
             self.newStatusMessage('number of client to stop should be an integer')
             return
-        
+
         self._stopNclients(num,id)
-        
+
     def _stopNclients(self, num,id):
         iterator = self.treemodel.get_iter_first()
         while iterator:
@@ -387,8 +387,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
     def getRunningClients(self,id):
         return [m for m in self.treemodel if m[3]==ON and m[4]=='client' and m[6]==id]
-      
-        
+
+
     def popupMenu(self, event,iter,right=True):
         menu = gtk.Menu()
         if self.treemodel.get_value(iter,4)=='server':
@@ -400,51 +400,51 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 iters=[self.treemodel.get_iter(path)  for path in selection[1] if self.treemodel.get_value(self.treemodel.get_iter(path),4)!='server']
             else:
                 iters=[iter]
-                
+
             outputMenu=gtk.Menu()
-            
+
             menu_item=gtk.RadioMenuItem(None,'Null Output')
             menu_item.connect('toggled',self.on_output_menu_toggled,iters)
             menu_item.show()
             outputMenu.append(menu_item)
-            
+
             menu_item1=gtk.RadioMenuItem(menu_item,'Vlc Output')
             menu_item1.connect('toggled',self.on_output_menu_toggled,iters)
             menu_item1.show()
             outputMenu.append(menu_item1)
-            
+
             menu_item2=gtk.RadioMenuItem(menu_item,'Flv Output')
             menu_item2.connect('toggled',self.on_output_menu_toggled,iters)
             menu_item2.show()
             outputMenu.append(menu_item2)
-            
+
             outputsItem=gtk.MenuItem('Select Output')
             outputsItem.set_submenu(outputMenu)
             menu.append(outputsItem)
-            
+
             menuitems = {"Set UploadBW" : self._setUploadBW}
-            
-                
+
+
         for i in menuitems.keys():
             menu_item = gtk.MenuItem(i)
             menu_item.connect("activate", menuitems[i], iters)
             menu.append(menu_item)
         menu.show_all()
         return menu
-    
+
     def on_output_menu_toggled(self,widget,iters):
         name=widget.get_label()
         for iterator in iters:
             c = self.treemodel.get_value(iterator, 7)
             c.setOutput(name)
-        
-        
+
+
     def setUploadBW(self,widget):
         selection = self.treeview.get_selection().get_selected_rows()
         iters=[self.treemodel.get_iter(path)  for path in selection[1] if self.treemodel.get_value(self.treemodel.get_iter(path),4)!='server']
         if iters:
             self._setUploadBW(widget, iters)
-            
+
     def _setUploadBW(self, args, iters):
         bw = getText("", "Upload bandwidth", "Insert new upload bandwidth:")
         try:
@@ -455,17 +455,17 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         for iterator in iters:
             c = self.treemodel.get_value(iterator, 7)
             c.sendNewBW(bw/8)
-            
+
     def setBW(self,peer,bw):
         p=self.findPeer(peer)
         if p:
             p[2]='%.2f'%(8*bw/1024)
-        
+
     def restartServer(self,args,iters):
         iter=iters[0]
         c=self.treemodel.get_value(iter,7)
         c.restartServer()
-        
+
     def startProducing(self,widget):
         producers=[]
         iterator = self.treemodel.get_iter_first()
@@ -476,7 +476,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         if not producers:
             self.newStatusMessage('there are no producers')
-            return 
+            return
         if len(producers)==1:
             self.toggleStartStop(producers[0])
         else:
@@ -490,12 +490,12 @@ class vizirGui(UI,xmlrpc.XMLRPC):
                 sid=int(getChoice('select producer to start', [i[1] for i in id],None,None))
                 prod=[p for p in prod if self.treemodel.get_value(p,6)==sid]
                 self.toggleStartStop(prod[0])
-                
+
     def showOverlay(self,widget):
         if self.vizPlot.showing:
             self.vizPlot.stop()
             return
-        
+
         id=self.getProducingId()
         if not id:
             self.newStatusMessage('there is no available overlays to plot')
@@ -507,13 +507,13 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             id=[i for i in id if i[1]==sid][0][1]
         self.vizInterface.setId(id)
         self.vizPlot.start(self.vizInterface)
-        
-            
-        
-        
+
+
+
+
     def getPeers(self):
         return [(m[0],m[1]) for m in self.treemodel]
-    
+
     def swapToggle(self,widget):
         if widget.get_stock_id()=='gtk-cancel':
             stop=True
@@ -521,42 +521,45 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         elif widget.get_stock_id()=='gtk-execute':
             stop=False
             widget.set_stock_id('gtk-cancel')
-             
+
         id=self.getProducingId()
-        if not id:   
+        if not id:
             widget.set_stock_id('gtk-cancel')
             return
-        
+
         id=id[0][1]
         clients=self.getRunningClients(id)
-        
+
         if not clients:
             widget.set_stock_id('gtk-cancel')
             return
-        
+
         for cl in clients:
             cl[7].stopSwapping(stop,id)
-            
+
 def startVizirGui():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'p:h',['port=','help'])
+        optlist,args=getopt.getopt(sys.argv[1:],'p:ht',['port=','testbed','help'])
     except getopt.GetoptError as err:
         usage(err=err)
-        
+
     port=9000
     plot=False
-    
+    testbed=False
+
     for opt,a in optlist:
         if opt in ('-p','--port'):
             port=int(a)
+        elif opt in ('-t','--testbed'):
+            testbed=True
         elif opt in ('-h','--help'):
             usage()
- 
-    vizirGui(port)
+
+    vizirGui(port,testbed)
     reactor.run()
-    
+
 def usage(err=None,daemon=False):
     import sys
     if err:
@@ -565,11 +568,11 @@ def usage(err=None,daemon=False):
     print ' Run P2ner Vizir'
     print ' '
     print ' -p, --port port :define port'
-    print ' -g, --graph :enable overlay visualization'
+    print ' -t, --testbed :translate IPs for experiments in UoP testbed'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')
-    
+
 if __name__=='__main__':
     startVizirGui()
-    
+
