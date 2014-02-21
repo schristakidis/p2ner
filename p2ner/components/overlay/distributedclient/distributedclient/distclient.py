@@ -493,7 +493,7 @@ class DistributedClient(Overlay):
             print('initial hood energy %s',initialHoodEnergy)
             print('final hood energy %s',finalHoodEnergy)
             sys.stderr.write('problemmmmmmmmmmmmmmmmmmmm in %s\n'%self.root.netChecker.localIp)
-            sys.stderr.write('%s %s\n'%(initialHoodEnergy,finalHoodEnergy)
+            sys.stderr.write('%s %s\n'%(initialHoodEnergy,finalHoodEnergy))
         else:
             self.log.debug('initial hood energy %s',initialHoodEnergy)
             self.log.debug('final hood energy %s',finalHoodEnergy)
