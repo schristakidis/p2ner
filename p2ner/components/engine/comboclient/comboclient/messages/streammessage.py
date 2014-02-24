@@ -31,7 +31,7 @@ class StreamIdMessage(ControlMessage):
         self.inMethod=input
         self.outMethod=output
 
-        
+
     def trigger(self, message):
         if message.message == self.hash:
             return True
@@ -49,44 +49,44 @@ class StreamIdMessage(ControlMessage):
         m=self.root.sidListeners.index(self)
         self.root.sidListeners.remove(self)
         self.interface.returnProducedStream(-1,self.hash)
-            
-            
+
+
 class ContentsMessage(ControlMessage):
     type='mstreammessage'
     code=MSG.GET_CONTENTS
     ack=True
-    
+
     def initMessage(self,server):
         self.server=server
-        
+
     def trigger(self,message):
         return True
-        
+
     def action(self,message,peer):
         if peer != self.server:
-            return 
+            return
         self.log.debug('received contents message from %s',peer)
         self.root.checkServers.pop(self.server)
         self.interface.returnContents(message.stream,(self.server.getIP(),self.server.getPort()))
-        
+
     def checkResponse(self,peer=None):
         self.log.debug('failed to receive contents message from %s',self.server)
         self.interface.returnContents(-1,(self.server.getIP(),self.server.getPort()))
         self.root.checkServers.pop(self.server)
-        
 
-   
 
-        
+
+
+
 class SubscribeMessage(ControlMessage):
     type = "streammessage"
     code = MSG.STREAM
     ack = True
-    
+
     def initMessage(self,id,output=None):
         self.id=id
         self.output=output
-        
+
     def trigger(self, message):
         if self.id==message.stream.id:
             return True
@@ -97,15 +97,15 @@ class SubscribeMessage(ControlMessage):
         self.response=True
         self.root.streamListeners.remove(self)
         self.root.newSubStream(message.stream,self.id,self.output)
-        
+
     def checkResponse(self,peer=None):
         self.log.debug('failed to receive subscribe stream message for id %s',self.id)
         self.root.streamListeners.remove(self)
         self.root.newSubStream(-1,self.id)
-    
 
 
-        
 
-    
-    
+
+
+
+

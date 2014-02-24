@@ -26,7 +26,7 @@ from p2ner.util.utilities import findNextTCPPort
 from twisted.web.xmlrpc import Proxy
 
 class xmlrpcControl(Interface,xmlrpc.XMLRPC):
-    
+
     def initInterface(self,*args,**kwargs):
         xmlrpc.XMLRPC.__init__(self)
         self.dContactServers={}
@@ -40,7 +40,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             self.proxy=Proxy(url)
         else:
             self.proxy=None
-            
+
     def start(self):
         self.logger=DatabaseLog(_parent=self)
         print 'start listening xmlrpc'
@@ -49,16 +49,16 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         reactor.listenTCP(p, server.Site(self))
         if self.proxy:
             self.getIp(p)
-       
+
     def getIp(self,port):
-        try:   
+        try:
             if self.basic:
                 ip=self.netChecker.localIp
                 p=self.root.controlPipe.getElement(name="UDPPortElement").port
                 bw=self.root.trafficPipe.getElement(name="BandwidthElement").bw
             else:
                 ip=self.netChecker.externalIp
-                if self.netChecker.upnp: 
+                if self.netChecker.upnp:
                     p=self.netChecker.upnpControlPort
                 else:
                     p=self.netChecker.extControlPort
@@ -72,13 +72,13 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
 
     def register(self,ip,rpcport,port,bw):
         self.proxy.callRemote('register',ip,rpcport,port,bw)
-        
+
     def xmlrpc_connect(self):
         return True
 
     def cleanUp(self):
         pass
-        
+
     def xmlrpc_registerStream(self,stream,input=None,output=None):
         print 'trying to register stream'
         s=loads(stream)
@@ -90,65 +90,69 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             output=loads(output)
 
         self.dRegisterStream[strm.streamHash()]=d
-        self.root.registerStream(strm,input,output)        
+        self.root.registerStream(strm,input,output)
         return d
-    
+
     def xmlrpc_contactServer(self,server):
         print 'should contact:',server
         d=defer.Deferred()
         self.root.contactServers(server)
         self.dContactServers[tuple(server)]=d
         return d
-    
+
     def xmlrpc_getProducingStreams(self):
         pStreams=self.root.getProducingStreams()
         s=[dumps(s) for s in pStreams]
         return s
-    
+
     def xmlrpc_getRegisteredStreams(self):
         rStreams=self.root.getRegisteredStreams()
         r=[dumps(r) for r in rStreams]
         return r
-    
+
     def xmlrpc_startProducing(self,id):
         self.root.startProducing(id)
         return True
-    
+
     def xmlrpc_startRemoteProducer(self,id):
         self.root.startRemoteProducer(id)
         return True
-    
+
     def xmlrpc_subscribeStream(self,id,ip,port,output=None):
         d=defer.Deferred()
         if not self.dSubStream.has_key(id):
             self.dSubStream[id]=d
         self.root.subscribeStream(id,ip,port,loads(output))
         return d
-    
+
     def xmlrpc_stopProducing(self,id,changeRepub=False):
         d=defer.Deferred()
+        print 'should stop producing stream :',id
         if not self.dStopProducing.has_key(id):
             self.dStopProducing[id]=d
         self.root.stopProducing(id,changeRepub)
         return d
-    
+
     def xmlrpc_unregisterStream(self,id):
         d=defer.Deferred()
         if not self.dUnregisterStream.has_key(id):
             self.dUnregisterStream[id]=d
         self.root.unregisterStream(id)
         return d
-    
+
     def xmlrpc_quiting(self):
         reactor.callLater(0,self.root.quiting)
         return True
-    
+
     def returnSubStream(self,stream,id):
         if stream!=-1:
             stream=dumps(stream)
         defer=self.dSubStream.pop(id)
-        defer.callback((stream,id))
-            
+        if type(defer)!=list:
+            defer.callback((stream,id))
+        else:
+            defer[0].callback(id)
+
 
     def returnStopProducing(self,id):
         try:
@@ -156,37 +160,48 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         except:
             return
         defer.callback(id)
-            
+
     def returnUnregisterStream(self,id):
         defer=self.dUnregisterStream.pop(id)
         defer.callback(id)
-            
+
     def returnProducedStream(self,stream,hash):
         try:
             d=self.dRegisterStream.pop(hash)
         except:
             return
-        
-        if stream!=-1:
-            stream=dumps(stream)
-        d.callback(stream)
-           
+
+        if type(d)!=list:
+            if stream!=-1:
+                stream=dumps(stream)
+            d.callback(stream)
+        else:
+            self.root.startProducing(stream.id)
+            d[0].callback(stream.id)
+
+
     def returnContents(self,stream,server):
-        d=stream    
-        if stream!=-1:
-            d=[dumps(s) for s in stream]
         defer=self.dContactServers.pop(server)
-        defer.callback((d,server))
-        
+        if type(defer)!=list:
+            d=stream
+            if stream!=-1:
+                d=[dumps(s) for s in stream]
+            defer.callback((d,server))
+        else:
+            defer=defer[0]
+            if stream!=-1:
+                d=[(s.id,s.title,s.author,s.description) for s in stream]
+            defer.callback(d)
+
     def logRecord(self,record):
         if record.levelno%10==0:
             self.logger.addRecord(record)
-        
+
     def xmlrpc_getRecords(self):
         d=self.logger.getRecords()
         d.addCallback(self.dumpRecords)
         return d
-    
+
     def dumpRecords(self,ret):
         if ret:
             ret=[dict(r) for r in ret]
@@ -194,13 +209,13 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         else:
             ret=[]
         return ret
-    
+
     def xmlrpc_requestFiles(self,dname):
         if not dname:
             dname = os.path.expanduser("~")
         #else:
         #   dname = os.path.abspath(dname)
-        
+
         files=[]
         fl=['..']+os.listdir(dname)
         for f in fl:
@@ -217,15 +232,15 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
                 files.append((f,stat.S_ISDIR(filestat.st_mode),filestat.st_size,time.ctime(filestat.st_mtime),oct(stat.S_IMODE(filestat.st_mode)),os.path.join(dname,f)))
 
         return [dumps(f) for f in files]
-    
+
     def networkUnreachable(self):
         print 'network conditions are not valid'
-        
+
     def xmlrpc_getComponentsInterfaces(self,comp):
         c=getCompInt(comp)
         c=dumps(c)
         return (comp,c)
-        
+
     def xmlrpc_copyConfig(self):
         filename,chFilename=self.preferences.getConfigFiles()
         f=open(filename,'rb')
@@ -237,7 +252,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         if not r:
             r=-1
         return (b,r)
-    
+
     def xmlrpc_saveRemoteConfig(self,file,chFile):
         self.preferences.saveFromRemoteConfig(file,chFile)
         return 0
@@ -245,19 +260,19 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     def xmlrpc_startConverting(self,dir,filename,videorate,subs,subsFile,subsEnc):
         id=self.root.startConverting(dir,filename,videorate,subs,subsFile,subsEnc)
         return id
-    
+
     def xmlrpc_getConverterStatus(self,id):
         status=self.root.converters[id].getStatus()
         return status
-        
+
     def xmlrpc_abortConverter(self,id):
         converter=self.root.converters.pop(id)
         converter.abort()
         return 0
-    
+
     def xmlrpc_getStatistics(self):
         return self.stats.keys()
-    
+
     def xmlrpc_getStatValues(self,stats):
         ret=[]
         for s,c in stats:
@@ -265,32 +280,32 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             if count>100:
                 c=100 -( count - c)
             v=self.stats[s]['values'][c:]
-            
+
             ret.append((s,v,count))
         return ret
-    
+
     def xmlrpc_startBWMeasurement(self,ip):
         d=defer.Deferred()
         self.root.startBWMeasurement(ip,None,d)
         return d
-    
+
     def xmlrpc_setBW(self,bw):
         self.root.setBW(bw)
         return 1
-  
+
     def xmlrpc_getBW(self):
         return self.root.trafficPipe.getElement(name="BandwidthElement").bw
 
 
     def networkStatus(self,status):
         pass
-    
+
     def networkUnreachable(self,status):
         self.root.exiting()
-    
+
     def checkNetwork(self):
         reactor.callLater(0.2,self.netChecker.check)
-       
+
     def xmlrpc_getNeighbours(self,id):
         strm=self.root.getStream(id)
         neighs=strm['overlay'].getNeighbours()
@@ -298,10 +313,63 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         en=strm['overlay'].getEnergy()
         stats=strm['overlay'].getVizirStats()
         return (ret,en,stats)
-    
+
     def xmlrpc_stopSwapping(self,stop,id):
         strm=self.root.getStream(id)
         strm['overlay'].toggleSwap(stop)
         return 1
-    
-   
+
+
+    def xmlrpc_registerSteerStream(self,title,author,desc,port):
+        print 'trying to register stream'
+        s={}
+        s['overlay']={'numNeigh': 8, 'component': 'DistributedClient', 'swapFreq': 3}
+        s['server']=('127.0.0.1', '16000')
+        s['scheduler']= {'blocksec': 7, 'bufsize': 30, 'component': 'PullClient', 'reqInt': 2}
+        s['password']=None
+        s['republish']=False
+        s['startable']=False
+        s['startTime']=0
+        s['type']='stream'
+        s['description']=desc
+        s['author']=author
+        s['title']=title
+        s['filename']='rtp//@:'+str(port)
+
+        input= {'videoRate': 0, 'component': 'GstInput', 'advanced': False}
+        output={'comp': 'NullOutput', 'kwargs': {}}
+
+        strm=Stream(**s)
+        d=defer.Deferred()
+
+        self.dRegisterStream[strm.streamHash()]=[d]
+        self.root.registerStream(strm,input,output)
+        return d
+
+
+    def xmlrpc_contactSteerServer(self):
+        server=('127.0.0.1',16000)
+        print 'should contact:',server
+        d=defer.Deferred()
+        self.root.contactServers(server)
+        self.dContactServers[tuple(server)]=[d]
+        return d
+
+    def xmlrpc_subscribeSteerStream(self,id,output=None):
+        d=defer.Deferred()
+        ip='127.0.0.1'
+        port=16000
+        if not output:
+            output={'comp': 'NullOutput', 'kwargs': {}}
+        elif output==1:
+            output={'comp': 'GstOutput', 'kwargs': {}}
+        else:
+            output={'comp': 'PureVlcOutput', 'kwargs': {}}
+
+
+
+
+        if not self.dSubStream.has_key(id):
+            self.dSubStream[id]=[d]
+        self.root.subscribeStream(id,ip,port,output)
+        return d
