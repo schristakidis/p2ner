@@ -320,11 +320,11 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         return 1
 
 
-    def xmlrpc_registerSteerStream(self,title,author,desc,port):
+    def xmlrpc_registerSteerStream(self,title,author,desc,port,trackerIP,trackerPort):
         print 'trying to register stream'
         s={}
         s['overlay']={'numNeigh': 8, 'component': 'DistributedClient', 'swapFreq': 3}
-        s['server']=('127.0.0.1', '16000')
+        s['server']=(trackerIP,trackerPort)
         s['scheduler']= {'blocksec': 7, 'bufsize': 30, 'component': 'PullClient', 'reqInt': 2}
         s['password']=None
         s['republish']=False
@@ -347,18 +347,16 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         return d
 
 
-    def xmlrpc_contactSteerServer(self):
-        server=('127.0.0.1',16000)
+    def xmlrpc_contactSteerServer(self,trackerIP,trackerPort):
+        server=(trackerIP,trackerPort)
         print 'should contact:',server
         d=defer.Deferred()
         self.root.contactServers(server)
         self.dContactServers[tuple(server)]=[d]
         return d
 
-    def xmlrpc_subscribeSteerStream(self,id,output=None):
+    def xmlrpc_subscribeSteerStream(self,id,output,trackerIP,trackerPort):
         d=defer.Deferred()
-        ip='127.0.0.1'
-        port=16000
         if not output:
             output={'comp': 'NullOutput', 'kwargs': {}}
         elif output==1:
@@ -371,5 +369,5 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
 
         if not self.dSubStream.has_key(id):
             self.dSubStream[id]=[d]
-        self.root.subscribeStream(id,ip,port,output)
+        self.root.subscribeStream(id,trackerIP,trackerPort,output)
         return d

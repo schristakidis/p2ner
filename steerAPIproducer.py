@@ -22,10 +22,10 @@ def stopFailure(*args):
     print 'stop failure'
     print args
 
-def registerStream(title,author,desc,port,p2nerIp='127.0.0.1',p2nerPort=PORT):
+def registerStream(title,author,desc,port,trackerIP,trackerPort,p2nerIp='127.0.0.1',p2nerPort=PORT):
     url='http://'+p2nerIp+':'+str(p2nerPort)
     proxy=Proxy(url)
-    d=proxy.callRemote('registerSteerStream',title,author,desc,port)
+    d=proxy.callRemote('registerSteerStream',title,author,desc,port,trackerIP,trackerPort)
     d.addCallback(registationSuccess)
     d.addErrback(registrationFailed)
 
@@ -46,7 +46,7 @@ if __name__=='__main__':
     author='sakis'
     desc='test stream'
     port=5004
-    registerStream(title,author,desc,port,p2nerPort=PORT)
+    registerStream(title,author,desc,port,'127.0.0.1',16000,p2nerPort=PORT)
     # reactor.callLater(20,stopProducingStream,STREAMID)
     reactor.run()
 

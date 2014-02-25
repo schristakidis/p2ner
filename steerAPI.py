@@ -33,22 +33,22 @@ def stopFailure(*args):
     print 'subscription failure'
     print args
 
-def getContents(p2nerIp='127.0.0.1',p2nerPort=9090):
+def getContents(trackerIP,trackerPort,p2nerIp='127.0.0.1',p2nerPort=9090):
     url='http://'+p2nerIp+':'+str(p2nerPort)
     proxy=Proxy(url)
-    d=proxy.callRemote('contactSteerServer')
+    d=proxy.callRemote('contactSteerServer',trackerIP,trackerPort)
     d.addCallback(contentsSuccess)
     d.addErrback(contentsFailed)
 
 
-def subscribeStream(id,output,p2nerIp='127.0.0.1',p2nerPort=9090):
+def subscribeStream(id,output,trackerIP,trackerPort,p2nerIp='127.0.0.1',p2nerPort=9090):
     #output
     #0:NullOutput
     #1:GstOutput
     #2:VlcOutput
     url='http://'+p2nerIp+':'+str(p2nerPort)
     proxy=Proxy(url)
-    d=proxy.callRemote('subscribeSteerStream',STREAMID,output)
+    d=proxy.callRemote('subscribeSteerStream',STREAMID,output,trackerIP,trackerPort)
     d.addCallback(subSuccess)
     d.addErrback(subFailure)
 
@@ -64,8 +64,8 @@ if __name__=='__main__':
     # global PORT
     PORT=sys.argv[1]
     print PORT
-    getContents(p2nerPort=PORT)
-    reactor.callLater(2,subscribeStream,STREAMID,1,p2nerPort=PORT)
+    getContents('127.0.0.1',16000,p2nerPort=PORT)
+    reactor.callLater(2,subscribeStream,STREAMID,1,'127.0.0.1',16000,p2nerPort=PORT)
     # reactor.callLater(15,stopStream,STREAMID,p2nerPort=PORT)
     reactor.run()
 
