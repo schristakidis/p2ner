@@ -47,41 +47,10 @@ class GstInput(Input):
         except:
             raise
 
-        try:
-            videorate = int(videorate)
-            print videorate
-        except:
-            videorate = 0
-
-        try:
-            streamport = int(streamport)
-            print streamport
-        except:
-            streamport = -1
-
-
-        if 'file' in type:
-            if 'win' in sys.platform:
-                #no pass=qual for windows tests
-                pipeline = "filesrc name=filesrc ! queue ! decodebin name=d d. !  queue ! audioconvert ! faac ! queue ! mpegtsmux name=m ! queue ! appsink name=p2sink d. ! queue !   x264enc  name=xenc byte-stream=true ! queue ! m."
-            else:
-                #pipeline = "filesrc name=filesrc ! queue ! decodebin name=d d. !  queue ! audioconvert ! faac ! queue ! mpegtsmux name=m ! queue ! appsink name=p2sink d. ! queue !   x264enc  name=xenc byte-stream=true ! queue ! m." #pass=qual
-                pipeline = "filesrc name=filesrc ! queue  ! decodebin name=d d. !  queue ! audioconvert ! audioresample ! faac ! queue ! mpegtsmux name=m ! queue ! appsink name=p2sink d. ! queue ! ffmpegcolorspace ! videorate ! videoscale !  ffenc_mpeg4 !  queue ! m."
-                print "this one"
-            pipeline = "filesrc name=filesrc ! queue  ! decodebin name=d d. !  queue ! audioconvert ! audioresample ! faac ! queue ! mpegtsmux name=m ! queue ! appsink name=p2sink d. ! queue ! ffmpegcolorspace ! videorate ! videoscale !  ffenc_mpeg4 !  queue ! m."
-        elif type=='stream':
-            # pipeline = "udpsrc name=udpsrc ! queue ! decodebin name=d d. !  queue ! audioconvert ! faac ! queue ! mpegtsmux name=m ! queue ! appsink name=p2sink d. ! queue !  x264enc  name=xenc byte-stream=true pass=qual ! queue ! m."
+        if type=='stream':
             pipeline = 'udpsrc name=udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000"  ! rtpmp2tdepay ! appsink name=p2sink'
-        elif type=='webcam':
-            if sys.platform == 'win32':
-                pipeline = "ksvideosrc ! queue ! ffmpegcolorspace !  videorate ! videoscale ! queue !  x264enc byte_stream=true name=xenc pass=qual ! queue ! mux. dshowaudiosrc ! queue ! audio/x-raw-int,channels=1 ,depth=8  ! audioconvert ! queue ! faac  ! queue ! mpegtsmux name=mux  ! appsink name=p2sink"
-                #No-Audio
-#                pipeline = "ksvideosrc ! queue ! ffmpegcolorspace !  videorate ! videoscale ! queue ! ffenc_mpeg4 me-method=5 name=xenc ! queue  ! appsink name=p2sink"
-#                pipeline = "ksvideosrc ! queue ! ffmpegcolorspace !  videorate ! videoscale ! queue ! x264enc byte_stream=true name=xenc pass=qual ! queue  ! appsink name=p2sink"
-            else:
-                pipeline = "v4l2src ! queue !  ffmpegcolorspace ! videorate ! videoscale ! queue !  ffenc_mpeg4 name=xenc    ! queue ! mux. alsasrc ! queue ! audio/x-raw-int,rate=8000,channels=1 ,depth=8  ! audioconvert ! audioresample ! queue ! lame  ! queue ! mpegtsmux name=mux  ! appsink name=p2sink"
         else:
-            raise ValueError('unknown type:%s in GstInput',type)
+            raise ValueError('type:%s is not supported yet from GstInput',type)
 
         self.proto.sendData(pipeline)
         self.proto.sendData(type)

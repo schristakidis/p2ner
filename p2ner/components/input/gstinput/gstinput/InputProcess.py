@@ -49,8 +49,9 @@ class GstPipeline(object):
         #    xenc.set_property('bitrate',videorate)
 
         if type=='stream':
+            portNumber=filename.split(':')[-1]
             port=self.recorder.get_by_name('udpsrc')
-            port.set_property('port',5004)
+            port.set_property('port',int(portNumber))
             # port.set_property('port',streamport)
 
         self.appsink = self.recorder.get_by_name('p2sink')

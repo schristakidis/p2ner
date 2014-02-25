@@ -30,7 +30,7 @@ class InputProto(protocol.ProcessProtocol):
         if  childFD==1:
             self.buffer.append(data)
         # else:
-           # print "mes or err",data
+        #    print "mes or err",data
 
     def getBuffer(self):
         buf=''
