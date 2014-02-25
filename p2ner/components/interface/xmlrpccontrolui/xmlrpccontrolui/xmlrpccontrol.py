@@ -355,12 +355,12 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         self.dContactServers[tuple(server)]=[d]
         return d
 
-    def xmlrpc_subscribeSteerStream(self,id,output,trackerIP,trackerPort):
+    def xmlrpc_subscribeSteerStream(self,id,trackerIP,trackerPort,output,gstPort):
         d=defer.Deferred()
         if not output:
             output={'comp': 'NullOutput', 'kwargs': {}}
         elif output==1:
-            output={'comp': 'GstOutput', 'kwargs': {}}
+            output={'comp': 'GstOutput', 'kwargs': {'port':gstPort}}
         else:
             output={'comp': 'PureVlcOutput', 'kwargs': {}}
 
