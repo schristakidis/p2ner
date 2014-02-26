@@ -38,7 +38,7 @@ class GstOutput(Output):
 
     def startProto(self):
         # reactor.spawnProcess(self.proto,sys.executable, (sys.executable,self.path),env=None)
-        pipe = "appsrc name=appsrc ! rtpmp2tpay ! queue ! udpsink host=127.0.0.1 port=%s"%self.port
+        pipe = "appsrc name=appsrc ! mpegtsparse ! rtpmp2tpay ! queue ! udpsink host=127.0.0.1 port=%s"%str(self.port)
         self.player=gst.parse_launch(pipe)
         self.appsink = self.player.get_by_name('appsrc')
         self.appsink.set_property('emit-signals', True)
