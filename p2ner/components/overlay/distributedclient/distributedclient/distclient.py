@@ -366,17 +366,11 @@ class DistributedClient(Overlay):
 
     ###PERFORM SWAP
     def performSwap(self):
+        initialHoodEnergy=self.getCustomEnergy(self.getNeighbours())+self.getCustomPassiveEnergy(self.partnerTable)
         self.passiveInitPeer.participateSwap=False
+
         partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
-
-        initialHoodEnergy=self.getCustomEnergy(partnerSet)+self.getCustomEnergy(self.partnerTable)
-
         availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
-        #tempav=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
-        #if len(availablePeers)!=len(tempav):
-        #    print availablePeers
-        #    print tempav
-         #   reactor.stop()
 
         for p in availablePeers:
             p.participateSwap=True
@@ -385,30 +379,126 @@ class DistributedClient(Overlay):
         initPassiveLenght=len(self.partnerTable)
         initLength=initActiveLength+initPassiveLenght
 
-        finalPassiveSet=int(initLength)/2
-        finalActiveSet=initLength-finalPassiveSet
+        execTwise=False
+        if initLength%2!=0:
+            execTwise=True
+
+        if not execTwise:
+            (newTable,newPartnerTable,energy)=self._performSwap(initialHoodEnergy,0)
+            self.newTable=newTable
+            self.newPartnerTable=newPartnerTable
+        else:
+            self.log.warning('executing swap twice')
+            # sys.stderr.write('executing swap twice %s\n'%self.root.netChecker.localIp)
+            equal=False
+            possibleSwaps={}
+            for i in [0,1]:
+                possibleSwaps[i]=self._performSwap(initialHoodEnergy,i)
+            if int(10000*possibleSwaps[0][2])<int(10000*possibleSwaps[1][2]):
+                choose=0
+            elif int(10000*possibleSwaps[0][2])>int(10000*possibleSwaps[1][2]):
+                choose=1
+            else:
+                equal=True
+                if len(possibleSwaps[0][0])==len(self.getNeighbours()):
+                    choose=0
+                else:
+                    choose=1
+
+            (newTable,newPartnerTable,energy)=possibleSwaps[choose]
+            self.newTable=newTable
+            self.newPartnerTable=newPartnerTable
+            # sys.stderr.write('examin swap twice:%s %s %s %s %s %s %s %s %s %s %s \n'%(possibleSwaps[0][2],len(possibleSwaps[0][0]),len(possibleSwaps[0][1]),possibleSwaps[1][2],len(possibleSwaps[1][0]),len(possibleSwaps[1][1]),choose,equal,len(newTable),len(self.getNeighbours()),self.root.netChecker.localIp))
+            self.log.warning('examin swap twice:%s %s %s %s %s %s %s %s %s %s %s \n'%(possibleSwaps[0][2],len(possibleSwaps[0][0]),len(possibleSwaps[0][1]),possibleSwaps[1][2],len(possibleSwaps[1][0]),len(possibleSwaps[1][1]),choose,equal,len(newTable),len(self.getNeighbours()),self.root.netChecker.localIp))
+
+        finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+
+        if int(1000*finalHoodEnergy)>int(1000*initialHoodEnergy) and len(self.neighbours)==len(newTable):
+            self.log.error('major problem in swap')
+            self.log.error('initial hood energy %s',initialHoodEnergy)
+            self.log.error('final hood energy %s',finalHoodEnergy)
+            print('initial hood energy %s',initialHoodEnergy)
+            print('final hood energy %s',finalHoodEnergy)
+            # sys.stderr.write('problemmmmmmmmmmmmmmmmmmmm in %s\n'%self.root.netChecker.localIp)
+            # sys.stderr.write('%s %s %s %s %s %s\n'%(initialHoodEnergy,finalHoodEnergy,len(self.neighbours),len(newTable),len(self.partnerTable),len(self.newPartnerTable)))
+        else:
+            self.log.debug('initial hood energy %s',initialHoodEnergy)
+
+        self.sendFinalTable()
+
+    def _performSwap(self,initEnergy,byass=0):
+        partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
+        availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
 
 
+        initActiveLength=len(partnerSet)
+        initPassiveLenght=len(self.partnerTable)
+        initLength=initActiveLength+initPassiveLenght
+
+        self.log.warning('initiatorSet:%s passiveSet:%s allSet:%s',initActiveLength,initPassiveLenght,initLength)
+
+        if not byass:
+            finalPassiveSet=int(initLength)/2
+            finalActiveSet=initLength-finalPassiveSet
+        else:
+            finalActiveSet=int(initLength)/2
+            finalPassiveSet=initLength-finalActiveSet
+
+        self.log.warning('finailinitiatorSet:%s finalpassiveSet:%s ',finalActiveSet,finalPassiveSet)
 
         activeUnavailablePeers=[p for p in partnerSet if not p.partnerParticipateSwap]
         passiveUnavailablePeers=[p for p in self.partnerTable if  not p.participateSwap]
 
         swapActiveLenght=finalActiveSet-len(activeUnavailablePeers)
         swapPassiveLenght=finalPassiveSet-len(passiveUnavailablePeers)
+        # swapLenght=initLength-len(activeUnavailablePeers)-len(passiveUnavailablePeers)
         swapLenght=swapActiveLenght+swapPassiveLenght
 
-        if finalPassiveSet!=finalActiveSet:
-            swapPassiveLenght+=1
+        self.log.warning('finalAtctiveSwapSet:%s finalPassiveSwapSet:%s ',swapActiveLenght,swapPassiveLenght)
 
-        if swapActiveLenght<=0 or swapPassiveLenght<=0:
+        if (swapActiveLenght==0 and swapPassiveLenght==0) or (swapActiveLenght<0 or swapPassiveLenght<0):
             #swap finished
-            self.newTable=self.getNeighbours()
-            self.newPartnerTable=self.partnerTable
-            self.log.warning("current neughs %s",self.newTable[:])
-            self.log.warning('%s',self.getNeighbours())
+            newTable=self.getNeighbours()
+            newPartnerTable=self.partnerTable
+            self.log.warning('no point in performin swap')
+            # sys.stderr.write('no point in performing swap %s\n'%byass)
+            self.log.warning('passive init %s',self.passiveInitPeer)
+            self.log.warning("current neughs %s",newTable[:])
             self.log.warning('partner table %s',self.partnerTable[:])
-            self.sendFinalTable()
-            return
+            self.log.warning('active unavailable %s',activeUnavailablePeers)
+            self.log.warning('passive unavailable %s',passiveUnavailablePeers)
+            finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+            return (newTable,newPartnerTable,finalHoodEnergy)
+        elif swapActiveLenght==0 and swapPassiveLenght!=0:
+            newTable=activeUnavailablePeers+[self.passiveInitPeer]
+            newPartnerTable=passiveUnavailablePeers+availablePeers
+            self.log.warning('all available peers goes to passive')
+
+            self.log.warning("current neughs %s",self.getNeighbours())
+            self.log.warning('partner table %s',self.partnerTable)
+            self.log.warning('active unavailable %s',activeUnavailablePeers)
+            self.log.warning('passive unavailable %s',passiveUnavailablePeers)
+            self.log.warning('passive init %s',self.passiveInitPeer)
+            self.log.warning('new final %s',newTable)
+            self.log.warning('new passive final %s',newPartnerTable)
+            finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+            return (newTable,newPartnerTable,finalHoodEnergy)
+        elif swapActiveLenght!=0 and swapPassiveLenght==0:
+            newTable=activeUnavailablePeers+availablePeers+[self.passiveInitPeer]
+            newPartnerTable=passiveUnavailablePeers
+            self.log.warning('all available peers goes to active')
+
+            self.log.warning("current neughs %s",self.getNeighbours())
+            self.log.warning('partner table %s',self.partnerTable)
+            self.log.warning('active unavailable %s',activeUnavailablePeers)
+            self.log.warning('passive unavailable %s',passiveUnavailablePeers)
+            self.log.warning('passive init %s',self.passiveInitPeer)
+            self.log.warning('new final %s',newTable)
+            self.log.warning('new passive final %s',newPartnerTable)
+            finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+            return (newTable,newPartnerTable,finalHoodEnergy)
+
+
 
         G=nx.DiGraph()
         G.add_node(-1,demand=-swapLenght)
@@ -426,12 +516,12 @@ class DistributedClient(Overlay):
                 rtt=sum(p.lastRtt)/len(p.lastRtt)
             else:
                 self.log.error("can't perform swap with no rtt for %s",p)
-                #raise ValueError("can't perform swap with no rtt for %s",p)
+                raise ValueError("can't perform swap with no rtt for %s",p)
                 #reactor.stop()
                 pass
             temp[p]=count
             G.add_edge(-3,count,capacity=1,weight=int(1000*rtt))
-            G.add_edge(-4,count,capacity=1,weigth=int(1000*p.swapRtt))
+            G.add_edge(-4,count,capacity=1,weight=int(1000*p.swapRtt))
             G.add_edge(count,-2,capacity=1)
             count +=1
 
@@ -440,6 +530,7 @@ class DistributedClient(Overlay):
         try:
             flowDict=nx.min_cost_flow(G)
         except:
+            raise ValueError('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
             for p in availablePeers:
                 rtt=0
                 if len(p.lastRtt):
@@ -447,15 +538,16 @@ class DistributedClient(Overlay):
                 print p,rtt,p.swapRtt
             print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
             print 'could not execute swap'
+            sys.stderr.write('could not execute swapppppp %s\n'%self.root.netChecker.localIp)
             self.log.error("could not execute swap")
             setValue(self,'log','could not execute swap')
-            self.newTable=self.getNeighbours()
-            self.newPartnerTable=self.partnerTable
-            self.log.warning("current neughs %s",self.newTable[:])
+            newTable=self.getNeighbours()
+            newPartnerTable=self.partnerTable
+            self.log.warning("current neughs %s",newTable[:])
             self.log.warning('%s',self.getNeighbours())
             self.log.warning('partner table %s',self.partnerTable[:])
-            self.sendFinalTable()
-            return
+            finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+            return (newTable,newPartnerTable,finalHoodEnergy)
 
         print flowDict
         #if flowDict['src']['active']!=swapActiveLenght or flowDict['src']['passive']!=swapPassiveLenght:
@@ -465,9 +557,11 @@ class DistributedClient(Overlay):
         newPassiveTable=[p for p in availablePeers if flowDict[-4][temp[p]]==1]
 
         if len(newActiveTable)+len(newPassiveTable)!=len(availablePeers):
-            #raise ValueError('problem in perform swap')
+            raise ValueError('problem in perform swap')
             print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
             print 'problem in perform swap'
+            sys.stderr.write('problemmmmm in perform swap %s\n'%self.root.netChecker.localIp)
+            sys.stderr.write('%d %d'%(swapActiveLenght,swapPassiveLenght))
             setValue(self,'log', 'problem in perform swap')
             print newActiveTable
             print newPassiveTable
@@ -476,29 +570,32 @@ class DistributedClient(Overlay):
 
         self.log.warning("current neughs %s",self.getNeighbours())
         self.log.warning('partner table %s',self.partnerTable)
-        self.log.warning('unavailable %s',activeUnavailablePeers)
+        self.log.warning('active unavailable %s',activeUnavailablePeers)
         self.log.warning('new %s',newActiveTable)
+        self.log.warning('passive unavailable %s',passiveUnavailablePeers)
         self.log.warning('new passive %s',newPassiveTable)
-        self.newTable=newActiveTable+activeUnavailablePeers+[self.passiveInitPeer]
+        newTable=newActiveTable+activeUnavailablePeers+[self.passiveInitPeer]
         self.log.warning('passive init %s',self.passiveInitPeer)
-        self.log.warning('new final %s',self.newTable)
-        self.newPartnerTable=newPassiveTable+passiveUnavailablePeers
+        self.log.warning('new final %s',newTable)
+        newPartnerTable=newPassiveTable+passiveUnavailablePeers
+        self.log.warning('new passive final %s',newPartnerTable)
 
-        finalHoodEnergy=self.getCustomEnergy(newActiveTable+activeUnavailablePeers)+self.getCustomEnergy(self.newPartnerTable)
-
-        if finalHoodEnergy>initialHoodEnergy and len(self.neighbours)==len(self.newTable):
-            self.log.error('major problem in swap')
-            self.log.error('initial hood energy %s',initialHoodEnergy)
-            self.log.error('final hood energy %s',finalHoodEnergy)
-            print('initial hood energy %s',initialHoodEnergy)
-            print('final hood energy %s',finalHoodEnergy)
-            sys.stderr.write('problemmmmmmmmmmmmmmmmmmmm in %s\n'%self.root.netChecker.localIp)
-            sys.stderr.write('%s %s\n'%(initialHoodEnergy,finalHoodEnergy))
-        else:
-            self.log.debug('initial hood energy %s',initialHoodEnergy)
-            self.log.debug('final hood energy %s',finalHoodEnergy)
-
-        self.sendFinalTable()
+        finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
+        if int(1000*initEnergy)<int(1000*finalHoodEnergy):
+            # sys.stderr.write('%s\n'%byass)
+            self.log.error("%s %s"%(initEnergy,finalHoodEnergy))
+            self.log.error('%s\n'%byass)
+            n=[-1,-2]+range(count)+[-3,-4]
+            for i in n:
+                for j in n:
+                    if G.get_edge_data(i,j):
+                        self.log.error('%s %s %s\n'%(i,j,G.get_edge_data(i,j)))
+                        # sys.stderr.write('%s %s %s\n'%(i,j,G.get_edge_data(i,j)))
+            self.log.error('%s\n'%temp)
+            # sys.stderr.write('%s\n'%temp)
+            self.log.error('%s\n'%flowDict)
+            # sys.stderr.write('%s\n'%flowDict)
+        return (newTable,newPartnerTable,finalHoodEnergy)
 
     ###SENDING FINAL TABLE TO PASSIVE
     def sendFinalTable(self):
@@ -846,8 +943,8 @@ class DistributedClient(Overlay):
         for p in self.neighbours:
             if len(p.lastRtt):
                 en +=sum(p.lastRtt)/len(p.lastRtt)
-        if len(self.neighbours):
-            en=en/len(self.neighbours)
+        # if len(self.neighbours):
+            # en=en/len(self.neighbours)
         return en
 
     def getCustomEnergy(self,table):
@@ -855,8 +952,14 @@ class DistributedClient(Overlay):
         for p in table:
             if len(p.lastRtt):
                 en +=sum(p.lastRtt)/len(p.lastRtt)
-        if len(table):
-            en=en/len(table)
+        # if len(table):
+            # en=en/len(table)
+        return en
+
+    def getCustomPassiveEnergy(self,table):
+        en=0
+        for p in table:
+            en +=p.swapRtt
         return en
 
     def returnNeighs(self,peer):
