@@ -26,14 +26,13 @@ class Block(BlockMessage):
         return False
       
     def action(self, block, peer):
-        #print 'recived fragment ',fragment.blockid,' from ',peer,' lpb ',self.buffer.lpb
+        print 'recived block ',block.blockid,' from ',peer,' lpb ',self.buffer.lpb
         if not self.loopingCall.running:
             return
             self.scheduler.start()
         while block.blockid > self.buffer.lpb:
             #print '??????????????????????????????????????????????'
             self.scheduler.shift(norequests=True) 
-        #print fragment.blockid,fragment.fragmentid,fragment.fragments
         self.scheduler.buffer.updateBlock(block.blockid)
         #if not self.scheduler.running: #probably just for the push scheduler
             #print "RESUSCITATE SCHEDULER"

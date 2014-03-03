@@ -43,6 +43,7 @@ def biter_thread(pipe):
     for b in bora.biter():
         print "block", b, "RECV"
         block = Container(streamid=b[0], blockid=b[1])
+        print "BITER BLOCK",block
         r = scanBlocks(block)
         reactor.callFromThread(pipe.triggerActions, r, block)
         
@@ -58,6 +59,8 @@ class BoraElement(PipeElement):
         self.to = to
         self.port = port
         self.schedulers = {}
+        reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
+
             
     def sendblock(self, r, scheduler, block, peer):
         print "SENDBLOCK"
@@ -89,8 +92,10 @@ class BoraElement(PipeElement):
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
         incomplete = bora.incomplete_block_list()
+        print "incomplete:", incomplete
         if len(incomplete):
             incomplete = [i for i in incomplete if incomplete[0]==scheduler.stream.id]
+        print "incomplete2", incomplete
         return incomplete
         
     def popblockdata(self, r, scheduler, blockid):
@@ -147,6 +152,7 @@ class BoraElement(PipeElement):
         sl = self.schedulers.keys()
         if len(sl):
             s = choice(sl)
+            print "CALLING SCHEDULER"
             reactor.callLater(0, s.produceBlock)
 
     def triggerActions(self, scannedblocks, message, peer=None):

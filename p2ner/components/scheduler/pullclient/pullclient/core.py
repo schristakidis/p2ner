@@ -59,7 +59,7 @@ class PullClient(Scheduler):
     def errback(self, failure): return failure
 
     def produceBlock(self):
-        #print "PRODUCEBLOCK"
+        print "IN SCHEDULER PRODUCEBLOCK"
         #self.log.debug('trying to produce block')
         self.running=True
         d = deferToThread(self.getRequestedBID)
@@ -68,10 +68,12 @@ class PullClient(Scheduler):
         return d
         
     def sendBlock(self, req):
+        print "in SCHEDULER sendblock"
         if not req:
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
+            print "NOT SENDING"
             #self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
@@ -82,11 +84,12 @@ class PullClient(Scheduler):
         self.running=True
         bid, peer = req
         self.log.debug('sending block %d to %s',bid,peer)
+        print 'sending block %d to %s'%(bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
         
     def getRequestedBID(self):
-        #print "GETREQUESTEDBID"
+        print "GETREQUESTEDBID"
         while True:
             #print self.bufferlist
             peer = getMostDeprivedReq(self.bufferlist, self.buffer)
@@ -98,6 +101,7 @@ class PullClient(Scheduler):
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
+            print "BL:", bl
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 #blockID = choice(bl)
@@ -141,6 +145,8 @@ class PullClient(Scheduler):
         #print "COMPUTING REQUESTS"
         #print missingBlocks
         #exclude receiving
+        print "MISSING", missingBlocks
+        print "RECEIVING", receivingBlocks
         def dd(self, receivingBlocks, missingBlocks, neighbours):
             if not neighbours:
                 return
@@ -163,6 +169,7 @@ class PullClient(Scheduler):
                     print 'in continue 2'
                     continue
                 buffer = peer.s[self.stream.id]["buffer"]
+                print "BUFFER", buffer
                 #print 'neigh buffer:',buffer
                 tempReq = buffer.bIDListCompTrue(missingBlocks)
                 tmpBlocksToRequest[peer] = tempReq
