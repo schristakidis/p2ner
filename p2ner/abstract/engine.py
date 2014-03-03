@@ -143,7 +143,7 @@ class Engine(Namespace):
         #self.holePuncher=loadComponent('plugin','HolePuncher')(_parent=self)
 
         self.trafficPipe=Pipeline(_parent=self)
-        
+        """
         self.log.debug('trying to load pipeline element blocksplitter')
         bsplitter = loadComponent("pipeelement", "BlockSplitterElement")(_parent=self.trafficPipe)
         self.trafficPipe.append(bsplitter)
@@ -172,6 +172,11 @@ class Engine(Namespace):
         port = self.controlPipe.getElement("UDPPortElement").port +1 
         tport = loadComponent("pipeelement", "UDPPortElement")(_parent=self.trafficPipe, to='dataPort', port=port)
         self.trafficPipe.append(tport)
+        """
+        self.log.debug('trying to load pipeline element bora')
+        port = self.controlPipe.getElement("UDPPortElement").port +1 
+        bora = loadComponent("pipeelement", "BoraElement")(_parent=self.trafficPipe, to='dataPort', port=port)
+        self.trafficPipe.append(bora)
         
         #self.trafficPipe.call('listen')
         

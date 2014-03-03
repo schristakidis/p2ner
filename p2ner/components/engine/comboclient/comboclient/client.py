@@ -15,6 +15,7 @@
 
 from p2ner.abstract.engine import Engine
 from twisted.internet import reactor
+from twisted.internet.defer import maybeDeferred
 from p2ner.core.components import loadComponent
 #from p2ner.base.messages.bootstrap import ClientStartedMessage
 from messages.streammessage import  StreamIdMessage, ContentsMessage, SubscribeMessage
@@ -59,7 +60,8 @@ class Client(Engine):
     def checkNatPeer(self):
         if self.basic:
             self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
-            self.dataPort=self.root.trafficPipe.getElement(name="UDPPortElement").port
+            self.dataPort=self.root.trafficPipe.getElement(name="BoraElement").port
+            print self.dataPort
             return None,self.dataPort
         
         if self.netChecker.upnp: 
@@ -82,7 +84,8 @@ class Client(Engine):
                 
         p,port=self.checkNatPeer()
         
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        bw=1000
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw, p,server, self.controlPipe)
         self.log.debug('adding stream id message to listeners')
         m=StreamIdMessage(stream,input,output)
@@ -158,7 +161,8 @@ class Client(Engine):
         
         p,port=self.checkNatPeer()
 
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        bw=1000
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw,p,server, self.controlPipe)
         self.log.debug('sending request stream message to %s',server)
         m=SubscribeMessage(id,output)
