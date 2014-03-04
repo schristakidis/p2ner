@@ -54,15 +54,16 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         try:
             if self.basic:
                 ip=self.netChecker.localIp
-                p=self.root.controlPipe.getElement(name="UDPPortElement").port
-                bw=self.root.trafficPipe.getElement(name="BandwidthElement").bw
+                # p=self.root.controlPipe.getElement(name="UDPPortElement").port
+                p=self.root.controlPipe.callSimple('getPort')
+                bw=self.root.trafficPipe.callSimple('getBW')
             else:
                 ip=self.netChecker.externalIp
                 if self.netChecker.upnp:
                     p=self.netChecker.upnpControlPort
                 else:
                     p=self.netChecker.extControlPort
-                bw=self.root.trafficPipe.getElement(name="BandwidthElement").bw
+                bw=self.root.trafficPipe.callSimple('getBW')
         except KeyError:
             reactor.callLater(1,self.getIp,port)
             return
@@ -294,7 +295,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         return 1
 
     def xmlrpc_getBW(self):
-        return self.root.trafficPipe.getElement(name="BandwidthElement").bw
+        return self.root.trafficPipe.callSimple('getBW')
 
 
     def networkStatus(self,status):

@@ -31,7 +31,7 @@ import networkx as nx
 EXPIRE_TIME = 0.5
 
 class PullClient(Scheduler):
-    
+
     def registerMessages(self):
         self.messages = []
         self.messages.append(BufferMessage())
@@ -39,7 +39,7 @@ class PullClient(Scheduler):
         self.messages.append(RetransmitMessage())
         self.blocks = []
         self.blocks.append(Block())
-    
+
     def initScheduler(self):
         self.log.info('initing scheduler')
         self.running = False
@@ -55,25 +55,25 @@ class PullClient(Scheduler):
         self.lastIdleTime=0
         self.lastReqCheck=0
         self.requestFrequency=self.frequency*self.reqInterval
-        
+
     def errback(self, failure): return failure
 
     def produceBlock(self):
-        print "IN SCHEDULER PRODUCEBLOCK"
+        # print "IN SCHEDULER PRODUCEBLOCK"
         #self.log.debug('trying to produce block')
         self.running=True
         d = deferToThread(self.getRequestedBID)
         d.addCallback(self.sendBlock)
         d.addErrback(self.errback)
         return d
-        
+
     def sendBlock(self, req):
-        print "in SCHEDULER sendblock"
+        # print "in SCHEDULER sendblock"
         if not req:
             self.running = False
             if not self.lastIdleTime:
                 self.lastIdleTime=time()
-            print "NOT SENDING"
+            # print "NOT SENDING"
             #self.log.warning('no blocks to send. stopping scheduler')
             return None
         if self.lastIdleTime:
@@ -84,12 +84,12 @@ class PullClient(Scheduler):
         self.running=True
         bid, peer = req
         self.log.debug('sending block %d to %s',bid,peer)
-        print 'sending block %d to %s'%(bid,peer)
+        # print 'sending block %d to %s'%(bid,peer)
         self.trafficPipe.call("sendblock", self, bid, peer)
         counter(self, "blocksent")
-        
+
     def getRequestedBID(self):
-        print "GETREQUESTEDBID"
+        # print "GETREQUESTEDBID"
         while True:
             #print self.bufferlist
             peer = getMostDeprivedReq(self.bufferlist, self.buffer)
@@ -101,16 +101,16 @@ class PullClient(Scheduler):
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
-            print "BL:", bl
+            # print "BL:", bl
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 #blockID = choice(bl)
-               
+
                 try:
                     blockID=getRarestRequest(self.bufferlist,self.buffer,bl)
                 except:
                     blockID = choice(bl)
-                
+
                 #blockID=bl[0]
                 peer.s[self.stream.id]["request"].remove(blockID)
                 peer.s[self.stream.id]["buffer"].update(blockID)
@@ -119,8 +119,8 @@ class PullClient(Scheduler):
                 return (blockID, peer)
             else:
                 peer.s[self.stream.id]["request"]=[]
-        
-    
+
+
     def start(self):
         self.startTime=time()
         self.idleTime=0
@@ -130,7 +130,7 @@ class PullClient(Scheduler):
         self.log.info('scheduler is starting')
         self.loopingCall.start(self.frequency)
         self.trafficPipe.call('resetIdleStat')
-        
+
     def stop(self):
         self.log.info('scheduler is stopping')
         #reactor.callLater(0, self.stream.stop)
@@ -138,15 +138,15 @@ class PullClient(Scheduler):
             self.loopingCall.stop()
         except:
             pass
-         
-         
+
+
     def makeRequests(self, receivingBlocks, missingBlocks, neighbours):
         #print 'neighbours:',neighbours
         #print "COMPUTING REQUESTS"
         #print missingBlocks
         #exclude receiving
-        print "MISSING", missingBlocks
-        print "RECEIVING", receivingBlocks
+        # print "MISSING", missingBlocks
+        # print "RECEIVING", receivingBlocks
         def dd(self, receivingBlocks, missingBlocks, neighbours):
             if not neighbours:
                 return
@@ -169,7 +169,7 @@ class PullClient(Scheduler):
                     print 'in continue 2'
                     continue
                 buffer = peer.s[self.stream.id]["buffer"]
-                print "BUFFER", buffer
+                # print "BUFFER", buffer
                 #print 'neigh buffer:',buffer
                 tempReq = buffer.bIDListCompTrue(missingBlocks)
                 tmpBlocksToRequest[peer] = tempReq
@@ -180,26 +180,26 @@ class PullClient(Scheduler):
                     else:
                         requestableBlocks[b] = [peer]
                 ids[peer]='p'+str(countIds)
-                countIds+=1   
-                        
+                countIds+=1
+
             if not requestableBlocks:
                 return {}
-            
+
             """
             blocksToRequest={}
             for p in neighbours:
                 blocksToRequest[p]=[]
-            
-             
+
+
             while True:
-                
+
                 reqBlockList = requestableBlocks.keys()
                 for b in reqBlockList:
                     if len(requestableBlocks[b]) == 1:
                         peer = requestableBlocks[b][0]
                         blocksToRequest[peer]+=[b]
                         del requestableBlocks[b]
-                    
+
                 G=nx.DiGraph()
                 for b,peers in requestableBlocks.items():
                     G.add_edge('s',b,capacity=1)
@@ -208,18 +208,18 @@ class PullClient(Scheduler):
 
                 for id in ids.values():
                     G.add_edge(id,'e')#,capacity=1)
-            
-            
+
+
                 try:
                     flow, F = nx.ford_fulkerson(G, 's', 'e')
                     #F=nx.max_flow_min_cost(G,'s','e')
                 except:
                     self.log.error('scheduler matching failed')
-                
+
                 for peer,id in ids.items():
                     blocksToRequest[peer] +=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
-                
-                
+
+
             """
             keys = tmpBlocksToRequest.keys()
             blocksToRequest = {}
@@ -240,14 +240,14 @@ class PullClient(Scheduler):
                 peer = min([ (min(len(tmpBlocksToRequest[x]),len(blocksToRequest[x])),x) for x in tmpBlocksToRequest if block in tmpBlocksToRequest[x]])[1]
                 del requestableBlocks[block]
                 blocksToRequest[peer].append(block)
-            
+
             #print "BLOCKSTOREQUESTSSSS", blocksToRequest
             #self.log.debug('requesting blocks %s',blocksToRequest)
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
 
-        
+
     def sendRequests(self, requests):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
@@ -257,12 +257,12 @@ class PullClient(Scheduler):
     def sendLPB(self, peer):
         self.log.warning('sending LPB message to %s',peer)
         LPBMessage.send(self.stream.id, self.buffer.lpb, peer, self.controlPipe)
-        
+
     def shift(self, norequests = False):
         n = self.overlay.getNeighbours()
         outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
-        
+
         if self.buffer.lpb - self.buffer.flpb > self.buffer.buffersize:
             if not hit:
                 self.countMiss +=1
@@ -271,8 +271,8 @@ class PullClient(Scheduler):
             hitRatio=self.countHit/float(self.countHit+self.countMiss)
             setValue(self,'scheduler',hitRatio*1000)
             #self.log.debug('hit ratio %f',hitRatio)
-      
-        
+
+
         if not norequests:
             #send buffers
             if self.buffer.lpb % self.reqInterval == 0:
@@ -283,9 +283,9 @@ class PullClient(Scheduler):
             else:
                 #print 'sending buffer'
                 BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
-        
+
         #self.log.debug('%s',self.buffer)
-        
+
         idleRatio=self.idleTime/(time()-self.startTime)
         #self.log.debug('idle:%f',idleRatio)
         setValue(self,'idle',idleRatio*1000)
@@ -298,7 +298,7 @@ class PullClient(Scheduler):
 
     def isRunning(self):
         return self.loopingCall.running
-    
+
     def askFragments(self,bid,fragments,peer):
         print 'should ask from ',peer,fragments,bid
         self.log.warning('should ask from %s,%s,%d',peer,fragments,bid)
@@ -311,4 +311,4 @@ class PullClient(Scheduler):
         b['blockid']=block
         b['fragments']=fragments
         self.trafficPipe.call('sendFragments',self,b,peer)
-        
+

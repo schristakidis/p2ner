@@ -30,7 +30,7 @@ class Client(Engine):
 
     def initEngine(self, *args, **kwargs):
         self.log.info('initing client')
-        self.enableTraffic()
+        self.enableTraffic(cPipe=kwargs['cPipe'])
         self.enableUI(**kwargs)
         self.messages = []
         self.sidListeners = []
@@ -59,8 +59,8 @@ class Client(Engine):
 
     def checkNatPeer(self):
         if self.basic:
-            self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
-            self.dataPort=self.root.trafficPipe.getElement(name="BoraElement").port
+            self.controlPort=self.root.controlPipe.callSimple('getPort')
+            self.dataPort=self.root.trafficPipe.callSimple('getPort')
             print self.dataPort
             return None,self.dataPort
 
@@ -84,8 +84,7 @@ class Client(Engine):
 
         p,port=self.checkNatPeer()
 
-        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
-        bw=1000
+        bw=int(self.trafficPipe.callSimple('getBW')/1024)
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw, p,server, self.controlPipe)
         self.log.debug('adding stream id message to listeners')
         m=StreamIdMessage(stream,input,output)
@@ -161,8 +160,7 @@ class Client(Engine):
 
         p,port=self.checkNatPeer()
 
-        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
-        bw=1000
+        bw=int(self.trafficPipe.callSimple('getBW')/1024)
         reactor.callLater(0.1, ClientStartedMessage.send, port,bw,p,server, self.controlPipe)
         self.log.debug('sending request stream message to %s',server)
         m=SubscribeMessage(id,output)
@@ -246,7 +244,7 @@ def startClient():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'bp:dv:P:hs',['basic','port=','daemon','vizir=','vizirPort=','help','stats'])
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:dv:P:hsc',['basic','port=','daemon','vizir=','vizirPort=','help','stats','cPipe'])
     except getopt.GetoptError as err:
         usage(err=err)
 
@@ -256,6 +254,7 @@ def startClient():
     vizir=False
     vPort=9000
     stat=None
+    cPipe=False
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -271,6 +270,8 @@ def startClient():
             vPort=int(a)
         elif opt in ('-s','--stats'):
             stat='ZabbixStats'
+        elif opt in ('-c','--cPipe'):
+            cPipe=True
         elif opt in ('-h','--help'):
             usage()
     if interface=='XMLRPCControlUI':
@@ -284,9 +285,9 @@ def startClient():
         kwargs={}
 
     if not stat:
-        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port)
+        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port,cPipe=cPipe)
     else:
-        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port,stats=stat)
+        P2NER = Client(_parent=None,interface=(interface,[],kwargs),UI=gui,basic=basic,port=port,stats=stat,cPipe=cPipe)
     reactor.run()
 
 def startBasicNetClient():
@@ -308,6 +309,7 @@ def startDaemonClient():
     vizir=False
     vPort=9000
     stat=None
+    cPipe=True
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -320,6 +322,8 @@ def startDaemonClient():
             vPort=int(a)
         elif opt in ('-s','--stats'):
             stat='ZabbixStats'
+        elif opt in ('-c','--cPipe'):
+            cPipe=True
         elif opt in ('-h','--help'):
             usage(daemon=True)
 
@@ -328,9 +332,9 @@ def startDaemonClient():
     else:
         kwargs={}
     if not stat:
-        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),basic=basic,port=port)
+        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),basic=basic,port=port,cPipe=cPipe)
     else:
-        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),stats=stat,basic=basic,port=port)
+        P2NER = Client(_parent=None,interface=('XMLRPCControlUI',[],kwargs),stats=stat,basic=basic,port=port,cPipe=cPipe)
     reactor.run()
 
 def usage(err=None,daemon=False):
@@ -350,6 +354,7 @@ def usage(err=None,daemon=False):
     print ' -v, --vizir [ip] :run daemon with XMLRPC and vizir interface and connect to ip'
     print ' -P, --vizirPort port :set the vizir controller port'
     print '-s, --stats : enable Zabbix Statistics'
+    print '-c, --cPipe : enable c traffic Pipeline'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')

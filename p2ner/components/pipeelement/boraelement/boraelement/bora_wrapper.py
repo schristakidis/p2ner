@@ -26,14 +26,14 @@ import bora
 
 class Block(object):
     type = "blockfragment"
-        
+
 def triggerblk(totrigger, message):
     triggered = []
     for b in totrigger:
         if b.trigger(message):
             triggered.append(b)
     return triggered
-    
+
 def scanBlocks(message):
     instances = BlockMessage.getInstances()
     triggered = triggerblk(instances, message)
@@ -46,7 +46,7 @@ def biter_thread(pipe):
         print "BITER BLOCK",block
         r = scanBlocks(block)
         reactor.callFromThread(pipe.triggerActions, r, block)
-        
+
 def bpuller_thread(pipe):
     for b in bora.bpuller():
         print "Asking for data to send"
@@ -61,13 +61,13 @@ class BoraElement(PipeElement):
         self.schedulers = {}
         reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
 
-            
+
     def sendblock(self, r, scheduler, block, peer):
         print "SENDBLOCK"
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
-        
+
         to=self.to
 
         useLocalIp=False
@@ -76,17 +76,17 @@ class BoraElement(PipeElement):
                 useLocalIp=True
                 peer.useLocalIp=True
         except:
-            pass    
-        
+            pass
+
         if peer.useLocalIp:
             ip=peer.lip
             to='l'+to
         else:
             ip=peer.ip
-            
+
         reactor.callInThread(bora.send_block, scheduler.stream.id, block, ip, getattr(peer, to))
         return 0
-        
+
     def getreceiving(self, r, scheduler):
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
@@ -97,7 +97,7 @@ class BoraElement(PipeElement):
             incomplete = [i for i in incomplete if incomplete[0]==scheduler.stream.id]
         print "incomplete2", incomplete
         return incomplete
-        
+
     def popblockdata(self, r, scheduler, blockid):
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
@@ -105,22 +105,22 @@ class BoraElement(PipeElement):
         ret = bora.get_block_content (scheduler.stream.id, blockid)
         reactor.callInThread(bora.del_block, scheduler.stream.id, blockid)
         return ret
-        
+
     def inputblock(self, r, scheduler, bid, data):
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
         reactor.callInThread(bora.add_block, scheduler.stream.id, bid, data)
-        
+
     def listen(self, d):
-        
+
         bora.listen_on(self.port)
         self.log.info('start listening to port:%d',self.port)
-        
+
         print 'listening to port  ',self.port
         reactor.callInThread(biter_thread, self)
         reactor.callInThread(bpuller_thread, self)
-        
+
     def getscheduler(self, streamid):
         ret = None
         streamid = int(streamid)
@@ -137,13 +137,13 @@ class BoraElement(PipeElement):
             raise IndexError("You don't want to stream and subscribe the same stream")
         else:
             self.schedulers[scheduler] = {}
-        
+
     def unregisterScheduler(self, r, scheduler):
         if scheduler in self.schedulers:
             del self.schedulers[scheduler]
         else:
             raise IndexError("There is no such scheduler to unregister")
-            
+
     def produceblock(self, r=None):
         print "PRODUCEBLOCK"
         '''
@@ -158,9 +158,14 @@ class BoraElement(PipeElement):
     def triggerActions(self, scannedblocks, message, peer=None):
         for b in scannedblocks:
             b.action(message, peer)
-            
+
     def cleanUP(self):
         bora.die()
         self.schedulers = {}
-        
-    
+
+    def getBW(self):
+        return 100
+
+    def getPort(self):
+        return self.port
+

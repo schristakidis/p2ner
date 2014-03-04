@@ -31,8 +31,8 @@ class Pipeline(Namespace):
         self.pipePort=None
         for el in reversed(elements):
             self.insert(el)
-                        
-            
+
+
     @property
     def len(self):
         ret = getattr(self, '__len')
@@ -49,14 +49,14 @@ class Pipeline(Namespace):
     def setPipePort(self,port):
         print 'setting pipe port to',port
         self.pipePort=port
-        
+
     def insert(self, el):
         next = getattr(self, '__first')
         setattr(self, '__first', el)
         setattr(el, '__next', next)
         setattr(next, '__prev', el)
         setattr(self, '__len', self.len+1)
-        
+
     def append(self, el):
         end = getattr(self, '__first')
         if not end:
@@ -69,7 +69,7 @@ class Pipeline(Namespace):
         setattr(end, '__next', el)
         setattr(el, '__prev', end)
         setattr(self, '__len', self.len+1)
-    
+
     def insertAt(self, el, at):
         if at == 0:
             self.insert(el)
@@ -85,7 +85,7 @@ class Pipeline(Namespace):
         setattr(place, '__prev', el)
         setattr(el.prev, '__next', el)
         setattr(self, '__len', self.len+1)
-        
+
     def removeElement(self, name=None, index=-1):
         if name:
             next = getattr(self, '__first')
@@ -131,7 +131,7 @@ class Pipeline(Namespace):
             setattr(self, '__len', self.len-1)
         else:
             raise IndexError
-            
+
     def getElement(self, name=None, index=-1):
         if name:
             next = getattr(self, '__first')
@@ -147,7 +147,7 @@ class Pipeline(Namespace):
             return place
         else:
             raise IndexError
-        
+
     def send(self, msg, content, peer):
         if issubclass(msg, ControlMessage) and self.useHolePunching:
             d = self._call("send",msg, content, peer)
@@ -155,8 +155,8 @@ class Pipeline(Namespace):
             return d
         else:
             return self._send(msg, content, peer)
-            
-                
+
+
     def _send(self, msg, content, peer,d=None):
         if issubclass(msg, ControlMessage):
             content.header = Container()
@@ -173,18 +173,18 @@ class Pipeline(Namespace):
             return d
         else:
             reactor.callLater(0, d.callback, "")
-            
+
     def registerProducer(self, scheduler):
         d = self.call("registerScheduler", scheduler)
         return d
-        
+
     def unregisterProducer(self, scheduler):
         d = self.call("unregisterScheduler", scheduler)
         return d
-    
+
     def breakCall(self):
         raise StopPipe
-        
+
     def call(self, FUNC, *args, **kwargs):
         el = getattr(self, '__first')
         d = defer.Deferred()
@@ -222,7 +222,22 @@ class Pipeline(Namespace):
             el = el.next
         d.addErrback(errtrap)
         return d
-    
+
+
+    def callSimple(self, FUNC, *args, **kwargs):
+        el = getattr(self, '__first')
+        while el:
+            try:
+                meth = getattr(el, FUNC, False)
+            except:
+                meth=False
+            if callable(meth):
+                return meth(*args,**kwargs)
+            el = el.next
+        raise ValueError('No such function in Pipeline')
+
+
+
     def printall(self):
         i=0
         next = getattr(self, '__first')
@@ -230,9 +245,9 @@ class Pipeline(Namespace):
             print i, getattr(next.prev, 'name', None),  next.name, getattr(next.next, 'name', None)
             next = next.next
             i+=1
-        
+
 if __name__ == "__main__":
-    
+
     from p2ner.core.namespace import Namespace, initNS
     from twisted.internet import defer,reactor
     from p2ner.abstract.pipeelement import PipeElement, StopPipe
@@ -246,29 +261,29 @@ if __name__ == "__main__":
 
         def initElement(self, *args, **kwargs):
             print "INIT BANANA"
-    
+
         def chew(self, res, arg):
             print "chew BANANA"
             print "res", res, "arg", arg
             if arg==1:
                 self.breakCall()
             return 'BANANA'
-        
+
     class Melon(PipeElement):
 
         def initElement(self, *args, **kwargs):
             print "INIT MELON"
-    
+
         def chew(self, res, arg):
             print "chew MELON"
             print "res", res, "arg", arg
             return 'MELON'
-        
+
     class Apple(PipeElement):
 
         def initElement(self, *args, **kwargs):
             print "INIT APPLE"
-    
+
         def chew(self, res, arg):
             print "chew APPLE"
             d = defer.Deferred()
@@ -281,14 +296,14 @@ if __name__ == "__main__":
         return ret
 
     class Orange(PipeElement):
-        
+
         def redir(self, ret):
             self.forwardprev("chew", 'REDIR')
             self.breakCall()
 
         def initElement(self, *args, **kwargs):
             print "INIT ORANGE"
-    
+
         def chew(self, res, arg):
             print "chew ORANGE"
             d = defer.Deferred()
@@ -297,18 +312,18 @@ if __name__ == "__main__":
             d.addCallback(mod)
 
             reactor.callLater(2, d.callback, "ORANGE IS BACK")
-            return d 
-    
+            return d
+
     class Peanut(PipeElement):
 
         def initElement(self, *args, **kwargs):
             print "INIT PEANUT"
-    
+
         def chew(self, res, arg):
             print "chew PEANUT - this will except"
             res.addCallback(mod)
-            return d 
-        
+            return d
+
     banana = Banana()
     apple = Apple()
     orange = Orange()
@@ -319,9 +334,8 @@ if __name__ == "__main__":
     R.P.insertAt(banana, 1)
     #R.P.insertAt(peanut, 2)#THIS IS THE WRONG WAY TO MAKE AN ELEMENT
     R.P.insertAt(melon, 3)
-    
-    R.P.printall()
-    #R.P.removeElement(name="Melon")
+
+    R.P.printall() #R.P.removeElement(name="Melon")
     #R.P.printall()
     #R.P.removeElement(index=1)
     #R.P.printall()

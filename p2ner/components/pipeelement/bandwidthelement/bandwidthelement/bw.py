@@ -34,7 +34,7 @@ class BandwidthElement(PipeElement):
         self.startTime=0
         self.idleTime=0
         self.lastIdleTime=0
-        
+
     def send(self, res, msg, data, peer):
         if not self.startTime:
             self.startTime=time.time()
@@ -53,10 +53,10 @@ class BandwidthElement(PipeElement):
             reactor.callLater(0, self.sendfromque)
         self.breakCall()
         return res
-    
+
     def askdata(self):
         self.forwardprev("produceblock").callback("")
-    
+
     def sendfromque(self):
         if len(self.que) == 0:
             self.lastIdleTime=time.time()
@@ -81,7 +81,7 @@ class BandwidthElement(PipeElement):
         if self.bwSet:
             bw=self.bw
             peer.bw=bw
-            
+
         #print bw,peer.bw
         nextiter=1.0*len(res)/bw
         #print 'next iter:',nextiter
@@ -89,17 +89,20 @@ class BandwidthElement(PipeElement):
         #print 'next:',nextiter
         #print 'total:',time.time()+nextiter
         self.forwardnext("send", None, None, peer).callback(res)
-        
-    #accpets KBytes/sec    
+
+    #accpets KBytes/sec
     def setBW(self, d, bw):
         self.bwSet=True
         self.bw=bw
         if self.bw>4*1024:
             self.bw=4*1024
-            
+
         self.bw =self.bw*1024
         print 'setting bw to ',self.bw
         self.log.info('setting bw to %f',self.bw)
+        return self.bw
+
+    def getBW(self):
         return self.bw
 
 

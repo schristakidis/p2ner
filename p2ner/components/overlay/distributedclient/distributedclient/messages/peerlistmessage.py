@@ -22,18 +22,18 @@ class AskInitNeighs(BaseControlMessage):
     type = "sidmessage"
     code = MSG.ASK_INIT_NEIGHS
     ack = True
-    
+
     @classmethod
     def send(cls, sid, peer, out):
         d=out.send(cls, Container(streamid = sid), peer)
         d.addErrback(trap_sent)
         return d
-    
+
 class PeerListMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SEND_IP_LIST
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
@@ -43,20 +43,20 @@ class PeerListMessage(ControlMessage):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
         for p in message.peer:
             self['overlay'].sendAddNeighbour(p,peer)
-            
-                   
-        
+
+
+
     @classmethod
     def send(cls, sid, peerlist, peer, out):
         return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
-     
-        
-     
+
+
+
 class PeerListPMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SEND_IP_LIST_PRODUCER
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
@@ -66,26 +66,25 @@ class PeerListPMessage(ControlMessage):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
         print 'receive peer list message for producer from ',peer,' for ',message.peer
         inpeer,port=self.root.checkNatPeer()
-        bw=1000
-        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        bw=int(self.trafficPipe.callSimple('getBW')/1024)
         for p in message.peer:
             p.learnedFrom=peer
             print 'sending add producer message to ',p
             AddProducerMessage.send(self.stream.id,port,bw,inpeer,p,self['overlay'].addProducer,self['overlay'].failedProducer,self.root.controlPipe)
- 
 
 
-    
+
+
 class AddNeighbourMessage(ControlMessage):
     type = "overlaymessage"
     code = MSG.ADD_NEIGH
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
-        return True    
-       
+        return True
+
     def action(self, message, peer):
         peer.dataPort=message.port
         peer.reportedBW=message.bw
@@ -98,39 +97,39 @@ class AddNeighbourMessage(ControlMessage):
         print 'received neigh message from ',peer
         self['overlay'].addNeighbour(peer,temp=False)
         ConfirmNeighbourMessage.send(self.stream.id,peer,self.controlPipe)
-        
+
     @classmethod
     def send(cls, id,port,bw, inpeer, peer, out):
         msg = Container(streamid=id,port=int(port), bw=bw,peer=inpeer)
         d=out.send(cls, msg, peer)
         d.addErrback(trap_sent)
         return d
-        
+
 class ConfirmNeighbourMessage(ControlMessage):
     type = "sidmessage"
     code = MSG.CONFIRM_NEIGH
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
-        return True   
-    
+        return True
+
     def action(self, message, peer):
         self['overlay'].addNeighbour(peer)
-        
+
     @classmethod
     def send(cls, sid, peer, out):
         d=out.send(cls, Container(streamid = sid), peer)
         d.addErrback(trap_sent)
         return d
-    
-class AddProducerMessage(BaseControlMessage):   
+
+class AddProducerMessage(BaseControlMessage):
     type = "overlaymessage"
     code = MSG.ADD_PRODUCER
     ack = True
-    
-        
+
+
     @classmethod
     def send(cls, id,port,bw, inpeer, peer,suc_func,err_func, out):
         msg = Container(streamid=id,port=port, bw=bw,peer=inpeer)
@@ -142,44 +141,44 @@ class PingMessage(ControlMessage):
     type='basemessage'
     code=MSG.ADDNEIGH_RTT
     ack=True
-    
+
     def trigger(self,message):
         return True
-    
+
     def action(self,message,peer):
-        return 
-    
+        return
+
     @classmethod
     def send(cls,  peer, out):
         out.send(cls,Container(message=None),peer).addErrback(trap_sent)
-        
+
 class GetNeighsMessage(ControlMessage):
     type='basemessage'
     code=MSG.GET_NEIGHS
     ack=True
-    
+
     def trigger(self,message):
         if message.message!=self.stream.id:
             return False
         return True
-    
+
     def action(self,message,peer):
         self['overlay'].returnNeighs(peer)
-        
+
 class ReturnNeighsMessage(BaseControlMessage):
     type='swappeerlistmessage'
     code=MSG.RETURN_NEIGHS
     ack=True
-    
+
     @classmethod
     def send(cls, sid, peerlist, peer, out):
         return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
-    
+
 class SuggestNewPeerMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SUGGEST_NEW_PEER
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
@@ -188,17 +187,17 @@ class SuggestNewPeerMessage(ControlMessage):
     def action(self, message, peer):
         self.log.debug('received suggest new peer message from %s',peer)
         self['overlay'].suggestNewPeer(peer,message.peer)
-                  
-        
+
+
     @classmethod
     def send(cls, sid, peerlist, peer, out, suc_func=None,err_func=None):
-        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func)  
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func)
 
 class SuggestMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SUGGEST
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
@@ -207,8 +206,8 @@ class SuggestMessage(ControlMessage):
     def action(self, message, peer):
         self.log.debug('received suggest  message from %s',peer)
         self['overlay'].availableNewPeers(peer,message.peer)
-                  
-        
+
+
     @classmethod
     def send(cls, sid, peerlist, peer, out):
-        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)  
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
