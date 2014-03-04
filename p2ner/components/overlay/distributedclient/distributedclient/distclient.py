@@ -100,7 +100,8 @@ class DistributedClient(Overlay):
     def sendAddNeighbour(self,peer,originalPeer):
         inpeer,port=self.root.checkNatPeer()
         #self.log.info('my details %s port:%d',inpeer,port)
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        bw=1000
+        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         peer.learnedFrom=originalPeer
         self.tempPossibleNeighs.append(peer)
         AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,peer,self.root.controlPipe)

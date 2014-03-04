@@ -54,7 +54,7 @@ class NetworkChecker(Namespace):
             self.networkUnreichable()
         if not self.secondRun:
             self.controlPort=self.root.controlPipe.getElement(name="UDPPortElement").port
-            self.dataPort=self.root.trafficPipe.getElement(name="UDPPortElement").port
+            self.dataPort=self.root.trafficPipe.getElement(name="BoraElement").port
         else:
             self.root.controlPipe.call('cleanUp')
             self.root.trafficPipe.call('cleanUp')
@@ -62,7 +62,7 @@ class NetworkChecker(Namespace):
             self.controlPort=findNextConsecutivePorts(self.controlPort+2)
             self.dataPort=self.controlPort+1
             self.root.controlPipe.getElement(name="UDPPortElement").port=self.controlPort
-            self.root.trafficPipe.getElement(name="UDPPortElement").port=self.dataPort
+            self.root.trafficPipe.getElement(name="BoraElement").port=self.dataPort
             
         self.nat=False
         self.hpunching=False

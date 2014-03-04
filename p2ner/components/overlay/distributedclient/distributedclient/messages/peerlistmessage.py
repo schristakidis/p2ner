@@ -66,7 +66,8 @@ class PeerListPMessage(ControlMessage):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
         print 'receive peer list message for producer from ',peer,' for ',message.peer
         inpeer,port=self.root.checkNatPeer()
-        bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
+        bw=1000
+        #bw=int(self.trafficPipe.getElement("BandwidthElement").bw/1024)
         for p in message.peer:
             p.learnedFrom=peer
             print 'sending add producer message to ',p
