@@ -25,7 +25,7 @@ class MessageSent(Exception):
 class MessageError(Exception):
     def __init__(self, peer=None):
         self.peer = peer
-      
+
 
 def probe_ack(f,func=None,*args):
     f.trap(MessageSent,MessageError)
@@ -45,44 +45,44 @@ def probe_rec(f,func=None,*args):
     if f.check(MessageError):
         return True
 
-def probe_all(f,suc_func=None,err_func=None,*args):
+def probe_all(f,suc_func=None,err_func=None,**kwargs):
     f.trap(MessageSent,MessageError)
     if f.check(MessageSent):
         if suc_func:
-                suc_func(f.value.peer,*args)
+                suc_func(f.value.peer,**kwargs)
         return False
     if f.check(MessageError):
         if err_func:
-                err_func(f.value.peer,*args)
+                err_func(f.value.peer,**kwargs)
         return False
 
-    
+
 def trap_sent(f):
     f.trap(MessageSent,MessageError)
 
 
 class ControlMessage(Message):
     __instances__ = []
-    
+
     @property
     def code(self):
         return self.__class__.code
-    
+
     @property
     def type(self):
         return self.__class__.type
-    
+
     @property
     def ack(self):
         return self.__class__.ack
-    
+
     @classmethod
     def _cleanref(cls, r):
         #print 'del',r
         #cls.Log().error('removing %s',str(r))
         ControlMessage.__instances__.remove(r)
         #print ControlMessage.__instances__
-        
+
     @classmethod
     def remove_refs(cls,inst):
         #cls.Log.error('in remove refs')
@@ -95,7 +95,7 @@ class ControlMessage(Message):
                 break
             i+=1
         ControlMessage.__instances__.pop(found)
-        
+
     @autoNS
     def __init__(self, *args, **kwargs):
         ControlMessage.__instances__.append(ref(self, ControlMessage._cleanref))
@@ -103,11 +103,11 @@ class ControlMessage(Message):
         #    ControlMessage.Log=ref(self.logger.getLoggerChild('messages',self.interface))
         #ControlMessage.Log().debug('registering message %s',str(self))
         self.initMessage(*args, **kwargs)
-                                 
-        
+
+
     def initMessage(self, *args, **kwargs):
         pass
-        
+
     @classmethod
     def codefilter(cls, code):
         msglist = []
@@ -125,7 +125,7 @@ class ControlMessage(Message):
             print "Message instances: ", [m() for m in cls.__instances__]
             #cls.Log.warning("Message instances:%s ",str( [m() for m in cls.__instances__]))
         return msglist
-    
+
     @classmethod
     def fallbackmsgs(cls):
         msglist = []
@@ -133,9 +133,9 @@ class ControlMessage(Message):
             msg = msg_ref()
             if msg:
                 if msg.code == "-":
-                    msglist.append(msg) 
+                    msglist.append(msg)
         return msglist
-        
+
     @classmethod
     def trig(cls, msgs, triggers):
         triggered = []
@@ -143,21 +143,21 @@ class ControlMessage(Message):
             if msg.trigger(triggers[msg.type]):
                 triggered.append((msg, triggers[msg.type]))
         return triggered
-    
+
     def __str__(self):
         return "CODE: %d TYPE: %s ACK: %d" % (self.__class__.code, self.__class__.type, self.__class__.ack)
-    
+
     def __repr__(self):
         return "%s()" % self.__class__.__name__
-    
+
 class BaseControlMessage(ControlMessage):
-    
+
     @autoNS
     def __init__(self, *args, **kwargs):
         pass
-        
+
     def trigger(self,message):
         pass
-    
+
     def action(self,message,peer):
         pass

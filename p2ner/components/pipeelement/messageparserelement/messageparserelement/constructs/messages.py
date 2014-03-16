@@ -23,13 +23,19 @@ from peerbuffer import PeerBufferStruct
 from basemessage import BaseMessageAdapter, BaseMessageStruct
 
 # Container( message = <PICKABLE msg>)
-BaseMessage = Struct("basemessage", 
+BaseMessage = Struct("basemessage",
         BaseMessageAdapter(BaseMessageStruct),
         )
 
 # Container( streamid = <UInt16>)
 SIDMessage = Struct("sidmessage",
         UBInt16("streamid"),
+        )
+
+# Container( streamid = <UInt16> swapid=<UInt16>)
+SwapSIDMessage = Struct("swapsidmessage",
+        UBInt16("streamid"),
+        UBInt16("swapid"),
         )
 
 # Container( streamid = <UInt16>, message = <PICKABLE msg>)
@@ -39,35 +45,41 @@ SIDBaseMessage = Struct("sidbasemessage",
         )
 
 # Container( stream = <Stream obj>)
-StreamMessage = Struct("streammessage", 
-        StreamAdapter(StreamStruct), 
+StreamMessage = Struct("streammessage",
+        StreamAdapter(StreamStruct),
         )
 
 # Container( stream = [<Stream obj>....])
-MStreamMessage = Struct("mstreammessage", 
-        OptionalGreedyRange(StreamAdapter(StreamStruct)), 
+MStreamMessage = Struct("mstreammessage",
+        OptionalGreedyRange(StreamAdapter(StreamStruct)),
         )
 # Container( streamid = <UInt16>, buffer = <Buffer obj>)
-BufferMessage = Struct("buffermessage", 
-        UBInt16("streamid"), 
-        BufferAdapter(BufferStruct), 
+BufferMessage = Struct("buffermessage",
+        UBInt16("streamid"),
+        BufferAdapter(BufferStruct),
         Optional(RequestAdapter(MetaField("request",  lambda ctx: -(-ctx["buffer"].buffersize>>3)))),
         )
 
 # Container( streamid = <UInt16>, peer = [Peer obj])
-PeerListMessage = Struct("peerlistmessage", 
-        UBInt16("streamid"), 
-        OptionalGreedyRange(PeerAdapter(PeerStruct)), 
+PeerListMessage = Struct("peerlistmessage",
+        UBInt16("streamid"),
+        OptionalGreedyRange(PeerAdapter(PeerStruct)),
+        )
+
+SPeerListMessage = Struct("speerlistmessage",
+        UBInt16("streamid"),
+        UBInt16("swapid"),
+        OptionalGreedyRange(PeerAdapter(PeerStruct)),
         )
 
 # Container( streamid = <UInt16>, peerbuffer = [Container(peer = <Peer obj>, buffer = <Buffer obj>)])
-BufferListMessage = Struct("bufferlistmessage", 
-        UBInt16("streamid"), 
-        OptionalGreedyRange(PeerBufferStruct), 
+BufferListMessage = Struct("bufferlistmessage",
+        UBInt16("streamid"),
+        OptionalGreedyRange(PeerBufferStruct),
         )
 
 RetransmitMessage=Struct("retransmitmessage",
-        UBInt16("streamid"), 
+        UBInt16("streamid"),
         BaseMessageAdapter(BaseMessageStruct),
         UBInt16('blockid'),
         )
@@ -80,11 +92,11 @@ RttMessage=Struct('rttmessage',
         UBInt32('size'),
         UBInt16('blockId'),
         )
-                 
+
 RegisterMessage=Struct("registermessage",
-                       UBInt16("port"), 
+                       UBInt16("port"),
                        UBInt16('bw'),
-                       Optional(PeerAdapter(PeerStruct)),  
+                       Optional(PeerAdapter(PeerStruct)),
                        )
 
 PeerMessage=Struct("peermessage",
@@ -92,35 +104,38 @@ PeerMessage=Struct("peermessage",
                    )
 
 OverlayMessage=Struct("overlaymessage",
-                       UBInt16("streamid"), 
-                       UBInt16("port"), 
+                       UBInt16("streamid"),
+                       UBInt16("port"),
                        UBInt16('bw'),
-                       Optional(PeerAdapter(PeerStruct)),  
+                       Optional(PeerAdapter(PeerStruct)),
                        )
 
 LockMessage=Struct("lockmessage",
                    UBInt16('streamid'),
+                   UBInt16('swapid'),
                    Flag('lock'),
                    )
 
-SwapPeerListMessage = Struct("swappeerlistmessage", 
-        UBInt16("streamid"), 
-        OptionalGreedyRange(SwapPeerAdapter(SwapPeerStruct)), 
+SwapPeerListMessage = Struct("swappeerlistmessage",
+        UBInt16("streamid"),
+        UBInt16("swapid"),
+        OptionalGreedyRange(SwapPeerAdapter(SwapPeerStruct)),
         )
 
 SateliteMessage=Struct('satelitemessage',
         UBInt16('streamid'),
+        UBInt16('swapid'),
         UBInt8('action'),
         PeerAdapter(PeerStruct),
         Optional(OverlayMessage)
         )
-        
+
 class RawMessage(object):
-    
+
     @staticmethod
     def parse(message):
         return message
-    
+
     @staticmethod
     def build(message):
         return message
@@ -128,11 +143,13 @@ class RawMessage(object):
 MSG_TYPES = {
              "basemessage" : BaseMessage,
              "sidmessage" : SIDMessage,
+             "swapsidmessage" : SwapSIDMessage,
              "sidbasemessage": SIDBaseMessage,
              "streammessage": StreamMessage,
              "mstreammessage": MStreamMessage,
              "buffermessage": BufferMessage,
              "peerlistmessage": PeerListMessage,
+             "speerlistmessage": SPeerListMessage,
              "bufferlistmessage": BufferListMessage,
              "rawmessage": RawMessage,
              "retransmitmessage": RetransmitMessage,
@@ -164,16 +181,16 @@ if __name__ == "__main__":
     c =  StreamMessage.parse(s)
     print c
     print c.stream.classvars
-    b = StreamMessage.build( Container(code = "STREAM",  streamid=0,  stream = Stream(None,  12,  
-                                           "popipopi",  
-                                           0,  
-                                           39999,  
-                                           20,  
-                                           7,  
-                                           "desc",  
-                                           8,  
+    b = StreamMessage.build( Container(code = "STREAM",  streamid=0,  stream = Stream(None,  12,
+                                           "popipopi",
+                                           0,
+                                           39999,
+                                           20,
+                                           7,
+                                           "desc",
+                                           8,
                                            3, )))
     print repr(b)
     assert b == s
     assert StreamMessage.build(c) == s
-    
+
