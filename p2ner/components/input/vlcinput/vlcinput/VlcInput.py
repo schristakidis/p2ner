@@ -33,11 +33,11 @@ vlc_defaults = {
                },
     'linux':{
             'cfile': " -I dummy --ignore-config --sout=#duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'file': " -I dummy    --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'webcam': ' -I dummy --ignore-config v4l2:// :input-slave=alsa://pulse   --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,acodec=mp4a,ab=32,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+            'file': " -I dummy --ignore-config     --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mpga,ab=128,channels=2,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
+            'webcam': ' -I dummy --ignore-config v4l2:// :input-slave=alsa://pulse   --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,acodec=mpga,ab=128,channels=2,samplerate=44100}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
             'dstream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
-            'stream': ' -I dummy  --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
-             'tv': " -I dummy   --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
+            'stream': ' -I dummy  --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mpga,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+             'tv': " -I dummy   --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mpga,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
              }
     }
 
