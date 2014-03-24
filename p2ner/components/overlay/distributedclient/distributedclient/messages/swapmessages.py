@@ -66,11 +66,11 @@ class AcceptSwapMessage(ControlMessage):
         self['overlay'].recAcceptSwap(peer,message.peer,message.swapid)
 
     @classmethod
-    def send(cls, sid, swapid,peerlist, peer, out,suc_func=None,err_func=None):
+    def send(cls, sid, swapid,peerlist, peer, out,suc_func=None,err_func=None,args=None):
         return out.send(cls, Container(streamid=sid,swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class InitSwapTableMessage(AcceptSwapMessage):
-    type='peerlistmessage'
+    type='swappeerlistmessage'
     code=MSG.INIT_SWAP_TABLE
     ack=True
 
@@ -88,10 +88,10 @@ class AskLockMessage(ControlMessage):
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAskLock(peer,message.peer[0],message.streamid)
+        self['overlay'].recAskLock(peer,message.peer[0],message.swapid)
 
     @classmethod
-    def send(cls, sid,swapid, peerlist, peer, out,suc_func=None,err_func=None):
+    def send(cls, sid,swapid, peerlist, peer, out,suc_func=None,err_func=None,args=None):
         return out.send(cls, Container(streamid=sid, swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class AnswerLockMessage(ControlMessage):
@@ -136,7 +136,7 @@ class FinalSwapPeerListMessage(SwapPeerListMessage):
 
 
     def action(self,message,peer):
-        self['overlay'].recFinalSwapTable(peer,message.peer)
+        self['overlay'].recFinalSwapTable(peer,message.peer,message.swapid)
 
 class SateliteMessage(ControlMessage):
     type='satelitemessage'
