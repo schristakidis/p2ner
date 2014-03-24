@@ -229,8 +229,10 @@ class DistributedClient(Overlay):
             return
 
         ip=self.root.netChecker.localIp
+        port=self.root.netChecker.controlPort
+
         m=md5()
-        m.update(ip+str(time()))
+        m.update(ip+str(port)+str(time()))
         h=m.hexdigest()
         h=h[:len(h)/8]
         swapid=int(h,16)
@@ -841,6 +843,7 @@ class DistributedClient(Overlay):
 
     def sendUpdatedTableSuccess(self,peer,args):
         swapid=args
+        self.log.debug('updated table for %s to %s sent succesful'%(swapid,peer))
         self.swapState[swapid][STATE]=WAIT_FINAL_TABLE
         self.swapState[swapid][MSGS][peer]=reactor.callLater(5,self.checkStatus,swapid,peer)
 
@@ -948,6 +951,8 @@ class DistributedClient(Overlay):
             self.neighbours.append(peer)
             self.actionCompleted(swapid,peer)
             self.satelite -=1
+
+        self.swapState.pop(swapid)
 
         self.log.info('satelite %d',self.satelite)
         self.log.info('table %s',self.getNeighbours())
