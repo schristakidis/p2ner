@@ -17,7 +17,7 @@
 from pkg_resources import iter_entry_points, working_set, Environment
 import os, sys
 
-_entry_points = {   
+_entry_points = {
     "engine"        :   "p2ner.%s.engine",
     "stream"        :   "p2ner.%s.stream",
     "scheduler"     :   "p2ner.%s.scheduler",
@@ -31,7 +31,8 @@ _entry_points = {
     "input"         :   "p2ner.%s.input",
     "output"        :   "p2ner.%s.output",
     "plugin"        :   "p2ner.%s.plugin",
-    "stats"         :   "p2ner.%s.stats"
+    "stats"         :   "p2ner.%s.stats",
+    "flowcontrol"         :   "p2ner.%s.flowcontrol"
 }
 
 COMPONENTS_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -41,16 +42,16 @@ pkg_env = Environment([COMPONENTS_DIR])
 for name in pkg_env:
     working_set.require(pkg_env[name][0].key)
 
-sys.path.append(  COMPONENTS_DIR)  
+sys.path.append(  COMPONENTS_DIR)
 
 def getComponents(ctype):
     """Get all the components of a given type
-    
+
     :param ctype: the component's type
     :type ctype: string
     :returns: {"ComponentName":ComponentClass,...}
     :rtype: dict
-    
+
     """
     ret = {}
     if ctype not in _entry_points:
@@ -61,12 +62,12 @@ def getComponents(ctype):
 
 def getComponentsInterfaces(ctype):
     """Get component's interface from a given component type
-    
+
     :param ctype: the component's type
     :type ctype: string
     :returns: {"ComponentName":ComponentClass,...}
     :rtype: dict
-    
+
     """
     ret = {}
     if ctype not in _entry_points:
@@ -77,14 +78,14 @@ def getComponentsInterfaces(ctype):
 
 def loadComponent(ctype, cname):
     """Load a component's class
-    
+
     :param ctype: the component's type
     :type ctype: string
     :param cname: the component's name
     :type cname: string
     :returns: Instantiable class
     :rtype: Class
-    
+
     """
     ret = []
     if ctype not in _entry_points:
@@ -104,13 +105,13 @@ def loadComponent(ctype, cname):
 
 def getComponentConfig(ctype, cname):
     """Load a component's config
-    
+
     :param ctype: the component's type
     :type ctype: string
     :param cname: the component's name
     :type cname: string
     :returns: the component's config
-    
+
     """
     ret = []
     if ctype not in _entry_points:

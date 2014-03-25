@@ -20,7 +20,7 @@ from p2ner.base.Peer import Peer
 from p2ner.base.BlockMessage import BlockMessage
 from random import choice
 from construct import Container
-
+from p2ner.core.components import loadComponent
 import bora
 import pprint
 
@@ -52,7 +52,7 @@ def bpuller_thread(pipe):
     for b in bora.bpuller():
         #print "Asking for data to send"
         reactor.callFromThread(pipe.produceblock)
-        
+
 def bws_thread(pipe, interval=100000):
     pp = pprint.PrettyPrinter(indent=4)
     for b in bora.bwsiter(interval):
@@ -66,6 +66,8 @@ class BoraElement(PipeElement):
         self.to = to
         self.port = port
         self.schedulers = {}
+        flowControl = loadComponent('flowcontrol', 'DistFlowControl')
+        self.flowControl = flowControl(_parent=self)
         reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
 
 
@@ -127,7 +129,7 @@ class BoraElement(PipeElement):
         print 'listening to port  ',self.port
         reactor.callInThread(biter_thread, self)
         reactor.callInThread(bpuller_thread, self)
-        reactor.callInThread(bws_thread, self, 100000)
+        reactor.callInThread(self.flowControl.bws_thread)
 
     def getscheduler(self, streamid):
         ret = None
