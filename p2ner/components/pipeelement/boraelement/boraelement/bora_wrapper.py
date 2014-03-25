@@ -87,7 +87,7 @@ class BoraElement(PipeElement):
         else:
             ip=peer.ip
 
-        reactor.callInThread(bora.send_block, scheduler.stream.id, block, ip, getattr(peer, to))
+        reactor.callLater(0, bora.send_block, scheduler.stream.id, block, ip, getattr(peer, to))
         return 0
 
     def getreceiving(self, r, scheduler):
@@ -106,14 +106,14 @@ class BoraElement(PipeElement):
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
         ret = bora.get_block_content (scheduler.stream.id, blockid)
-        reactor.callInThread(bora.del_block, scheduler.stream.id, blockid)
+        reactor.callLater(0, bora.del_block, scheduler.stream.id, blockid)
         return ret
 
     def inputblock(self, r, scheduler, bid, data):
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
-        reactor.callInThread(bora.add_block, scheduler.stream.id, bid, data)
+        reactor.callLater(0, bora.add_block, scheduler.stream.id, bid, data)
 
     def listen(self, d):
 
