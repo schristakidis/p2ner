@@ -22,6 +22,7 @@ from random import choice
 from construct import Container
 
 import bora
+import pprint
 
 
 class Block(object):
@@ -43,14 +44,20 @@ def biter_thread(pipe):
     for b in bora.biter():
         print "block", b, "RECV"
         block = Container(streamid=b[0], blockid=b[1])
-        print "BITER BLOCK",block
+        #print "BITER BLOCK",block
         r = scanBlocks(block)
         reactor.callFromThread(pipe.triggerActions, r, block)
 
 def bpuller_thread(pipe):
     for b in bora.bpuller():
-        print "Asking for data to send"
+        #print "Asking for data to send"
         reactor.callFromThread(pipe.produceblock)
+        
+def bws_thread(pipe, interval=100000):
+    pp = pprint.PrettyPrinter(indent=4)
+    for b in bora.bwsiter(interval):
+        pp.pprint(b)
+        reactor.callFromThread(bora.bws_set, 100000, 1000000)
 
 class BoraElement(PipeElement):
 
@@ -92,10 +99,10 @@ class BoraElement(PipeElement):
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
         incomplete = bora.incomplete_block_list()
-        print "incomplete:", incomplete
+        #print "incomplete:", incomplete
         if len(incomplete):
             incomplete = [i for i in incomplete if incomplete[0]==scheduler.stream.id]
-        print "incomplete2", incomplete
+        #print "incomplete2", incomplete
         return incomplete
 
     def popblockdata(self, r, scheduler, blockid):
@@ -120,6 +127,7 @@ class BoraElement(PipeElement):
         print 'listening to port  ',self.port
         reactor.callInThread(biter_thread, self)
         reactor.callInThread(bpuller_thread, self)
+        reactor.callInThread(bws_thread, self, 100000)
 
     def getscheduler(self, streamid):
         ret = None
@@ -145,14 +153,14 @@ class BoraElement(PipeElement):
             raise IndexError("There is no such scheduler to unregister")
 
     def produceblock(self, r=None):
-        print "PRODUCEBLOCK"
+        #print "PRODUCEBLOCK"
         '''
         remove this and make a new el for more sophisticated scheduler prio selection
         '''
         sl = self.schedulers.keys()
         if len(sl):
             s = choice(sl)
-            print "CALLING SCHEDULER"
+            #print "CALLING SCHEDULER"
             reactor.callLater(0, s.produceBlock)
 
     def triggerActions(self, scannedblocks, message, peer=None):
