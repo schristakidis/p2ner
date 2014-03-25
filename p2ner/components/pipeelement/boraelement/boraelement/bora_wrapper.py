@@ -57,7 +57,7 @@ def bws_thread(pipe, interval=100000):
     pp = pprint.PrettyPrinter(indent=4)
     for b in bora.bwsiter(interval):
         pp.pprint(b)
-        reactor.callFromThread(bora.bws_set, 100000)
+        reactor.callFromThread(bora.bws_set, 100000, 1000000)
 
 class BoraElement(PipeElement):
 
