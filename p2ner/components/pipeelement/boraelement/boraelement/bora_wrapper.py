@@ -53,12 +53,6 @@ def bpuller_thread(pipe):
         #print "Asking for data to send"
         reactor.callFromThread(pipe.produceblock)
 
-def bws_thread(pipe, interval=100000):
-    pp = pprint.PrettyPrinter(indent=4)
-    for b in bora.bwsiter(interval):
-        pp.pprint(b)
-        reactor.callFromThread(bora.bws_set, 100000, 1000000)
-
 class BoraElement(PipeElement):
 
     def initElement(self, port=30000, to='dataPort', **kwargs):
@@ -129,7 +123,7 @@ class BoraElement(PipeElement):
         print 'listening to port  ',self.port
         reactor.callInThread(biter_thread, self)
         reactor.callInThread(bpuller_thread, self)
-        reactor.callInThread(self.flowControl.bws_thread)
+        self.flowControl.start()
 
     def getscheduler(self, streamid):
         ret = None

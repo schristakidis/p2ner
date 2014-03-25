@@ -19,6 +19,12 @@ import time
 import bora
 import pprint
 
+def bws_thread(flowcontrol, interval):
+        pp = pprint.PrettyPrinter(indent=4)
+        for b in bora.bwsiter(interval):
+            pp.pprint(b)
+            reactor.callFromThread(flowcontrol.update,b)
+            
 class DistFlowControl(FlowControl):
     def initFlowControl(self,*args,**kwargs):
         self.peers={}
@@ -29,20 +35,23 @@ class DistFlowControl(FlowControl):
         self.bwHistory=[]
         self.errorHistory=[]
         self.historySize=int(1/self.Tsend)
-        self.umax=0
+        self.umax=10000
         self.maxumax=self.umax
         self.u=4
         self.errorPhase=False
         self.recoveryPhase=False
+        
+    def start(self):
+        reactor.callInThread(bws_thread, self, self.TsendRef)
 
     def update(self,data):
         ackSum=0
         errSum=0
         print data
         for peer in data['peer_stats']:
-            p=(peer.host,peer.port)
+            p=(peer["host"],peer["port"])
             if p not in self.peers:
-                self.peers.append(p)
+                #self.peers.append(p)
                 self.peers[p]={}
 
             self.peers[p]['lastRtt']=peer['avgRTT']
@@ -110,8 +119,11 @@ class DistFlowControl(FlowControl):
 
         if executeAlgo:
             self.setUmax()
+        else:
+            self.send_bw()
 
     def setUmax(self):
+        """
         tumax = sorted(self.bwHistory)
         try:
             self.umax = tumax[-3]
@@ -119,7 +131,8 @@ class DistFlowControl(FlowControl):
             self.umax = tumax[0]
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
-
+        """
+        
         if not self.errorPhase and self.errorsPer>5:
             self.errorPhase=True
             self.recoveryPhase=False
@@ -162,17 +175,12 @@ class DistFlowControl(FlowControl):
         print self.peers
         print self.u
         print self.Tsend
+        self.send_bw()
 
-    def bws_thread(self):
-        interval=self.TsendRef*10**6
-        pp = pprint.PrettyPrinter(indent=4)
-        for b in bora.bwsiter(interval):
-            pp.pprint(b)
-            reactor.callInThread(self.update,b)
-            #interval=self.Tsend*10**6
-
-            reactor.callFromThread(bora.bws_set, 100000, 1000000)
-
+    def send_bw(self):
+        print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
+        bora.bws_set(int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
+        
 
 
 
