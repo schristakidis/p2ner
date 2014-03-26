@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 from p2ner.abstract.flowcontrol import FlowControl
-from twisted.internet import reactor
+from twisted.internet import reactor,task
 import time
 import bora
 import pprint
@@ -22,9 +22,9 @@ import pprint
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
         for b in bora.bwsiter(interval):
-            pp.pprint(b)
+            # pp.pprint(b)
             reactor.callFromThread(flowcontrol.update,b)
-            
+
 class DistFlowControl(FlowControl):
     def initFlowControl(self,*args,**kwargs):
         self.peers={}
@@ -35,31 +35,41 @@ class DistFlowControl(FlowControl):
         self.bwHistory=[]
         self.errorHistory=[]
         self.historySize=int(1/self.Tsend)
+        self.bwHistorySize=50
         self.umax=10000
         self.maxumax=self.umax
         self.u=4
         self.errorPhase=False
         self.recoveryPhase=False
-        
+        self.loopingCall=task.LoopingCall(self.sendBWstats)
+        self.stats=[]
+        self.count=0
+        self.errorsPer=0
+        self.difBw=0
+        self.controlBw=0
+        self.actualU=0
+        self.lastBW=0
+
+
+
     def start(self):
         reactor.callInThread(bws_thread, self, self.TsendRef)
+        self.loopingCall.start(0.1)
 
     def update(self,data):
         ackSum=0
         errSum=0
-        print data
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if p not in self.peers:
-                #self.peers.append(p)
                 self.peers[p]={}
 
-            self.peers[p]['lastRtt']=peer['avgRTT']
-            self.peers[p]['lastStt']=peer['avgSTT']
-            self.peers[p]['minRtt']=peer['minRTT']
-            self.peers[p]['minStt']=peer['minSTT']
-            self.peers[p]['errorRtt']=peer['errRTT']
-            self.peers[p]['errorStt']=peer['errSTT']
+            self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
+            self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
+            self.peers[p]['minRtt']=peer['minRTT']*pow(10,-6)
+            self.peers[p]['minStt']=peer['minSTT']*pow(10,-6)
+            self.peers[p]['errorRtt']=peer['errRTT']*pow(10,-6)
+            self.peers[p]['errorStt']=peer['errSTT']*pow(10,-6)
             if not self.peers[p]['errorStt']:
                 self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05
                 self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05
@@ -78,8 +88,8 @@ class DistFlowControl(FlowControl):
         lastAck=data['last_ack']
         executeAlgo=True
         if lastAck:
-            self.rtt=lastAck['RTT']
-            self.stt=lastAck['STT']
+            self.rtt=lastAck['RTT']*pow(10,-6)
+            self.stt=lastAck['STT']*pow(10,-6)
             lastPeer=(lastAck['host'],lastAck['port'])
             self.minRtt=self.peers[lastPeer]['minRtt']
             self.minStt=self.peers[lastPeer]['minStt']
@@ -123,7 +133,16 @@ class DistFlowControl(FlowControl):
             self.send_bw()
 
     def setUmax(self):
-        """
+        bw=bora.get_bw_msg()
+        for b in bw:
+            self.bwHistory.append(b['bw'])
+        if len(self.bwHistory)>self.bwHistorySize:
+            self.bwHistory=self.bwHistory[-self.bwHistorySize:]
+
+        if not self.bwHistory:
+            self.send_bw()
+            return
+
         tumax = sorted(self.bwHistory)
         try:
             self.umax = tumax[-3]
@@ -131,8 +150,7 @@ class DistFlowControl(FlowControl):
             self.umax = tumax[0]
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
-        """
-        
+
         if not self.errorPhase and self.errorsPer>5:
             self.errorPhase=True
             self.recoveryPhase=False
@@ -173,15 +191,89 @@ class DistFlowControl(FlowControl):
         self.Tsend=self.TsendRef*round(self.u)/self.u
         self.u=int(round(self.u))
         print self.peers
-        print self.u
-        print self.Tsend
+        print 'uuuuuuuuuuuu:',self.u
+        print 'tsenddddd:',self.Tsend
+        print 'bwwwwwwwwww:',int(self.u*1408/self.Tsend)
+        print 'reported bw:',self.lastBW
+        print '---------------------------'
         self.send_bw()
 
     def send_bw(self):
         print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
         bora.bws_set(int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
-        
+        self.saveStats()
 
+    def sendBWstats(self):
+        try:
+            bwStats=bora.get_bw_stats()
+        except:
+            return
 
+        send=[]
+        for p in bwStats:
+            estBw=[]
+            peer=(p['ip'],p['port'])
+            for b in p['list']:
+                estBw.append(b['bw'])
 
+            if len(estBw):
+                estBw.sort(reverse=True)
+                cat=[]
+                temp=[]
+                for e in estBw:
+                    if not len(temp):
+                        temp.append(e)
+                    elif e+0.1*e>temp[0]:
+                        temp.append(e)
+                    else:
+                        cat.append(temp)
+                        temp=[]
+                if len(temp):
+                    cat.append(temp)
+
+                est=max([(len(b),b) for b in cat])
+                est=est[1]
+            else:
+                continue
+
+            bw=sum(est)/len(est)
+            t={}
+            t['ip']=peer[0]
+            t['port']=peer[1]
+            t['bw']=bw
+            send.append(t)
+
+        if send:
+            bora.send_bw_msg(send)
+
+    def saveStats(self):
+        temp={}
+        temp['x']=self.count
+        temp['u']=self.u
+        temp['umax']=self.umax
+        temp['rtt']=self.rtt
+        temp['stt']=self.stt
+        temp['minStt']=self.minStt
+        temp['minRtt']=self.minRtt
+        temp['errStt']=self.errStt
+        temp['errRtt']=self.errRtt
+        temp['ackRate']=self.ackRate
+        temp['refStt']=self.refStt
+        temp['qRef']=self.qRef
+        temp['qDelay']=self.qDelay
+        temp['errorP']=self.errorsPer
+        temp['Tsend']=self.Tsend
+        temp['difBw']=self.difBw
+        temp['controlBW']=self.controlBw
+        temp['actualU']=self.actualU
+        temp['lastBW']=self.lastBW
+        self.count+=1
+        self.stats.append(temp)
+        if len(self.stats)>20:
+            self.stats.pop(0)
+
+    def getStats(self):
+        ret=self.stats[:]
+        self.stats=[]
+        return ret
 
