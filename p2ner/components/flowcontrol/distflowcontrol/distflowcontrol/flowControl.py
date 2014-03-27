@@ -64,15 +64,15 @@ class DistFlowControl(FlowControl):
             if p not in self.peers:
                 self.peers[p]={}
 
-            self.peers[p]['lastRtt']=peer['avgRTT']#*pow(10,-6)
-            self.peers[p]['lastStt']=peer['avgSTT']#*pow(10,-6)
-            self.peers[p]['minRtt']=peer['minRTT']#*pow(10,-6)
-            self.peers[p]['minStt']=peer['minSTT']#*pow(10,-6)
-            self.peers[p]['errorRtt']=peer['errRTT']#*pow(10,-6)
-            self.peers[p]['errorStt']=peer['errSTT']#*pow(10,-6)
+            self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
+            self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
+            self.peers[p]['minRtt']=peer['minRTT']*pow(10,-6)
+            self.peers[p]['minStt']=peer['minSTT']*pow(10,-6)
+            self.peers[p]['errorRtt']=peer['errRTT']*pow(10,-6)
+            self.peers[p]['errorStt']=peer['errSTT']*pow(10,-6)
             if not self.peers[p]['errorStt']:
-                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05*pow(10,6)
-                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05*pow(10,6)
+                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05#*pow(10,6)
+                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05#*pow(10,6)
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
@@ -88,8 +88,8 @@ class DistFlowControl(FlowControl):
         lastAck=data['last_ack']
         executeAlgo=True
         if lastAck:
-            self.rtt=lastAck['RTT']#*pow(10,-6)
-            self.stt=lastAck['STT']#*pow(10,-6)
+            self.rtt=lastAck['RTT']*pow(10,-6)
+            self.stt=lastAck['STT']*pow(10,-6)
             lastPeer=(lastAck['host'],lastAck['port'])
             self.minRtt=self.peers[lastPeer]['minRtt']
             self.minStt=self.peers[lastPeer]['minStt']
@@ -181,9 +181,9 @@ class DistFlowControl(FlowControl):
         predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime)#-self.lastSleepTime)
         self.difBw=nackedSends*1408-predictedConsumeBw
 
-        ynl=self.qDelay*self.actualU*pow(10,-6)
+        ynl=self.qDelay*self.actualU#*pow(10,-6)
         yn=ynl+self.difBw
-        yref=self.qRef*self.actualU*pow(10,-6)
+        yref=self.qRef*self.actualU#*pow(10,-6)
         self.controlBw=(1-self.k)*(yref-yn)
         self.u=self.controlBw + self.actualU*self.TsendRef
         self.u=self.u/1408
@@ -253,16 +253,16 @@ class DistFlowControl(FlowControl):
         temp['x']=self.count
         temp['u']=self.u
         temp['umax']=self.umax
-        temp['rtt']=self.rtt*pow(10,-6)
-        temp['stt']=self.stt*pow(10,-6)
-        temp['minStt']=self.minStt*pow(10,-6)
-        temp['minRtt']=self.minRtt*pow(10,-6)
-        temp['errStt']=self.errStt*pow(10,-6)
-        temp['errRtt']=self.errRtt*pow(10,-6)
+        temp['rtt']=self.rtt#*pow(10,-6)
+        temp['stt']=self.stt#*pow(10,-6)
+        temp['minStt']=self.minStt#*pow(10,-6)
+        temp['minRtt']=self.minRtt#*pow(10,-6)
+        temp['errStt']=self.errStt#*pow(10,-6)
+        temp['errRtt']=self.errRtt#*pow(10,-6)
         temp['ackRate']=self.ackRate
-        temp['refStt']=self.refStt*pow(10,-6)
-        temp['qRef']=self.qRef*pow(10,-6)
-        temp['qDelay']=self.qDelay*pow(10,-6)
+        temp['refStt']=self.refStt#*pow(10,-6)
+        temp['qRef']=self.qRef#*pow(10,-6)
+        temp['qDelay']=self.qDelay#*pow(10,-6)
         temp['errorP']=self.errorsPer
         temp['Tsend']=self.Tsend
         temp['difBw']=self.difBw
