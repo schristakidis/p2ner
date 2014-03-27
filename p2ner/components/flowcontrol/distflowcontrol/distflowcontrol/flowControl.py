@@ -178,13 +178,13 @@ class DistFlowControl(FlowControl):
         nackedSends=self.lastNack-self.lastAckedSent
         self.actualU=self.umax-self.ackSent
         print time.time(),self.lastSentTime,self.lastSleepTime
-        predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime-self.lastSleepTime)
+        predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime)#-self.lastSleepTime)
         self.difBw=nackedSends*1408-predictedConsumeBw
 
-        ynl=self.qDelay*self.umax
+        ynl=self.qDelay*self.actualU*pow(10,-6)
         yn=ynl+self.difBw
-        yref=self.qRef*self.actualU
-        self.controlBw=(1-self.k)*(yref-yn)*pow(10,-6)
+        yref=self.qRef*self.actualU*pow(10,-6)
+        self.controlBw=(1-self.k)*(yref-yn)
         self.u=self.controlBw + self.actualU*self.TsendRef
         self.u=self.u/1408
         if round(self.u)<=0:
