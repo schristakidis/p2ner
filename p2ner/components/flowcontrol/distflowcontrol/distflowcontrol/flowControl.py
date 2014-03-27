@@ -22,7 +22,7 @@ import pprint
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
         for b in bora.bwsiter(interval):
-            # pp.pprint(b)
+            pp.pprint(b)
             reactor.callFromThread(flowcontrol.update,b)
 
 class DistFlowControl(FlowControl):
@@ -64,15 +64,15 @@ class DistFlowControl(FlowControl):
             if p not in self.peers:
                 self.peers[p]={}
 
-            self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
-            self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
-            self.peers[p]['minRtt']=peer['minRTT']*pow(10,-6)
-            self.peers[p]['minStt']=peer['minSTT']*pow(10,-6)
-            self.peers[p]['errorRtt']=peer['errRTT']*pow(10,-6)
-            self.peers[p]['errorStt']=peer['errSTT']*pow(10,-6)
+            self.peers[p]['lastRtt']=peer['avgRTT']#*pow(10,-6)
+            self.peers[p]['lastStt']=peer['avgSTT']#*pow(10,-6)
+            self.peers[p]['minRtt']=peer['minRTT']#*pow(10,-6)
+            self.peers[p]['minStt']=peer['minSTT']#*pow(10,-6)
+            self.peers[p]['errorRtt']=peer['errRTT']#*pow(10,-6)
+            self.peers[p]['errorStt']=peer['errSTT']#*pow(10,-6)
             if not self.peers[p]['errorStt']:
-                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05
-                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05
+                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05*pow(10,6)
+                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05*pow(10,6)
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
@@ -88,8 +88,8 @@ class DistFlowControl(FlowControl):
         lastAck=data['last_ack']
         executeAlgo=True
         if lastAck:
-            self.rtt=lastAck['RTT']*pow(10,-6)
-            self.stt=lastAck['STT']*pow(10,-6)
+            self.rtt=lastAck['RTT']#*pow(10,-6)
+            self.stt=lastAck['STT']#*pow(10,-6)
             lastPeer=(lastAck['host'],lastAck['port'])
             self.minRtt=self.peers[lastPeer]['minRtt']
             self.minStt=self.peers[lastPeer]['minStt']
@@ -103,7 +103,7 @@ class DistFlowControl(FlowControl):
 
             self.lastSentTime=lastAck['sent']
             self.lastAckedSent=lastAck['seq']
-            self.lastSleepTime=lastAck['sleep']*10**(-6)
+            self.lastSleepTime=lastAck['sleep']*pow(10,-6)
             self.lastNack=data['last_nack']
         else:
             executeAlgo=False
@@ -122,8 +122,9 @@ class DistFlowControl(FlowControl):
         self.totalDataSent=lastData['O_DATA_COUNTER']
         self.ackSent=lastData['O_ACK_DATA_COUNTER']
 
+        print 'AckHistoryyyyyyyyy:',self.ackHistory
         try:
-            self.ackRate = 1.0*sum(self.ackHistory)/(len(self.ackHistory)*self.Tsend)
+            self.ackRate = 1.0*sum(self.ackHistory)/(len(self.ackHistory)*self.Tsend)*1408
         except:
             self.ackRate=0
 
@@ -176,13 +177,14 @@ class DistFlowControl(FlowControl):
     def setU(self):
         nackedSends=self.lastNack-self.lastAckedSent
         self.actualU=self.umax-self.ackSent
+        print time.time(),self.lastSentTime,self.lastSleepTime
         predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime-self.lastSleepTime)
         self.difBw=nackedSends*1408-predictedConsumeBw
 
         ynl=self.qDelay*self.umax
         yn=ynl+self.difBw
         yref=self.qRef*self.actualU
-        self.controlBw=(1-self.k)*(yref-yn)
+        self.controlBw=(1-self.k)*(yref-yn)*pow(10,-6)
         self.u=self.controlBw + self.actualU*self.TsendRef
         self.u=self.u/1408
         if round(self.u)<=0:
@@ -251,16 +253,16 @@ class DistFlowControl(FlowControl):
         temp['x']=self.count
         temp['u']=self.u
         temp['umax']=self.umax
-        temp['rtt']=self.rtt
-        temp['stt']=self.stt
-        temp['minStt']=self.minStt
-        temp['minRtt']=self.minRtt
-        temp['errStt']=self.errStt
-        temp['errRtt']=self.errRtt
+        temp['rtt']=self.rtt*pow(10,-6)
+        temp['stt']=self.stt*pow(10,-6)
+        temp['minStt']=self.minStt*pow(10,-6)
+        temp['minRtt']=self.minRtt*pow(10,-6)
+        temp['errStt']=self.errStt*pow(10,-6)
+        temp['errRtt']=self.errRtt*pow(10,-6)
         temp['ackRate']=self.ackRate
-        temp['refStt']=self.refStt
-        temp['qRef']=self.qRef
-        temp['qDelay']=self.qDelay
+        temp['refStt']=self.refStt*pow(10,-6)
+        temp['qRef']=self.qRef*pow(10,-6)
+        temp['qDelay']=self.qDelay*pow(10,-6)
         temp['errorP']=self.errorsPer
         temp['Tsend']=self.Tsend
         temp['difBw']=self.difBw
