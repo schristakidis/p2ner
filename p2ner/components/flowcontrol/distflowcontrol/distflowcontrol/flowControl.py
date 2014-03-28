@@ -155,7 +155,7 @@ class DistFlowControl(FlowControl):
             self.errorPhase=True
             self.recoveryPhase=False
 
-        if False:#self.errorPhase:
+        if self.errorPhase:
             self.umax=self.umax/2
             self.prevumax=self.maxumax/30
 
@@ -176,7 +176,7 @@ class DistFlowControl(FlowControl):
     def setU(self):
         nackedSends=self.lastNack-self.lastAckedSent
         self.actualU=self.umax-self.ackSent
-        predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime)#-self.lastSleepTime)
+        predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime-self.lastSleepTime)
         self.difBw=nackedSends*1408-predictedConsumeBw
 
         ynl=self.qDelay*self.actualU
@@ -250,9 +250,9 @@ class DistFlowControl(FlowControl):
         temp={}
         temp['x']=self.count
         temp['u']=self.u
-        temp['umax']=self.umax
+        temp['umax']=self.umax*8/1024
         temp['rtt']=self.rtt
-        temp['stt']=self.stt#
+        temp['stt']=self.stt
         temp['minStt']=self.minStt
         temp['minRtt']=self.minRtt
         temp['errStt']=self.errStt
