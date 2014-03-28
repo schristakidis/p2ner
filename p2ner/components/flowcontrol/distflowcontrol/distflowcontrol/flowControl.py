@@ -38,7 +38,7 @@ class DistFlowControl(FlowControl):
         self.bwHistorySize=50
         self.umax=10000
         self.maxumax=self.umax
-        self.u=4
+        self.u=2
         self.errorPhase=False
         self.recoveryPhase=False
         self.loopingCall=task.LoopingCall(self.sendBWstats)
@@ -71,8 +71,8 @@ class DistFlowControl(FlowControl):
             self.peers[p]['errorRtt']=peer['errRTT']*pow(10,-6)
             self.peers[p]['errorStt']=peer['errSTT']*pow(10,-6)
             if not self.peers[p]['errorStt']:
-                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05#*pow(10,6)
-                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05#*pow(10,6)
+                self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05
+                self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
@@ -122,7 +122,6 @@ class DistFlowControl(FlowControl):
         self.totalDataSent=lastData['O_DATA_COUNTER']
         self.ackSent=lastData['O_ACK_DATA_COUNTER']
 
-        print 'AckHistoryyyyyyyyy:',self.ackHistory
         try:
             self.ackRate = 1.0*sum(self.ackHistory)/(len(self.ackHistory)*self.Tsend)*1408
         except:
@@ -156,7 +155,7 @@ class DistFlowControl(FlowControl):
             self.errorPhase=True
             self.recoveryPhase=False
 
-        if self.errorPhase:
+        if False:#self.errorPhase:
             self.umax=self.umax/2
             self.prevumax=self.maxumax/30
 
@@ -177,13 +176,12 @@ class DistFlowControl(FlowControl):
     def setU(self):
         nackedSends=self.lastNack-self.lastAckedSent
         self.actualU=self.umax-self.ackSent
-        print time.time(),self.lastSentTime,self.lastSleepTime
         predictedConsumeBw=self.actualU*(time.time()-self.lastSentTime)#-self.lastSleepTime)
         self.difBw=nackedSends*1408-predictedConsumeBw
 
-        ynl=self.qDelay*self.actualU#*pow(10,-6)
+        ynl=self.qDelay*self.actualU
         yn=ynl+self.difBw
-        yref=self.qRef*self.actualU#*pow(10,-6)
+        yref=self.qRef*self.actualU
         self.controlBw=(1-self.k)*(yref-yn)
         self.u=self.controlBw + self.actualU*self.TsendRef
         self.u=self.u/1408
@@ -253,22 +251,22 @@ class DistFlowControl(FlowControl):
         temp['x']=self.count
         temp['u']=self.u
         temp['umax']=self.umax
-        temp['rtt']=self.rtt#*pow(10,-6)
-        temp['stt']=self.stt#*pow(10,-6)
-        temp['minStt']=self.minStt#*pow(10,-6)
-        temp['minRtt']=self.minRtt#*pow(10,-6)
-        temp['errStt']=self.errStt#*pow(10,-6)
-        temp['errRtt']=self.errRtt#*pow(10,-6)
-        temp['ackRate']=self.ackRate
-        temp['refStt']=self.refStt#*pow(10,-6)
-        temp['qRef']=self.qRef#*pow(10,-6)
-        temp['qDelay']=self.qDelay#*pow(10,-6)
+        temp['rtt']=self.rtt
+        temp['stt']=self.stt#
+        temp['minStt']=self.minStt
+        temp['minRtt']=self.minRtt
+        temp['errStt']=self.errStt
+        temp['errRtt']=self.errRtt
+        temp['ackRate']=self.ackRate*8/1024
+        temp['refStt']=self.refStt
+        temp['qRef']=self.qRef
+        temp['qDelay']=self.qDelay
         temp['errorP']=self.errorsPer
         temp['Tsend']=self.Tsend
         temp['difBw']=self.difBw
         temp['controlBW']=self.controlBw
-        temp['actualU']=self.actualU
-        temp['lastBW']=self.lastBW
+        temp['actualU']=self.actualU*8/1024
+        temp['lastBW']=self.lastBW*8/1024
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
