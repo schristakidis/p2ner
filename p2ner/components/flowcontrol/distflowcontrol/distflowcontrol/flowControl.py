@@ -22,7 +22,7 @@ import pprint
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
         for b in bora.bwsiter(interval):
-            pp.pprint(b)
+            #pp.pprint(b)
             reactor.callFromThread(flowcontrol.update,b)
 
 class DistFlowControl(FlowControl):
@@ -122,7 +122,7 @@ class DistFlowControl(FlowControl):
         self.totalDataSent=lastData['O_DATA_COUNTER']
         self.ackSent=lastData['O_ACK_DATA_COUNTER']
 
-        print 'AckHistoryyyyyyyyy:',self.ackHistory
+        #print 'AckHistoryyyyyyyyy:',self.ackHistory
         try:
             self.ackRate = 1.0*sum(self.ackHistory)/(len(self.ackHistory)*self.Tsend)*1408
         except:
@@ -192,12 +192,12 @@ class DistFlowControl(FlowControl):
 
         self.Tsend=self.TsendRef*round(self.u)/self.u
         self.u=int(round(self.u))
-        print self.peers
-        print 'uuuuuuuuuuuu:',self.u
-        print 'tsenddddd:',self.Tsend
-        print 'bwwwwwwwwww:',int(self.u*1408/self.Tsend)
-        print 'reported bw:',self.lastBW
-        print '---------------------------'
+        #print self.peers
+        #print 'uuuuuuuuuuuu:',self.u
+        #print 'tsenddddd:',self.Tsend
+        #print 'bwwwwwwwwww:',int(self.u*1408/self.Tsend)
+        #print 'reported bw:',self.lastBW
+        #print '---------------------------'
         self.send_bw()
 
     def send_bw(self):
