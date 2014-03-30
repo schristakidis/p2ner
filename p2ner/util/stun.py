@@ -30,11 +30,11 @@ def enable_logging():
     log.setLevel(logging.DEBUG)
 
 stun_servers_list = (
-    'stun.xten.com',       # 0
+    #'stun.xten.com',       # 0
     #'stun01.sipphone.com', # 1
     'stunserver.org',      # 2
     'stun.ideasip.com',    # 3 - no XOR-MAPPED-ADDRESS
-    'stun.softjoys.com',   # 4 - no XOR-MAPPED-ADDRESS
+    #'stun.softjoys.com',   # 4 - no XOR-MAPPED-ADDRESS
     'stun.voipbuster.com', # 5 - no XOR-MAPPED-ADDRESS
     'stun.voxgratia.org',  # 6
    # 'numb.viagenie.ca',    # 7

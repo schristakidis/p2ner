@@ -106,7 +106,7 @@ class BoraElement(PipeElement):
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
         ret = bora.get_block_content (scheduler.stream.id, blockid)
-        reactor.callLater(0, bora.del_block, scheduler.stream.id, blockid)
+        reactor.callLater(0, bora.del_block, scheduler.stream.id, blockid-1)
         return ret
 
     def inputblock(self, r, scheduler, bid, data):
