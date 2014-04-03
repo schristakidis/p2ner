@@ -18,6 +18,7 @@ from twisted.internet import reactor,task
 import time
 import bora
 import pprint
+from math import ceil
 
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
@@ -38,7 +39,7 @@ class DistFlowControl(FlowControl):
         self.bwHistorySize=50
         self.umax=10000
         self.maxumax=self.umax
-        self.u=2
+        self.u=4
         self.errorPhase=False
         self.recoveryPhase=False
         self.loopingCall=task.LoopingCall(self.sendBWstats)
@@ -77,6 +78,9 @@ class DistFlowControl(FlowControl):
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
 
+        if not self.peers:
+            self.send_bw()
+            return
         self.ackHistory.append(ackSum)
         self.errorHistory.append(errSum)
         if len(self.ackHistory)>self.historySize:
@@ -106,21 +110,27 @@ class DistFlowControl(FlowControl):
             self.lastSleepTime=lastAck['sleep']*pow(10,-6)
             self.lastNack=data['last_nack']
         else:
-            executeAlgo=False
+            executeAlgo=True
+            """
             self.minRtt=0
             self.minStt=0
             self.errRtt=0
             self.errStt=0
             self.stt=0
             self.rtt=0
+            """
 
         self.qDelay=self.stt-self.minStt
         self.qRef=2*(self.errStt-self.minStt)/4
         self.refStt=self.minStt+self.qRef
 
-        lastData=data['sent_data']
-        self.totalDataSent=lastData['O_DATA_COUNTER']
-        self.ackSent=lastData['O_ACK_DATA_COUNTER']
+        try:
+            lastData=data['sent_data']
+            self.totalDataSent=lastData['O_DATA_COUNTER']
+            self.ackSent=lastData['O_ACK_DATA_COUNTER']
+        except:
+            self.totalDataSent=0
+            self.ackSent=0
 
 
         try:
@@ -182,15 +192,19 @@ class DistFlowControl(FlowControl):
 
         ynl=self.qDelay*self.actualU
         yn=ynl+self.difBw
+        if yn<0:
+            yn=0
         yref=self.qRef*self.actualU
         self.controlBw=(1-self.k)*(yref-yn)
         self.u=self.controlBw + self.actualU*self.TsendRef
+        if self.errorPhase:
+            self.u=self.actualU*self.TsendRef
         self.u=self.u/1408
         if round(self.u)<=0:
-            self.u=1
+            self.u=2
 
-        self.Tsend=self.TsendRef*round(self.u)/self.u
-        self.u=int(round(self.u))
+        self.Tsend=self.TsendRef*ceil(self.u)/self.u
+        self.u=int(ceil(self.u))
         #print self.peers
         #print 'uuuuuuuuuuuu:',self.u
         #print 'tsenddddd:',self.Tsend
@@ -202,7 +216,8 @@ class DistFlowControl(FlowControl):
     def send_bw(self):
         print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
         bora.bws_set(int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
-        self.saveStats()
+        if self.peers:
+            self.saveStats()
 
     def sendBWstats(self):
         try:
