@@ -201,17 +201,7 @@ class DistributedClient(Overlay):
             self.statsLoopingCall.stop()
         except:
             pass
-        for p in self.neighbours:
-            try:
-                p.checkResponse.cancel()
-            except:
-                pass
-        if self.duringSwap:
-            for p in self.partnerTable:
-                try:
-                    p.checkRespone.cancel()
-                except:
-                    pass
+
         ClientStoppedMessage.send(self.stream.id, self.server, self.controlPipe)
         ClientStoppedMessage.send(self.stream.id, self.producer, self.controlPipe)
         for n in self.getNeighbours():
@@ -245,46 +235,22 @@ class DistributedClient(Overlay):
         self.swapState[swapid][ROLE]=INITIATOR
         self.swapState[swapid][STATE]=ASK_SWAP
         self.swapState[swapid][PARTNER]=peer
+        check = reactor.callLater(2,self.checkStatus,swapid,peer)
+        self.swapState[swapid][MSGS]={}
+        self.swapState[swapid][MSGS][peer]=check
 
         self.passiveInitPeer=peer
 
         print 'sending askswap to:',peer,swapid
         self.log.warning('%s',self.getNeighbours())
         self.log.debug('sending ask swap message to %s %s'%(peer,swapid))
-        AskSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe,err_func=self.askFailed,suc_func=self.askReceived,args=swapid)
-
-    def askFailed(self,peer,args=None):
-        swapid=args
-        self.swapState.pop(swapid)
-        self.log.error('ask swap to %s failed',peer)
-        print 'ask swap to ',peer,'failed'
-        setValue(self,'log','ask swap failed')
-        self.initiator=False
-        self.passiveInitPeer=None
-
-    def askReceived(self,peer,args=None):
-        swapid=args
-        counter(self,'swapInitiators')
-        try:
-            self.validateSwapMessage(peer,swapid,ASK_SWAP)
-        except SwapError as e:
-            print 'errorrrr'
-            print e.message
-            print e.peer
-            print e.swapSnapshot
-            return
-
-        self.swapState[swapid][STATE]=WAIT_ASK_RESPONSE
-        check = reactor.callLater(3,self.checkStatus,swapid,peer)
-        self.swapState[swapid][MSGS]={}
-        self.swapState[swapid][MSGS][peer]=check
-
+        AskSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe)
 
 
     ###RECEIVED REJECT SWAP
     def recRejectSwap(self,peer,swapid):
         try:
-            self.validateSwapMessage(peer,swapid,WAIT_ASK_RESPONSE)
+            self.validateSwapMessage(peer,swapid,ASK_SWAP)
         except SwapError as e:
             print 'errorrrr'
             print e.message
@@ -300,7 +266,7 @@ class DistributedClient(Overlay):
     ###RECEIVED ACCEPT SWAP
     def recAcceptSwap(self,peer,peerlist,swapid):
         try:
-            self.validateSwapMessage(peer,swapid,WAIT_ASK_RESPONSE)
+            self.validateSwapMessage(peer,swapid,ASK_SWAP)
         except SwapError as e:
             print 'errorrrr'
             print e.message
@@ -327,25 +293,11 @@ class DistributedClient(Overlay):
         self.log.debug('sending initial routing table to passive initiator %s',self.passiveInitPeer)
         neighs=[n for n in self.getNeighbours()]
         neighs.remove(self.passiveInitPeer)
-        self.swapState[swapid][STATE]=SEND_TABLE
-        InitSwapTableMessage.send(self.stream.id,swapid,neighs,self.passiveInitPeer,self.controlPipe,err_func=self.sendTableFailed,suc_func=self.sendTableSuccess)
-
-    def sendTableSuccess(self,peer,args):
-        swapid=args
-        self.log.debug('initial table sent was succesful to %s',peer)
         self.swapState[swapid][STATE]=WAIT_LOCKS_UTABLE
         self.swapState[swapid][MSGS]={}
-        self.swapState[swapid][MSGS][peer]=reactor.callLater(5,self.checkStatus,swapid,peer)
+        self.swapState[swapid][MSGS][self.passiveInitPeer]=reactor.callLater(4,self.checkStatus,swapid,self.passiveInitPeer)
+        InitSwapTableMessage.send(self.stream.id,swapid,neighs,self.passiveInitPeer,self.controlPipe)
         self.sendLocks(swapid)
-
-    def sendTableFailed(self,peer,args):
-        swapid=args
-        self.log.warning('initial swap routing table delivery to %s failed',peer)
-        setValue(self,'log','initial swap routing table delivery failed')
-        self.initiator=False
-        self.duringSwap=False
-        self.cleanSwapState(swapid)
-        return
 
     def sendLocks(self,swapid):
         if self.initiator:
@@ -366,20 +318,12 @@ class DistributedClient(Overlay):
             p.partnerParticipateSwap=True
             p.waitLock=True
             self.log.debug('sending lock message for %s to %s'%(swapid,p))
-            AskLockMessage.send(self.stream.id,swapid,[pnode],p,self.controlPipe,err_func=self.lockFailed,suc_func=self.lockSent,args=swapid)
+            self.swapState[swapid][MSGS][p]=reactor.callLater(3,self.checkStatus,swapid,p)
+            AskLockMessage.send(self.stream.id,swapid,[pnode],p,self.controlPipe)
         if not availableNeighs:
             self.log.debug('there are no locks to send')
             self.checkLockFinished(swapid)
 
-    def lockFailed(self,peer,args):
-        swapid=args
-        peer.participateSwap=False
-        peer.partnerParticipateSwap=False
-        self.checkLockFinished(swapid)
-
-    def lockSent(self,peer,args):
-        swapid=args
-        self.swapState[swapid][MSGS][peer]=reactor.callLater(3,self.checkStatus,swapid,peer)
 
     ###REICEVED LOCK ANSWER
     def recAnsLock(self,peer,lock,swapid):
@@ -581,7 +525,7 @@ class DistributedClient(Overlay):
                 rtt=sum(p.lastRtt)/len(p.lastRtt)
             else:
                 self.log.error("can't perform swap with no rtt for %s",p)
-                raise ValueError("can't perform swap with no rtt for %s",p)
+                # raise ValueError("can't perform swap with no rtt for %s",p)
 
             temp[p]=count
             G.add_edge(-3,count,capacity=1,weight=int(1000*rtt))
@@ -644,33 +588,25 @@ class DistributedClient(Overlay):
         self.log.warning('new passive final %s',newPartnerTable)
 
         finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
-        if int(1000*initEnergy)<int(1000*finalHoodEnergy):
-            self.log.error("%s %s"%(initEnergy,finalHoodEnergy))
-            self.log.error('%s\n'%byass)
-            n=[-1,-2]+range(count)+[-3,-4]
-            for i in n:
-                for j in n:
-                    if G.get_edge_data(i,j):
-                        self.log.error('%s %s %s\n'%(i,j,G.get_edge_data(i,j)))
-            self.log.error('%s\n'%temp)
-            self.log.error('%s\n'%flowDict)
+        # if int(1000*initEnergy)<int(1000*finalHoodEnergy):
+        #     self.log.error("%s %s"%(initEnergy,finalHoodEnergy))
+        #     self.log.error('%s\n'%byass)
+        #     n=[-1,-2]+range(count)+[-3,-4]
+        #     for i in n:
+        #         for j in n:
+        #             if G.get_edge_data(i,j):
+        #                 self.log.error('%s %s %s\n'%(i,j,G.get_edge_data(i,j)))
+        #     self.log.error('%s\n'%temp)
+        #     self.log.error('%s\n'%flowDict)
         return (newTable,newPartnerTable,finalHoodEnergy)
 
     ###SENDING FINAL TABLE TO PASSIVE
     def sendFinalTable(self,swapid):
         self.log.debug('sending final swap table to %s',self.passiveInitPeer)
-        FinalSwapPeerListMessage.send(self.stream.id,swapid,self.newPartnerTable,self.passiveInitPeer,self.controlPipe,suc_func=self.finalSwapTableReceived,err_func=self.finalSwapTableFailed)
+        FinalSwapPeerListMessage.send(self.stream.id,swapid,self.newPartnerTable,self.passiveInitPeer,self.controlPipe)
         self.partnerPeer=self.passiveInitPeer
-
-    def finalSwapTableReceived(self,peer,args):
-        swapid=args
         self.swapState[swapid][STATE]=UPDATE_SATELITES
         self.updateSatelites(swapid)
-
-    def finalSwapTableFailed(self,peer,args):
-        swapid=args
-        self.log.error('failed to sent final swap table to %s',self.passiveInitPeer)
-        ###clean satelites
 
 
     def updateSatelites(self,swapid):
@@ -790,20 +726,11 @@ class DistributedClient(Overlay):
             self.swapState[swapid]={}
             self.swapState[swapid][ROLE]=PASSIVE
             self.swapState[swapid][PARTNER]=peer
-            self.swapState[swapid][STATE]=SEND_ACCEPT_SWAP
-            AcceptSwapMessage.send(self.stream.id,swapid,neighs,peer,self.controlPipe,suc_func=self.acceptReceived,err_func=self.acceptFailed,args=swapid)
+            self.swapState[swapid][STATE]=WAIT_INIT_TABLE
+            self.swapState[swapid][MSGS]={}
+            self.swapState[swapid][MSGS][peer] =reactor.callLater(2,self.checkStatus,swapid,peer)
+            AcceptSwapMessage.send(self.stream.id,swapid,neighs,peer,self.controlPipe)
 
-    def acceptReceived(self,peer,args=None):
-        swapid=args
-        self.swapState[swapid][STATE]=WAIT_INIT_TABLE
-        self.swapState[swapid][MSGS]={}
-        self.swapState[swapid][MSGS][peer] =reactor.callLater(3,self.checkStatus,swapid,peer)
-
-    def acceptFailed(self,peer,args=None):
-        swapid=args
-        self.cleanSwapState(swapid)
-        self.passiveInitiator=False
-        self.duringSwap=False
 
     ###RECEIVED INITIAL SWAP ROUTING TABLE
     def recInitSwapTable(self,peer,peerlist,swapid):
@@ -831,21 +758,10 @@ class DistributedClient(Overlay):
     def sendUpdatedSwapTable(self,swapid):
         self.log.debug('sending updated passive table to active initiator %s',self.initPeer)
         self.log.debug('%s',self.partnerTable[:])
-        SwapPeerListMessage.send(self.stream.id, swapid, self.partnerTable, self.initPeer, self.controlPipe,err_func=self.sendUpdatedTableFailed,suc_func=self.sendUpdatedTableSuccess)
-
-    def sendUpdatedTableFailed(self,peer,args):
-        swapid=args
-        self.duringSwap=False
-        self.passiveInitiator=False
-        self.log.warning('send updated table to %s failed',peer)
-        setValue(self,'log','send updated table to %s failed')
-        ###should free satelites
-
-    def sendUpdatedTableSuccess(self,peer,args):
-        swapid=args
-        self.log.debug('updated table for %s to %s sent succesful'%(swapid,peer))
         self.swapState[swapid][STATE]=WAIT_FINAL_TABLE
-        self.swapState[swapid][MSGS][peer]=reactor.callLater(5,self.checkStatus,swapid,peer)
+        self.swapState[swapid][MSGS][self.initPeer]=reactor.callLater(5,self.checkStatus,swapid,self.initPeer)
+        SwapPeerListMessage.send(self.stream.id, swapid, self.partnerTable, self.initPeer, self.controlPipe)
+
 
     ###RECEIVED FINAL SWAP TABLE
     def recFinalSwapTable(self,peer,table,swapid):
@@ -890,7 +806,8 @@ class DistributedClient(Overlay):
             self.swapState[swapid][ORIGINATOR]=peer
             self.swapState[swapid][PARTNER]=partner
             self.swapState[swapid][MSGS]={}
-            self.swapState[swapid][MSGS][peer]=None
+            self.swapState[swapid][STATE]=WAIT_UPDATE
+            self.swapState[swapid][MSGS][peer]=reactor.callLater(5,self.checkStatus, swapid,peer)
 
             peer.lockPartner=partner
             counter(self,'swapSatelites')
@@ -899,27 +816,9 @@ class DistributedClient(Overlay):
             self.tempSatelites+=1
             self.tempLastSatelite=time()
 
-            AnswerLockMessage.send(self.stream.id,swapid,True,peer,self.controlPipe,err_func=self.ansLockFailed,suc_func=self.ansLockSent)
+            AnswerLockMessage.send(self.stream.id,swapid,True,peer,self.controlPipe)
             self.log.debug('and accepted it %s'%swapid)
 
-    def ansLockFailed(self,peer,args):
-        swapid=args
-        if peer in self.swapState[swapid][MSGS].keys() and not self.swapState[swapid][MSGS][peer]:
-            self.swapState[swapId][MSGS].pop(peer)
-            self.satelite -=1
-            self.log.warning('failed to deliver possitive lock answer to %s',peer)
-        else:
-            self.log.error('anslock failed from an non existing peer')
-            self.log.error('peer:%s,swapid:%s,swapState:%s'%(peer,swapid,self.swapState))
-
-    def ansLockSent(self,peer,args):
-        swapid=args
-        if peer in self.swapState[swapid][MSGS].keys() and not self.swapState[swapid][MSGS][peer]:
-            self.swapState[swapid][STATE]=WAIT_UPDATE
-            self.swapState[swapid][MSGS][peer]=reactor.callLater(10,self.checkStatus, swapid,peer)
-        else:
-            self.log.error('ansLock succeded probably more than once')
-            self.log.error('peer:%s,swapid:%s,swapState:%s'%(peer,swapid,self.swapState))
 
 
     def recUpdateSatelite(self,peer,action,partner,swapid):
@@ -970,39 +869,45 @@ class DistributedClient(Overlay):
         if self.shouldStop:
             self._stop()
 
-    def checkStatus(self,status,peer=None):
-        setValue(self,'log','in checkstatus')
+
+    def checkStatus(self,swapid,peer):
+        status=self.swapState[swapid][STATE]
         if status==ASK_SWAP:
+            self.swapState.pop(swapid)
             self.initiator=False
-            self.log.warning('never got an answer for ask swap from %s',peer)
-            setValue(self,'log','never got an answer for ask swap')
-        elif status==ACCEPT_SWAP:
+            self.passiveInitPeer=None
+            self.log.error('never got an answer for ask swap from %s',peer)
+            print 'ask swap to ',peer,'failed'
+        elif status==WAIT_LOCKS_UTABLE:
+            if peer==self.passiveInitPeer:
+                self.log.error('initial swap routing table delivery to %s failed',peer)
+                self.initiator=False
+                self.duringSwap=False
+                #CLEAN SATELITES!!!!!!!!!!!!!!!!1
+                self.cleanSwapState(swapid)
+            else:
+                self.log.error('Ask log to %s failed',peer)
+                peer.participateSwap=False
+                peer.partnerParticipateSwap=False
+                self.checkLockFinished(swapid)
+        elif status==WAIT_INIT_TABLE:
+            self.log.error('send accept failed')
+            self.cleanSwapState(swapid)
+            self.passiveInitiator=False
+            self.duringSwap=False
+        elif status==WAIT_FINAL_TABLE:
             self.duringSwap=False
             self.passiveInitiator=False
-            self.log.warning('never got an answer for accept swap from %s',peer)
-            setValue(self,'log','never got an answer for accept swap')
-        elif status==SEND_INIT_TABLE:
-            self.log.warning('never got an answer for send init table from %s',peer)
-            self.initiator=False
-            self.duringSwap=False
-            setValue(self,'log','never got an answer for send init table ')
-            ###should clean satelites
-        elif status==LOCK_SENT:
-            peer.participateSwap=False
-            peer.partnerParticipateSwap=False
-            self.checkLockFinished()
-            self.log.warning('never got an answer for ask lock from %s',peer)
-            setValue(self,'log','never got an answer for ask lock')
-        elif status==WAIT_SWAP:
-            self.satelite -=1
-            self.log.warning('never got an answer as a satelite from %s',peer)
-            setValue(self,'log','never got an answer as a satelite')
-        elif status==SEND_UPDATE:
-            self.duringSwap=False
-            self.passiveInitiator=False
-            self.log.warning('never got an answer for send updated table from %s',peer)
-            setValue(self,'log','never got an answer for send updated table')
+            self.log.error('send updated table to %s failed',peer)
+            setValue(self,'log','send updated table to %s failed')
             ###should free satelites
+        elif status==WAIT_UPDATE:
+            self.swapState[swapid][MSGS].pop(peer)
+            self.satelite -=1
+            self.log.error('failed to deliver possitive lock answer to %s',peer)
+        else:
+            self.log.error('Unknown STATUSSSSSSSS %s'%status)
+
 
     def getEnergy(self):
         en=0
@@ -1141,7 +1046,7 @@ class DistributedClient(Overlay):
             raise SwapError('Received message for an unknown swap',peer,swapid,state,self.swapState)
         if state!=self.swapState[swapid][STATE]:
             self._logValidationError(peer,swapid,state)
-            self.log.error('Received swap message for a wrong state')
+            self.log.error('Received swap message for a wrong state %s %s'%(state,self.swapState[swapid][STATE]))
             raise SwapError('Received swap message for a wrong state',peer,swapid,state,self.swapState)
 
     def _logValidationError(self,peer,swapid,state):
