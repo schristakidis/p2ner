@@ -94,10 +94,9 @@ class AckElement(PipeElement):
                 duplicate=True
 
             port=self._parent.controlPipe.getElement(name="UDPPortElement").port
-            if int(uniform(0,10))<9:
-                ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK))
-                d = self.forwardnext("send", None, ack, peer)
-                reactor.callLater(0, d.callback, "")
+            ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK))
+            d = self.forwardnext("send", None, ack, peer)
+            reactor.callLater(0, d.callback, "")
 
             if duplicate:
                 #print 'IT WAS A DUPLICATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'

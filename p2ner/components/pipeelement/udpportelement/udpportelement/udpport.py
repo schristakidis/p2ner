@@ -19,6 +19,7 @@ import sys, socket
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import DatagramProtocol
 import time
+from random import uniform
 
 class UDPPortElement(PipeElement, DatagramProtocol):
 
@@ -87,6 +88,8 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         return res
 
     def sockwrite(self, data, host, port):
+        if uniform(0,10)>9:
+            return data
         if len(data):
             self.listener.write(data, (host, port))
         return data

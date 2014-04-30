@@ -24,6 +24,7 @@ from random import uniform
 from twisted.internet.threads import deferToThread
 from p2ner.util.utilities import findNextTCPPort
 from twisted.web.xmlrpc import Proxy
+import sys
 
 class xmlrpcControl(Interface,xmlrpc.XMLRPC):
 
@@ -197,6 +198,8 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
     def logRecord(self,record):
         if record.levelno%10==0:
             self.logger.addRecord(record)
+        if record.levelno==40:
+            sys.stderr.write(record.getMessage()+'\n')
 
     def xmlrpc_getRecords(self):
         d=self.logger.getRecords()

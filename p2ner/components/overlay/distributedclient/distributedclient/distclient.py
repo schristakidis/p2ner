@@ -638,8 +638,40 @@ class DistributedClient(Overlay):
                 inform['peer']=inpeer
                 p.swapAction=SUBSTITUTE
             SateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe,err_func=self.satUpdateFailed,suc_func=self.satUpdateSuccess)
-            self.log.debug('sending update satelite to %s',p)
+            self.log.debug('sending update satelite to %s with action %s',p,p.swapAction)
             print 'sending update satelite to ',p,' with action ',p.swapAction
+
+    def cleanSatelites(self,swapid):
+        available=[p for p in self.newTable if p.participateSwap]
+        self.log.warning('in clean satelites')
+        if not available:
+            self.finishSwap(swapid)
+            return
+
+        inpeer,port=self.root.checkNatPeer()
+        bw=int(self.trafficPipe.callSimple('getBW')/1024)
+
+        for p in available:
+            p.participateSwap=False
+            p.swapAction=CONTINUE
+            inform=None
+            SateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+            self.log.debug('sending clean update satelite to %s',p)
+            print 'sending clean update satelite to ',p,' with action ',p.swapAction
+
+        #merging table
+        newNeighs=[p for p in self.duringSwapNeighbours if p not in self.neighbours]
+        self.neighbours=self.neighbours+newNeighs
+        self.duringSwapNeighbours=[]
+
+        self.cleanSwapState(swapid)
+
+        self.initiator=False
+        self.passiveInitiator=False
+        self.duringSwap=False
+        self.swapState.pop(swapid)
+        if self.shouldStop:
+            self._stop()
 
     def mergeTempTable(self):
         newNeighs=[p for p in self.duringSwapNeighbours if p not in self.newTable]
@@ -822,7 +854,7 @@ class DistributedClient(Overlay):
 
 
     def recUpdateSatelite(self,peer,action,partner,swapid):
-        self.log.debug('received update satelite from %s with partner %s',peer,partner)
+        self.log.debug('received update satelite from %s with partner %s for %s',peer,partner,swapid)
 
         try:
             self.validateUpdateMessage(peer,action,partner,swapid,WAIT_UPDATE)
@@ -883,8 +915,7 @@ class DistributedClient(Overlay):
                 self.log.error('initial swap routing table delivery to %s failed',peer)
                 self.initiator=False
                 self.duringSwap=False
-                #CLEAN SATELITES!!!!!!!!!!!!!!!!1
-                self.cleanSwapState(swapid)
+                self.cleanSatelites(swapid)
             else:
                 self.log.error('Ask log to %s failed',peer)
                 peer.participateSwap=False
@@ -900,7 +931,7 @@ class DistributedClient(Overlay):
             self.passiveInitiator=False
             self.log.error('send updated table to %s failed',peer)
             setValue(self,'log','send updated table to %s failed')
-            ###should free satelites
+            self.cleanSatelites(swapid)
         elif status==WAIT_UPDATE:
             self.swapState[swapid][MSGS].pop(peer)
             self.satelite -=1
@@ -985,7 +1016,7 @@ class DistributedClient(Overlay):
 
     def collectStats(self):
         setValue(self,'energy',1000*self.getEnergy())
-        setValue(self,'neighbors',len(self.getNeighbours()))
+        setValue(self,'neighbours',len(self.getNeighbours()))
 
     def getVizirStats(self):
         ret=(self.tempSwaps,time()-self.tempLastSwap,self.tempSatelites,time()-self.tempLastSatelite)
