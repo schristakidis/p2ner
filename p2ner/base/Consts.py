@@ -85,3 +85,5 @@ class MessageCodes(object):
     ASK_INIT_NEIGHS=104
     CONFIRM_NEIGH=105
     PING_SWAP=106
+    ACK_UPDATE=107
+    CLEAN_SATELITE=108

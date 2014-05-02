@@ -159,7 +159,10 @@ class SateliteMessage(ControlMessage):
                 peer.ldataPort=p.peer.dataPort
                 peer.hpunch=p.peer.hpunch
 
-        self['overlay'].recUpdateSatelite(peer,message.action,message.peer,message.swapid)
+        self.notify(peer,message.action,message.peer,message.swapid)
+
+    def notify(self,peer,action,p,swapid):
+        self['overlay'].recUpdateSatelite(peer,action,p,swapid)
 
     @classmethod
     def send(cls, sid, swapid, action, partner,inform, peer, out,err_func=None,suc_func=None):
@@ -169,6 +172,31 @@ class SateliteMessage(ControlMessage):
             m=None
         msg = Container(streamid = sid,swapid=swapid, action=action,peer = partner,overlaymessage=m)
         return out.send(cls, msg, peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
+
+class CleanSateliteMessage(SateliteMessage):
+    type='satelitemessage'
+    code=MSG.CLEAN_SATELITE
+    ack=True
+
+    def notify(self,peer,action,p,swapid):
+        self['overlay'].recUpdateSatelite(peer,action,p,swapid,ack=False)
+
+class AckUpdateMessage(ControlMessage):
+    type='swapsidmessage'
+    code=MSG.ACK_UPDATE
+    ack=True
+
+    def trigger(self,message):
+        if self.stream.id!=message.streamid:
+            return False
+        return True
+
+    def action(self,message,peer):
+        self['overlay'].recAckUpdate(peer,message.swapid)
+
+    @classmethod
+    def send(cls,sid,swapid,peer,out,err_func=None,suc_func=None,args=None):
+        return out.send(cls,Container(streamid=sid,swapid=swapid),peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=args)
 
 class PingSwapMessage(ControlMessage):
     type='basemessage'
