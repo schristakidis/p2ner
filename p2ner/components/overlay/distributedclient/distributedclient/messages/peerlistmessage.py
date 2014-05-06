@@ -42,9 +42,7 @@ class PeerListMessage(ControlMessage):
     def action(self, message, peer):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
         for p in message.peer:
-            self['overlay'].sendAddNeighbour(p,peer)
-
-
+            self['overlay'].checkSendAddNeighbour(p,peer)
 
     @classmethod
     def send(cls, sid, peerlist, peer, out):
@@ -95,8 +93,7 @@ class AddNeighbourMessage(ControlMessage):
             peer.hpunch=message.peer.hpunch
         self.log.debug('received add neigh message from %s',peer)
         print 'received neigh message from ',peer
-        self['overlay'].addNeighbour(peer,temp=False)
-        ConfirmNeighbourMessage.send(self.stream.id,peer,self.controlPipe)
+        self['overlay'].checkAcceptNeighbour(peer)
 
     @classmethod
     def send(cls, id,port,bw, inpeer, peer, out):
