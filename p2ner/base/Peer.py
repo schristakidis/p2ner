@@ -111,6 +111,7 @@ class Peer(object):
             obj.lastRtt=[]
             obj.swapRtt=0
             obj.isNeighbour=False
+            obj.askedReplace=False
         return obj
 
 

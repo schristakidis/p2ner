@@ -77,6 +77,7 @@ class DistributedClient(Overlay):
         self.registerMessages()
         self.neighbours = []
         self.duringSwapNeighbours={}
+        self.removeDuringSwap=[]
         self.partnerTable=[]
         self.satelite=0
         self.initiator=False
@@ -167,14 +168,27 @@ class DistributedClient(Overlay):
 
     def addDuringSwapNeighbours(self):
         for peer,v in self.duringSwapNeighbours.items():
-            if v['INIT']:
+            if v['INIT'] and not self.shouldStop:
                 self.sendAddNeighbour(peer)
             else:
                 self.acceptNeighbour(peer)
 
+    def removeDuringSwapNeighbours(self):
+        for p in self.removeDuringSwap:
+            try:
+                self.log.debug('removing %s after swap',p)
+                self.neighbours.remove(p)
+            except:
+                self.log.error('could not remove %s after swap.Probably is not in the new table',p)
+
+        self.removeDuringSwap=[]
+
     def checkAddNeigh(self,peer):
         self.log.error('in check add neigh for %s',peer)
-        self.duringSwapNeighbours.pop(peer)
+        try:
+            self.duringSwapNeighbours.pop(peer)
+        except:
+            self.log.error('cannot remove neigh from during swap neighbours')
 
     def addProducer(self,peer):
         self.producer=peer
@@ -187,6 +201,8 @@ class DistributedClient(Overlay):
 
     def removeNeighbour(self, peer):
         try:
+            if self.duringSwap:
+                self.removeDuringSwap.append(peer)
             self.neighbours.remove(peer)
             self.log.info('removing %s from neighborhood',peer)
             print 'removing form neighbourhood ',peer
@@ -201,7 +217,6 @@ class DistributedClient(Overlay):
                 print 'no further action needed'
         except:
             self.log.error('In remove neighbour %s is not a neighbor',peer)
-            setValue(self,'log','peer to remove is not a neighbor')
 
     def isNeighbour(self, peer):
         return peer in self.neighbours
@@ -216,6 +231,7 @@ class DistributedClient(Overlay):
 
 
     def _stop(self):
+        self.log.error('should stop')
         if self.satelite or self.initiator or self.passiveInitiator:
             print 'can not stop '
             print 'satelite:',self.satelite
@@ -238,6 +254,7 @@ class DistributedClient(Overlay):
         for n in self.getNeighbours():
             self.log.debug('sending clientStopped message to %s',n)
             ClientStoppedMessage.send(self.stream.id, n, self.controlPipe)
+        self.log.error('stopping')
         self.stopDefer.callback(True)
 
     ###ACTIVE INITIATOR ##########################3
@@ -774,6 +791,7 @@ class DistributedClient(Overlay):
         self.checkDuplicates()
         self.swapState.pop(swapid)
         self.addDuringSwapNeighbours()
+        self.removeDuringSwapNeighbours()
         if self.shouldStop:
             self._stop()
 
@@ -973,6 +991,7 @@ class DistributedClient(Overlay):
             self.swapState.pop(swapid)
             self.initiator=False
             self.passiveInitPeer=None
+            self.duringSwap=False
             self.log.error('never got an answer for ask swap from %s for %d',peer,swapid)
             print 'ask swap to ',peer,'failed'
         elif status==WAIT_LOCKS_UTABLE:
@@ -985,6 +1004,7 @@ class DistributedClient(Overlay):
                 self.log.error('Ask lock to %s failed for %d',peer,swapid)
                 peer.participateSwap=False
                 peer.partnerParticipateSwap=False
+                self.swapState[swapid][MSGS].pop(peer)
                 self.checkLockFinished(swapid)
         elif status==WAIT_INIT_TABLE:
             self.log.error('send accept failed')
@@ -1185,7 +1205,7 @@ class DistributedClient(Overlay):
         ##check peers in satelite's table
         if action==CONTINUE:
             neigh=[peer]
-            notNeigh=[partner]
+            notNeigh=[]  #should be partner but there is a problem with during swap neighbours
         elif action==INSERT:
             notNeigh=[peer]
             neigh=[]
