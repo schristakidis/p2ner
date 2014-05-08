@@ -65,6 +65,8 @@ class DistributedClient(Overlay):
         self.messages.append(PingSwapMessage())
         self.messages.append(AckUpdateMessage())
         self.messages.append(CleanSateliteMessage())
+        self.messages.append(ValidateNeighboursMessage())
+        self.messages.append(ReplyValidateNeighboursMessage())
 
     def initOverlay(self):
         self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
@@ -83,6 +85,7 @@ class DistributedClient(Overlay):
         self.initiator=False
         self.passiveInitiator=False
         self.duringSwap=False
+        self.pauseSwap=False
         self.numNeigh=self.stream.overlay['numNeigh']
         self.loopingCall = task.LoopingCall(self.startSwap)
         self.loopingCall.start(self.stream.overlay['swapFreq'])
@@ -262,7 +265,7 @@ class DistributedClient(Overlay):
     ### ASK SWAP
     def startSwap(self):
         self.log.debug('starting swap')
-        if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop or len(self.duringSwapNeighbours):
+        if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop or len(self.duringSwapNeighbours) or self.pauseSwap:
             self.log.debug('no available conditions for swap %d,%d,%d,%d,%d',self.satelite,self.initiator,self.passiveInitiator,len(self.duringSwapNeighbours),len(self.neighbours))
             return
 
@@ -808,7 +811,7 @@ class DistributedClient(Overlay):
         if swapid in self.swapState:
             self.log.error('got a request for an already existing swapid \nState:%s\npeer:%s,swapid:%s'%(self.swapState,peer,swapid))
             return
-        if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop or len(self.duringSwapNeighbours):
+        if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop or len(self.duringSwapNeighbours) or self.pauseSwap:
             RejectSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe)
             self.log.debug('and rejected it %d,%d,%d,%d',self.satelite,self.initiator,self.passiveInitiator,len(self.duringSwapNeighbours))
         else:
@@ -1118,12 +1121,10 @@ class DistributedClient(Overlay):
         return ret
 
     def toggleSwap(self,stop):
-        if stop:
-            if self.loopingCall.running:
-                self.loopingCall.stop()
-        else:
-            if not self.loopingCall.running:
-                reactor.callLater(uniform(0.1,0.9),self.loopingCall.start,self.stream.overlay['swapFreq'])
+        self.log.error('in toggle swap.Pause is %s',stop)
+        self.pauseSwap=stop
+        if self.pauseSwap:
+            reactor.callLater(4,self.validateNeighbours)
 
     def sendPing(self):
         try:
@@ -1234,3 +1235,19 @@ class DistributedClient(Overlay):
         action.cancel()
         return len(self.swapState[swapid][MSGS])
 
+    def validateNeighbours(self):
+        self.log.error('in validate neighbours')
+        for p in self.getNeighbours():
+            self.log.error('send validate message to %s',p)
+            ValidateNeighboursMessage.send(self.stream.id,p,self.controlPipe)
+
+    def ansValidateNeighs(self,peer):
+        ans=peer in self.getNeighbours()
+        self.log.error('reply to validate message from %s with %s',peer,ans)
+        ReplyValidateNeighboursMessage.send(self.stream.id,ans,peer,self.controlPipe)
+
+    def checkValidateNeighs(self,ans,peer):
+        if not ans:
+            self.log.error('i am not a neighbour to %s',peer)
+        else:
+            self.log.error('everything is ok with %s',peer)

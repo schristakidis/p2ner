@@ -208,3 +208,40 @@ class SuggestMessage(ControlMessage):
     @classmethod
     def send(cls, sid, peerlist, peer, out):
         return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
+
+class ValidateNeighboursMessage(ControlMessage):
+    type = "sidmessage"
+    code = MSG.VALIDATE_NEIGHS
+    ack = True
+
+    def trigger(self, message):
+        if self.stream.id != message.streamid:
+            return False
+        return True
+
+    def action(self, message, peer):
+        self['overlay'].ansValidateNeighs(peer)
+
+    @classmethod
+    def send(cls, sid, peer, out):
+        d=out.send(cls, Container(streamid = sid), peer)
+        d.addErrback(trap_sent)
+        return d
+
+class ReplyValidateNeighboursMessage(ControlMessage):
+    type='lockmessage'
+    code = MSG.REPLY_VALIDATE_NEIGHS
+    ack=True
+
+    def trigger(self, message):
+        if self.stream.id != message.streamid:
+            return False
+        return True
+
+    def action(self,message,peer):
+        self['overlay'].checkValidateNeighs(message.lock,peer)
+        return
+
+    @classmethod
+    def send(cls, sid, ans , peer, out):
+        return out.send(cls, Container(streamid=sid,swapid=0, lock=ans), peer).addErrback(trap_sent)
