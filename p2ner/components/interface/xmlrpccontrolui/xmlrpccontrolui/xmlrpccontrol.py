@@ -70,6 +70,8 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             return
 
         print ip,port,p,bw
+        self.pip=ip
+        self.pport=p
         self.register(ip,port,p,bw)
 
     def register(self,ip,rpcport,port,bw):
@@ -199,7 +201,10 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         if record.levelno%10==0:
             self.logger.addRecord(record)
         if record.levelno==40:
-            sys.stderr.write(record.getMessage()+'\n')
+            msg=record.getMessage()
+            sys.stderr.write(msg+'\n')
+            if self.proxy:
+                self.proxy.callRemote('logerror',self.pip,self.pport,msg)
 
     def xmlrpc_getRecords(self):
         d=self.logger.getRecords()

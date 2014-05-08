@@ -162,6 +162,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.treemodel.append((ip,port,bw,on,type,rpcport,id,o))
         return True
 
+    def xmlrpc_logerror(self,ip,port,message):
+        print ip,port,message
+        return True
+
     def combo_changed(self, widget, path, text):
         if self.treemodel[path][3]==OFF :
             self.treemodel[path][4] = text
