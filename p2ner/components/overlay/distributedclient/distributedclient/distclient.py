@@ -1121,7 +1121,7 @@ class DistributedClient(Overlay):
         return ret
 
     def toggleSwap(self,stop):
-        self.log.error('in toggle swap.Pause is %s',stop)
+        self.log.debug('in toggle swap.Pause is %s',stop)
         self.pauseSwap=stop
         if self.pauseSwap:
             reactor.callLater(4,self.validateNeighbours)
@@ -1236,18 +1236,35 @@ class DistributedClient(Overlay):
         return len(self.swapState[swapid][MSGS])
 
     def validateNeighbours(self):
-        self.log.error('in validate neighbours')
+        if self.duringSwap or self.satelite or len(self.duringSwapNeighbours) or len(self.removeDuringSwap):
+            self.log.error('not in a clean state')
+            self.log.error('during swap:%s',self.duringSwap)
+            self.log.error('satelite:%s',self.satelite)
+            self.log.error('during swap neighbours:%s',self.duringSwapNeighbours)
+            self.log.error('during swap remove neighbours:%s',self.removeDuringSwap)
         for p in self.getNeighbours():
-            self.log.error('send validate message to %s',p)
+            self.log.debug('send validate message to %s',p)
+            p.checked=False
             ValidateNeighboursMessage.send(self.stream.id,p,self.controlPipe)
+        reactor.callLater(2,self.checkFinishValidation)
 
     def ansValidateNeighs(self,peer):
         ans=peer in self.getNeighbours()
-        self.log.error('reply to validate message from %s with %s',peer,ans)
         ReplyValidateNeighboursMessage.send(self.stream.id,ans,peer,self.controlPipe)
+        if not ans:
+            self.log.error('%s is not my neighbor',peer)
 
     def checkValidateNeighs(self,ans,peer):
         if not ans:
             self.log.error('i am not a neighbour to %s',peer)
         else:
-            self.log.error('everything is ok with %s',peer)
+            peer.checked=True
+            self.log.debug('everything is ok with %s',peer)
+        notChecked=[p for p in self.getNeighbours() if not p.checked]
+        if not notChecked:
+            self.log.error('validation finished and everything is excellent')
+
+    def checkFinishValidation(self):
+        for p in self.getNeighbours():
+            if not p.checked:
+                self.log.error('problem in validating %s',p)
