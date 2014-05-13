@@ -1267,3 +1267,11 @@ class DistributedClient(Overlay):
         for p in self.getNeighbours():
             if not p.checked:
                 self.log.error('problem in validating %s',p)
+
+
+    def getStats(self):
+        ret=[]
+        ret.append((self.stream.id,'energy',self.getEnergy()))
+        ret.append((self.stream.id,'neighbours',len(self.getNeighbours())))
+        return ret
+

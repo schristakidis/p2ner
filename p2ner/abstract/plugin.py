@@ -22,11 +22,8 @@ class Plugin(Namespace):
     @initNS
     def __init__(self, *args, **kwargs):
         self.initPlugin(*args, **kwargs)
-    
+
     @abstractmethod
     def initPlugin(self, *args, **kwargs):
         pass
-    
-    @abstractmethod
-    def cleanUp(self):
-        pass
+

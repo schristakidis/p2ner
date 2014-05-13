@@ -380,3 +380,19 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             self.dSubStream[id]=[d]
         self.root.subscribeStream(id,trackerIP,trackerPort,output)
         return d
+
+
+    def xmlrpc_getStats(self,sid):
+        ret={}
+        cbw=self.root.controlPipe.callSimple('getStats')
+        ret[-1]={}
+        ret[-1]['controrBW']=cbw[0][2]
+        s=self.root.getStream(sid)
+        st=s['overlay'].getStats()
+        for s in st:
+            if s[0] not in ret:
+                ret[s[0]]={}
+            ret[s[0]][s[1]]=s[2]
+        return dumps(ret)
+
+
