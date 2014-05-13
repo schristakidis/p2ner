@@ -88,8 +88,6 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         return res
 
     def sockwrite(self, data, host, port):
-        if uniform(0,10)>9:
-            return data
         if len(data):
             self.listener.write(data, (host, port))
         return data

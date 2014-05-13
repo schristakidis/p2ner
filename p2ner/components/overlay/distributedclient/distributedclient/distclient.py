@@ -140,7 +140,7 @@ class DistributedClient(Overlay):
 
     def acceptNeighbour(self,peer):
         if self.duringSwap:
-            self.log.error('during swap in accept Neighbour for %s',peer)
+            self.log.debug('during swap in accept Neighbour for %s',peer)
         elif not self.isNeighbour(peer):
             self.neighbours.append(peer)
             self.log.info('adding %s to neighborhood',peer)
@@ -199,7 +199,7 @@ class DistributedClient(Overlay):
         print 'adding ',peer,' as producer'
 
     def failedProducer(self,peer):
-        self.log.warning('failed to add %s as producer',peer)
+        self.log.error('failed to add %s as producer',peer)
         print 'failed to add ',peer,' as producer'
 
     def removeNeighbour(self, peer):
@@ -226,7 +226,7 @@ class DistributedClient(Overlay):
 
     def stop(self):
         self.shouldStop=True
-        self.log.warning('should stop')
+        self.log.info('should stop')
         if not self.stopDefer:
             self.stopDefer=defer.Deferred()
         reactor.callLater(0,self._stop)
@@ -600,7 +600,6 @@ class DistributedClient(Overlay):
             print 'could not execute swap'
             sys.stderr.write('could not execute swapppppp %s\n'%self.root.netChecker.localIp)
             self.log.error("could not execute swap")
-            setValue(self,'log','could not execute swap')
             newTable=self.getNeighbours()
             newPartnerTable=self.partnerTable
             self.log.warning("current neughs %s",newTable[:])
