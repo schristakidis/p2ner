@@ -94,6 +94,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.win.show_all()
 
     def on_win_destroy(self,*args):
+        self.plotter.destroy()
         reactor.stop()
 
     def formatview(self):
