@@ -40,6 +40,7 @@ class VizirPlotter(Plugin):
         plots={}
         for k,v in self.stats.items():
             plots[k]=[str(i) for i in sorted(v.keys())]
+        plots['NumOfNodes']=['NumOfNodes']
         self.gui=PlotGui(plots)
 
     def getID(self):
@@ -109,7 +110,8 @@ class VizirPlotter(Plugin):
         self.writeStats(tempStats)
 
     def writeStats(self,stats):
-        for k in self.stats.keys():
+        keys=[k for k in self.stats.keys() if k!='NumOfNodes']
+        for k in keys:
             if k not in stats:
                 for v in ['10','50','90']:
                     self.stats[k][v].append(0)
@@ -117,6 +119,12 @@ class VizirPlotter(Plugin):
                 stats[k].sort()
                 for v in ['10','50','90']:
                     self.stats[k][v].append(stats[k][int((int(v)/100.0)*len(stats[k]))])
+
+        if not 'NumOfNodes' in self.stats:
+            self.stats['NumOfNodes']={}
+            self.stats['NumOfNodes']['NumOfNodes']=[]
+
+        self.stats['NumOfNodes']['NumOfNodes'].append(len(self.peers))
 
         if self.gui and self.gui.showing:
             self.gui.updatePlots(self.stats)
