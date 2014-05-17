@@ -104,6 +104,7 @@ class VizirPlotter(Plugin):
                         self.stats[s]['10']=[]
                         self.stats[s]['50']=[]
                         self.stats[s]['90']=[]
+                        self.stats[s]['average']=[]
                     if s not in tempStats:
                         tempStats[s]=[]
                     tempStats[s].append(v)
@@ -113,12 +114,13 @@ class VizirPlotter(Plugin):
         keys=[k for k in self.stats.keys() if k!='NumOfNodes']
         for k in keys:
             if k not in stats:
-                for v in ['10','50','90']:
+                for v in ['10','50','90','average']:
                     self.stats[k][v].append(0)
             else:
                 stats[k].sort()
                 for v in ['10','50','90']:
                     self.stats[k][v].append(stats[k][int((int(v)/100.0)*len(stats[k]))])
+                self.stats[k]['average'].append(sum(stats[k])/len(stats[k]))
 
         if not 'NumOfNodes' in self.stats:
             self.stats['NumOfNodes']={}
