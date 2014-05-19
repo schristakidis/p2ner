@@ -23,7 +23,7 @@ from random import uniform
 from time import time
 
 class AckElement(PipeElement):
-    
+
     def initElement(self, retries=5, timeout=0.5, dupeTimeout=10, **kargs):
         self.seq = 0
         self.timeout = timeout
@@ -32,7 +32,7 @@ class AckElement(PipeElement):
         self.cache = {}
         self.log.info('AckElement loaded')
         self.acked = []
-    
+
     def send(self, res, msg, data, peer):
         if getattr(msg, "ack", False):
             peer.ackRtt[self.seq]=time()
@@ -56,7 +56,7 @@ class AckElement(PipeElement):
             """
             return d
         return res
-    
+
 
     def receive(self, header, message, peer, recTime):
         if header.code == MSG.ACK:
@@ -71,13 +71,13 @@ class AckElement(PipeElement):
                 d = self.cache[header.seq]['d']
                 p = self.cache[header.seq]['peer']
                 del(self.cache[header.seq])
-                
+
                 if peer.ackRtt.has_key(header.seq):
                     peer.lastRtt.append(time()-peer.ackRtt[header.seq])
                     peer.lastRtt=peer.lastRtt[-5:]
                     peer.ackRtt.pop(header.seq)
                     #print peer,peer.lastRtt
-                    
+
                 d.errback(defer.failure.Failure(MessageSent(p)))
                 self.breakCall()
         elif header.ack:
@@ -88,20 +88,26 @@ class AckElement(PipeElement):
             print header.seq
             """
             dupe = (peer, header.seq)
+            duplicate=False
+
             if dupe in self.acked:
+                duplicate=True
+
+            port=self._parent.controlPipe.getElement(name="UDPPortElement").port
+            ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK))
+            d = self.forwardnext("send", None, ack, peer)
+            reactor.callLater(0, d.callback, "")
+
+            if duplicate:
                 #print 'IT WAS A DUPLICATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
                 self.breakCall()
             else:
-                port=self._parent.controlPipe.getElement(name="UDPPortElement").port
-                ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK))
-                d = self.forwardnext("send", None, ack, peer)
-                reactor.callLater(0, d.callback, "")
                 self.acked.append(dupe)
                 reactor.callLater(self.dupeTimeout, self.acked.remove, dupe)
             #print '------------------------------------'
         return header
-        
-    
+
+
     def checkAck(self, seq):
         if seq in self.cache:
             tosend = self.cache[seq]
@@ -112,7 +118,7 @@ class AckElement(PipeElement):
                 reactor.callLater(0, d.callback, tosend['res'])
                 reactor.callLater(self.timeout, self.checkAck, seq)
             else:
-                self.log.error("send failed:%s %s %s", seq,tosend['peer'],tosend['msg'])
+                self.log.warning("send failed:%s %s %s", seq,tosend['peer'],tosend['msg'])
                 print 'message ack failedddddddddddddddd'
                 """
                 print '--------------'
@@ -125,7 +131,7 @@ class AckElement(PipeElement):
                 del(self.cache[seq])
                 if tosend['peer'].ackRtt.has_key(seq):
                     tosend['peer'].ackRtt.pop(seq)
-                    
+
                 d.errback(defer.failure.Failure(MessageError(tosend['peer'])))
                 return None
-        return True  
+        return True

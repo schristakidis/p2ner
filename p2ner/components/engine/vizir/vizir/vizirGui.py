@@ -55,6 +55,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')()
         self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
+        self.plotter=loadComponent('plugin','VizirPlotter')(_parent=self)
         self.constructGui()
 
 
@@ -73,6 +74,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         showOverlay = self.builder.get_object("showOverlay")
         swapButton=self.builder.get_object("swapButton")
         showLog=self.builder.get_object("showLog")
+        statsButton=self.builder.get_object("statsButton")
         startNclients.connect("clicked", self.startNclients)
         stopNclients.connect("clicked", self.stopNclients)
         setUploadBW.connect("clicked", self.setUploadBW)
@@ -80,6 +82,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         showOverlay.connect("clicked", self.showOverlay)
         showLog.connect('clicked',self.logger.start)
         swapButton.connect('clicked',self.swapToggle)
+        statsButton.connect('clicked',self.getStats)
         self.win.set_title("VizEW - Control Center")
         pixbuf = self.win.render_icon(gtk.STOCK_FIND, gtk.ICON_SIZE_MENU)
         self.win.set_icon(pixbuf)
@@ -91,6 +94,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.win.show_all()
 
     def on_win_destroy(self,*args):
+        self.plotter.destroy()
         reactor.stop()
 
     def formatview(self):
@@ -160,6 +164,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         peer=(ip,rpcport)
         o=PClient(self,peer,_parent=self)
         self.treemodel.append((ip,port,bw,on,type,rpcport,id,o))
+        return True
+
+    def xmlrpc_logerror(self,ip,port,message):
+        print ip,port,message
         return True
 
     def combo_changed(self, widget, path, text):
@@ -536,6 +544,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         for cl in clients:
             cl[7].stopSwapping(stop,id)
+
+    def getStats(self,widget):
+        self.plotter.toggle()
+        return
 
 def startVizirGui():
     from twisted.internet import reactor

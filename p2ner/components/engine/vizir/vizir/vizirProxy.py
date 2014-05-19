@@ -54,6 +54,10 @@ class VizirProxy(xmlrpc.XMLRPC):
         d=proxy.callRemote(*args)
         return d
 
+    def xmlrpc_logerror(self,ip,port,message):
+        self.proxy.callRemote('logerror',ip,port,message)
+        return True
+
 def startVizirProxy():
     from twisted.internet import reactor
     import sys,getopt

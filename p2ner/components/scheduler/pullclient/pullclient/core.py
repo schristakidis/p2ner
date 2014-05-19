@@ -101,19 +101,28 @@ class PullClient(Scheduler):
                 return None
             #self.log.debug('requests from most deprived %s %s',peer,peer.s[self.stream.id]["request"])
             bl = self.buffer.bIDListCompTrue(peer.s[self.stream.id]["request"])
+            bl2=bl[:]
             # print "BL:", bl
             #self.log.debug('possible blocks to send %s',bl)
             if len(bl) > 0:
                 #blockID = choice(bl)
+                rarest=False
 
                 try:
                     blockID=getRarestRequest(self.bufferlist,self.buffer,bl)
+                    rarest=True
                 except:
                     blockID = choice(bl)
 
                 #blockID=bl[0]
-                peer.s[self.stream.id]["request"].remove(blockID)
-                peer.s[self.stream.id]["buffer"].update(blockID)
+                try:
+                    peer.s[self.stream.id]["request"].remove(blockID)
+                    peer.s[self.stream.id]["buffer"].update(blockID)
+                except:
+                    self.log.error("problem in scheduler. Can't remove blockid %s"%blockID)
+                    self.log.error("blocks:%s,requests:%s,blocks before:%s"%(bl,peer.s[self.stream.id]["request"],bl2))
+                    self.log.error("happened while searching for rarest:%s"%rarest)
+                    continue
                 #print "SENDING BLOCK", blockID, peer
                 self.lastReqCheck=time()
                 return (blockID, peer)

@@ -19,6 +19,7 @@ import sys, socket
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import DatagramProtocol
 import time
+from random import uniform
 
 class UDPPortElement(PipeElement, DatagramProtocol):
 
@@ -28,6 +29,7 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         self.interface = interface
         self.to = to
         self.log.info('UDPPortElement component loaded')
+        self.controlBW=0
 
     def getExPort(self,d):
         return self.exPort
@@ -88,6 +90,7 @@ class UDPPortElement(PipeElement, DatagramProtocol):
 
     def sockwrite(self, data, host, port):
         if len(data):
+            self.controlBW +=len(data)
             self.listener.write(data, (host, port))
         return data
 
@@ -99,6 +102,12 @@ class UDPPortElement(PipeElement, DatagramProtocol):
         self.log.debug('stop listening to port %d',self.port)
         print self.port
         self.listener.stopListening()
+
+    def getStats(self):
+        ret=self.controlBW
+        self.controlBW=0
+        return [(-1,'controlBW',ret)]
+
 
 
 

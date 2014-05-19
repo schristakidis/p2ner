@@ -24,7 +24,7 @@ class BufferMessage(ControlMessage):
     type = "buffermessage"
     code = MSG.BUFFER
     ack = False
-    
+
     def trigger(self, message):
         if message.streamid == self.stream.id:
             return True
@@ -35,7 +35,7 @@ class BufferMessage(ControlMessage):
         #print message
         #print "----------------------------------------------------"
         #TODO: LPB resynch if D(LPB) is wide
-        #while self.buffer.lpb < message.buffer.lpb: 
+        #while self.buffer.lpb < message.buffer.lpb:
         #    self.scheduler.shift()
         sid = self.stream.id
         if sid not in peer.s:
@@ -73,7 +73,7 @@ class BufferMessage(ControlMessage):
                 if not waitPeer:
                     #self.log.warning('starting scheduler')
                     reactor.callLater(0,self.scheduler.produceBlock)
-     
+
 
     @classmethod
     def send(cls, sid, buffer, req, peer, out):
@@ -81,4 +81,4 @@ class BufferMessage(ControlMessage):
             req=None
         c = Container(streamid=sid, buffer=buffer, request=req)
         out.send(cls, c, peer)
-        
+

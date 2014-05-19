@@ -27,7 +27,7 @@ class SwapPeerAdapter(Adapter):
             rtt=-1
             if len(obj.lastRtt):
                 rtt=sum(obj.lastRtt)/len(obj.lastRtt)
-        
+
             if obj.lip:
                 lip=obj.lip
                 lport=obj.lport
@@ -38,9 +38,8 @@ class SwapPeerAdapter(Adapter):
                 lport=0
                 ldataport=0
                 hpunch=False
- 
-           
-            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=hpunch,rtt=rtt,swap=obj.participateSwap)
+
+            return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=hpunch,rtt=rtt,swap=obj.participateSwap,isNeighbour=obj.isNeighbour)
 
     def _decode(self,  obj,  ctx):
         p=Peer(obj.IP,  obj.port,  obj.dataport)
@@ -48,6 +47,7 @@ class SwapPeerAdapter(Adapter):
         p.swapRtt=obj.rtt
         p.partnerParticipateSwap=obj.swap
         p.participateSwap=obj.swap
+        p.isNeighbour=obj.isNeighbour
         if obj.LIP=='0.0.0.0':
             p.lip=None
             p.lport=None
@@ -59,16 +59,17 @@ class SwapPeerAdapter(Adapter):
             p.ldataPort=obj.ldataport
             p.hpunch=obj.hpunch
         return p
-    
-SwapPeerStruct = Struct( "peer", 
+
+SwapPeerStruct = Struct( "peer",
                    IpAddressAdapter(Bytes("IP",  4)),
-                   UBInt16("port"), 
+                   UBInt16("port"),
                    UBInt16("dataport"),
-                   UBInt16('bw'), 
+                   UBInt16('bw'),
                    IpAddressAdapter(Bytes("LIP",  4)),
                    UBInt16("lport"),
                    UBInt16("ldataport"),
                    Flag("hpunch"),
                    BFloat64("rtt"),
-                   Flag("swap")
+                   Flag("swap"),
+                   Flag("isNeighbour")
                    )

@@ -25,7 +25,7 @@ from twisted.internet import reactor
 class PClient(Interface):
     def initInterface(self,parent,peer):
         self.parent=parent
-        self.peer=peer        
+        self.peer=peer
         self.output={}
         self.output['comp']='NullOutput'
         self.output['kwargs']=None
@@ -37,22 +37,22 @@ class PClient(Interface):
             self.interface=Interface(_parent=self)
             url="http://"+peer[0]+':'+str(peer[1])+"/XMLRPC"
             self.interface.setUrl(url)
-        
+
     def sendStartProducing(self,id,type):
         self.interface.startProducing(id,type)
-        
+
     def sendStopProducing(self,id):
         self.interface.stopProducing(id,False)
-        
+
     def stopProducing(self,id):
         self.parent.setStatus(self.peer,OFF)
         self.parent.setId(self.peer,-1)
         self.parent.producerStopped(id)
-        
-        
+
+
     def sendSubsribe(self,id,ip,port,output):
         self.interface.subscribeStream(id,ip,port,output)
-        
+
     def succesfulSubscription(self,stream,id):
         if stream==-1:
             self.parent.setStatus(self.peer,OFF)
@@ -60,27 +60,27 @@ class PClient(Interface):
         else:
             self.parent.setStatus(self.peer,ON)
             self.parent.setId(self.peer,id)
-            
+
     def sendUnregisterStream(self,id):
         self.interface.unregisterStream(id)
-        
+
     def unregisterStream(self,id):
         self.parent.setStatus(self.peer,OFF)
         self.parent.setId(self.peer,-1)
-        
+
     def sendNewBW(self,bw):
         self.interface.setBW(bw)
         reactor.callLater(1,self.interface.getBW)
-                
+
     def checkBW(self,bw):
         self.parent.setBW(self.peer,bw)
-        
+
     def restartServer(self):
         self.interface.restartServer()
-        
+
     def getOutput(self):
         return self.output
-    
+
     def setOutput(self,output):
         if "Vlc" in output:
             self.output['comp']='PureVlcOutput'
@@ -88,12 +88,15 @@ class PClient(Interface):
             self.output['comp']='NullOutput'
         elif 'Flv' in output:
             self.output['comp']='FlvOutput'
-        
+
     def getNeighbours(self,id,ip,port,func):
         self.interface.getNeighbours(id,ip,port,func)
-        
+
     def getLog(self,func,ip,port):
         self.interface.getVizirLogRecords(func,ip,port)
-        
+
     def stopSwapping(self,stop,id):
         self.interface.stopSwapping(stop,id)
+
+    def getStats(self,sid,ip,port,func):
+        self.interface.getStats(func,sid,ip,port)

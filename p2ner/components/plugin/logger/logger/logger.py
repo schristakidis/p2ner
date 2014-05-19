@@ -32,7 +32,7 @@ levels = {
 }
 
 class Logger(object):
-    
+
     def __init__(self,level='debug',name='p2ner'):
         self.log = logging.getLogger(name)
         name=name+'.'
@@ -43,15 +43,16 @@ class Logger(object):
         if not os.path.isdir(os.path.join(userdatadir, "log")):
             os.mkdir(os.path.join(userdatadir, "log"))
         self.dir= os.path.join(get_user_data_dir(), "log",name)
+        self.names=[]
         self.setupLogger(level)
-        
+
     def setupLogger(self,level="debug", filename=None, filemode="a"):
 
         if not filename:
             filename = self.dir+"log"
-            
+
         self.logFilename=filename
-        
+
         if not level or level not in levels:
             level = "error"
 
@@ -62,9 +63,9 @@ class Logger(object):
         handler.setFormatter(formatter)
 
         self.log.addHandler(handler)
-        
+
         self.log.handlers[0].doRollover()
-        
+
         self.log.debug('\n---------\nLog started on %s.\n---------\n' % time.asctime())
 
         """
@@ -76,7 +77,7 @@ class Logger(object):
                  filemode=filemode
                  )
         """
-    def setLoggerLevel(self,level): 
+    def setLoggerLevel(self,level):
         if level not in levels:
             return
         self.log.setLevel(levels[level])
@@ -86,16 +87,17 @@ class Logger(object):
             log=self.log.getChild(name)
         except:
             log=logging.getLogger(self.lname+name)
-        
-        if interface:
+
+        if interface and name not in self.names:
             self.add_handler(log,level,interfaceHandler(interface))
+            self.names.append(name)
         return log
-       
+
 
     def addFileHandler(self,name,level='debug'):
         if not level or level not in levels:
             level = "debug"
- 
+
         log=self.getLoggerChild(name)
         filename=self.dir+(name+'.log')
         handler=logging.FileHandler(filename,mode='w')
@@ -103,7 +105,7 @@ class Logger(object):
         handler.setFormatter(formatter)
         handler.setLevel(levels[level])
         log.addHandler(handler)
-        
+
     def add_handler(self,log,level,handler):
         formatter = logging.Formatter("[%(levelname)-8s] %(name)s %(asctime)s %(module)s(%(funcName)s):%(lineno)d %(message)s")
         handler.setFormatter(formatter)
@@ -112,13 +114,13 @@ class Logger(object):
         handler.setLevel(levels[level])
         log.addHandler(handler)
 
-    
+
 
     def getFilename(self):
         return self.logFilename
 
 
 
-        
-        
-        
+
+
+

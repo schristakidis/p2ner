@@ -18,24 +18,24 @@ import weakref
 
 def findPeer(ip, port=-1, dataPort=-1):
     '''
-    returns peer(s) following the specified criteria        
+    returns peer(s) following the specified criteria
     '''
     if port == -1:
         l = [p for p in Peer._peerPool.values() if p.ip==ip]
         if dataPort is -1:
             return l
-        
+
         p = [p for p in l if p.dataPort==dataPort]
         if len(p)==1:
             return p[0]
-        
+
     p = Peer._peerPool.get((ip, port), None)
 
     return p
- 
+
 def findLocalPeer(ip, port=-1, dataPort=-1):
     '''
-    returns peer(s) following the specified criteria        
+    returns peer(s) following the specified criteria
     '''
     l = [p for p in Peer._peerPool.values() if  p.lip==ip] #p.useLocalIp and
     if port == -1:
@@ -48,7 +48,7 @@ def findLocalPeer(ip, port=-1, dataPort=-1):
             return l[0]
 
     return None
-   
+
 def getPeerList():
     '''
     returns the whole list of cached peers
@@ -60,14 +60,14 @@ class Peer(object):
     '''
     Peer keep a dictionary of unique peer identities and contains
     peers basic parameters: ip, port, dataPort, latency and bandwidth
-    a peer is identified by the tuple (ip, port) and other attributes 
+    a peer is identified by the tuple (ip, port) and other attributes
     can only be updated
     see
     http://www.suttoncourtenay.org.uk/duncan/accu/pythonpatterns.html#flyweight
     for information on how the class creation is handled
     '''
     _peerPool=weakref.WeakValueDictionary()
-        
+
     def __new__(cls, ip, port=-1, dataPort=-1):
         ip = str(ip)
         port = int(port)
@@ -75,20 +75,20 @@ class Peer(object):
         obj = findPeer(ip, port, dataPort)
         if obj and obj.dataPort==0 and dataPort!=-1:
             obj.dataPort=dataPort
-            
+
         if not obj:
             obj = object.__new__(cls)
             Peer._peerPool[(ip, port)] = obj
             obj.ip = ip
             obj.port = port
             obj.s = {}
-            
+
             obj.nat=False
-            
+
             obj.bw=0
             obj.reportedBW=0
             obj.rtt=0
-            
+
             if dataPort != -1:
                 obj.dataPort = dataPort
             else:
@@ -105,11 +105,13 @@ class Peer(object):
             obj.dataPortOk=False
             obj.conProb=False
             obj.learnedFrom=None
-            
+
             obj.participateSwap=False
             obj.ackRtt={}
             obj.lastRtt=[]
             obj.swapRtt=0
+            obj.isNeighbour=False
+            obj.askedReplace=False
         return obj
 
 
@@ -117,10 +119,10 @@ class Peer(object):
         if dataPort != -1:
             self.dataPort = dataPort
 
-    
+
     def serialize(self, fields):
         '''
-        returns a tuple of values corresponding to the parameters 
+        returns a tuple of values corresponding to the parameters
         in the tuple fields and False in place of non existing fields'
         values
         '''
@@ -136,7 +138,7 @@ class Peer(object):
         if self.lip:
             ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch) ])])
         return ret
-    
+
     def __getstate__(self):
         pickledict=self.__dict__.copy()
         try:
@@ -144,13 +146,13 @@ class Peer(object):
         except:
             pass
         return pickledict
-        
+
     def getIP(self):
         return self.ip
-    
+
     def getPort(self):
         return self.port
-    
+
 if __name__ == "__main__":
     a=Peer("127.0.0.1", 22, 23)
     print a
