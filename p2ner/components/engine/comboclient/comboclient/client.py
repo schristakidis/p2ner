@@ -309,7 +309,7 @@ def startDaemonClient():
     vizir=False
     vPort=9000
     stat=None
-    cPipe=True
+    cPipe=False
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
