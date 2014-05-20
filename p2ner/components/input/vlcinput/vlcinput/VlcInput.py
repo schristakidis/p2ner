@@ -25,19 +25,19 @@ from collections import deque
 vlc_defaults = {
     'win': {
             'cfile': " -I dummy  --dummy-quiet --ignore-config --sout=#duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'file': " -I dummy --dummy-quiet --ignore-config  --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'webcam': ' -I dummy --dummy-quiet --ignore-config dshow:// --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
-            'stream': ' -I dummy --dummy-quiet --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+            'file': " -I dummy --dummy-quiet --ignore-config  --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=%s,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
+            'webcam': ' -I dummy --dummy-quiet --ignore-config dshow:// --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=%s,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+            'stream': ' -I dummy --dummy-quiet --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=%s,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
             'dstream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
-            'tv': " -I dummy --dummy-quiet  --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mp4a,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
+            'tv': " -I dummy --dummy-quiet  --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=%s,ab=32,channels=2,samplerate=44100,audio-sync}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
                },
     'linux':{
             'cfile': " -I dummy --ignore-config --sout=#duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'file': " -I dummy --ignore-config     --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mpga,ab=128,channels=2,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
-            'webcam': ' -I dummy --ignore-config v4l2:// :input-slave=alsa://pulse   --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,acodec=mpga,ab=128,channels=2,samplerate=44100}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+            'file': " -I dummy --ignore-config     --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=%s,ab=128,channels=2,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit",
+            'webcam': ' -I dummy --ignore-config v4l2:// :input-slave=alsa://pulse   --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,acodec=%s,ab=128,channels=2,samplerate=44100}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
             'dstream': ' -I dummy  --ignore-config --sout=#transcode:standard{access=file,mux=ts,dst=-} vlc://quit',
-            'stream': ' -I dummy  --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=mpga,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
-             'tv': " -I dummy   --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=mpga,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
+            'stream': ' -I dummy  --ignore-config --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,acodec=%s,ab=32,channels=2,samplerate=44100,audio-sync}:standard{access=file,mux=ts{shaping=%d,use-key-frames},dst=-} vlc://quit',
+             'tv': " -I dummy   --ignore-config --program=%d --sout=#transcode{width=%d,height=%d,venc=x264{slice-max-size=25200,keyint=60,vbv-maxrate=%d,ratetol=0},vcodec=h264,vb=%d,scale=1,soverlay,acodec=%s,ab=32,channels=1,samplerate=44100}:duplicate{dst=standard{mux=ts{shaping=%d,use-key-frames},dst=-},dst=display{noaudio,novideo} vlc://quit"
              }
     }
 
@@ -59,6 +59,10 @@ class VlcInput(Input):
             self.interface.displayError('version %s of vlc is old.\n version %s or greater is needed'%(getVlcVersion(),getVlcReqVersion()))
             return
 
+        if getVlcVersion()<='2.0.8':
+            self.acodec='mp4a'
+        else:
+            self.acodec='mpga'
         self.input=kwargs['input']
         self.videoRate=self.input['videoRate']
         self.hasPlayer=False
@@ -111,7 +115,7 @@ class VlcInput(Input):
             arg2=('--subsdec-encoding=%s'%self.input['advanced']['encoding'])
 
         if not line:
-            args=(int(self.width),int(self.height),int(videorate),int(videorate),int(self.scheduler.blocksSec))
+            args=(int(self.width),int(self.height),int(videorate),int(videorate),self.acodec,int(self.scheduler.blocksSec))
             if type == 'webcam':
                 proc = ['vlcProcess']+(vlc_defaults[platform][type]%args).split()
             elif type=='cfile':
