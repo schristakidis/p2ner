@@ -127,7 +127,7 @@ class DistFlowControl(FlowControl):
         try:
             lastData=data['sent_data']
             self.totalDataSent=lastData['O_DATA_COUNTER']
-            self.ackSent=lastData['O_ACK_DATA_COUNTER']
+            self.ackSent=lastData['O_ACK_DATA_COUNTER']*self.TsendRef
         except:
             self.totalDataSent=0
             self.ackSent=0
