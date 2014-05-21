@@ -283,6 +283,7 @@ class DistFlowControl(FlowControl):
         temp['controlBW']=self.controlBw
         temp['actualU']=self.actualU*8/1024
         temp['lastBW']=self.lastBW*8/1024
+        temp['ackSent']=self.ackSent*8/1024
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
