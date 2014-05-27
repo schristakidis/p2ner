@@ -51,6 +51,8 @@ class DistFlowControl(FlowControl):
         self.actualU=0
         self.lastBW=0
         self.idle=0
+        self.umaxHistory=[]
+        self.idleHistorySize=-5
 
 
 
@@ -67,14 +69,12 @@ class DistFlowControl(FlowControl):
             for stt in self.peers[p]['history'][1:]:
                 if stt>1.1*lstt or stt<0.9*lstt:
                     const=False
-                lstt=stt
 
         if const:
             ascending=True
             descending=True
-            lastAckHistory=self.ackHistory[-3:]
-            lack=lastAckHistory[0]
-            for ack in lastAckHistory[1:]:
+            lack=self.umaxHistory[0]
+            for ack in self.umaxHistory[1:]:
                 if 1.1*ack>=lack:
                     descending=False
                 else:
@@ -96,7 +96,7 @@ class DistFlowControl(FlowControl):
                 self.peers[p]['history']=[]
 
             self.peers[p]['history'].append(peer['avgSTT']*pow(10,-6))
-            self.peers[p]['history']=self.peers[p]['history'][-3:]
+            self.peers[p]['history']=self.peers[p]['history'][-self.idleHistorySize:]
 
             self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
             self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
@@ -199,6 +199,8 @@ class DistFlowControl(FlowControl):
             self.umax = tumax[0]
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
+        self.umaxHistory.append(self.umax)
+        self.umaxHistory=self.umaxHistory[-self.idleHistorySize:]
 
         if not self.errorPhase and self.errorsPer>5:
             self.errorPhase=True
