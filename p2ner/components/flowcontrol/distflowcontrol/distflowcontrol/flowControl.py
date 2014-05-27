@@ -124,7 +124,7 @@ class DistFlowControl(FlowControl):
 
         self.checkIdle(data)
 
-        if len(self.ackHistory>3):
+        if len(self.ackHistory)>3:
             self.checkIdle(data)
 
         lastAck=data['last_ack']
