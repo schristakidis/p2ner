@@ -95,7 +95,7 @@ class DistFlowControl(FlowControl):
             if not 'history' in self.peers[p].keys():
                 self.peers[p]['history']=[]
 
-            self.peers[p]['history'].append(peers['avgSTT']*pow(10,-6))
+            self.peers[p]['history'].append(peer['avgSTT']*pow(10,-6))
             self.peers[p]['history']=self.peers[p]['history'][-3:]
 
             self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
