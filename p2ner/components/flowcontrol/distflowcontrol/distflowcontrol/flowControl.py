@@ -52,7 +52,7 @@ class DistFlowControl(FlowControl):
         self.lastBW=0
         self.idle=0
         self.umaxHistory=[]
-        self.idleHistorySize=-5
+        self.idleHistorySize=5
 
 
 
