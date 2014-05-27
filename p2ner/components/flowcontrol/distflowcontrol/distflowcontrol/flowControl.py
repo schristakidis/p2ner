@@ -50,12 +50,39 @@ class DistFlowControl(FlowControl):
         self.controlBw=0
         self.actualU=0
         self.lastBW=0
+        self.idle=0
 
 
 
     def start(self):
         reactor.callInThread(bws_thread, self, self.TsendRef)
         self.loopingCall.start(0.1)
+
+    def checkIdle(self,data):
+        self.idle=0
+        const=True
+        for peer in data['peer_stats']:
+            p=(peer["host"],peer["port"])
+            lstt=self.peers[p]['history'][0]
+            for stt in self.peers[p]['history'][1:]:
+                if stt>1.1*lstt or stt<0.9*lstt:
+                    const=False
+                lstt=stt
+
+        if const:
+            ascending=True
+            descending=True
+            lastAckHistory=self.ackHistory[-3:]
+            lack=lastAckHistory[0]
+            for ack in lastAckHistory[1:]:
+                if 1.1*ack>=lack:
+                    descending=False
+                else:
+                    ascending=False
+                lack=ack
+
+            if ascending or descending:
+                self.idle=1
 
     def update(self,data):
         ackSum=0
@@ -64,6 +91,12 @@ class DistFlowControl(FlowControl):
             p=(peer["host"],peer["port"])
             if p not in self.peers:
                 self.peers[p]={}
+
+            if not 'history' in self.peers[p].keys():
+                self.peers[p]['history']=[]
+
+            self.peers[p]['history'].append(peers['avgSTT']*pow(10,-6))
+            self.peers[p]['history']=self.peers[p]['history'][-3:]
 
             self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
             self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
@@ -88,6 +121,11 @@ class DistFlowControl(FlowControl):
             self.errorHistory=self.errorHistory[-self.historySize:]
 
         self.lastAckSize=self.ackHistory[-1]
+
+        self.checkIdle(data)
+
+        if len(self.ackHistory>3):
+            self.checkIdle(data)
 
         lastAck=data['last_ack']
         executeAlgo=True
@@ -284,6 +322,7 @@ class DistFlowControl(FlowControl):
         temp['actualU']=self.actualU*8/1024
         temp['lastBW']=self.lastBW*8/1024
         temp['ackSent']=self.ackSent*8/1024
+        temp['idleStatus']=self.idle
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
