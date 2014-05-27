@@ -51,8 +51,8 @@ class DistFlowControl(FlowControl):
         self.actualU=0
         self.lastBW=0
         self.idle=0
-        self.umaxHistory=[]
         self.idleHistorySize=5
+        self.ackRatioHistory=[]
 
 
 
@@ -61,7 +61,6 @@ class DistFlowControl(FlowControl):
         self.loopingCall.start(0.1)
 
     def checkIdle(self,data):
-        self.idle=0
         const=True
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
@@ -71,18 +70,28 @@ class DistFlowControl(FlowControl):
                     const=False
 
         if const:
-            ascending=True
-            descending=True
-            lack=self.umaxHistory[0]
-            for ack in self.umaxHistory[1:]:
-                if 1.1*ack>=lack:
-                    descending=False
-                else:
-                    ascending=False
-                lack=ack
+            first=self.ackRatioHistory[0]
+            last=self.ackRatioHistory[-1]
+            self.idleAck=max((1.0*(last-first)/last),(1.0*(first-last)/first))
 
-            if ascending or descending:
-                self.idle=1
+            if self.idleAck<0.1:
+                self.idle=0
+                return
+
+            a=1.0*(last-first)/len(self.ackRatioHistory)
+            line=True
+            for x in range(len(self.ackRatioHistory)):
+                point1=0.9*first+a*x
+                point2=1.1*first+a*x
+                if self.ackRatioHistory[x]<point1 or self.ackRatioHistory[x]>point2:
+                    line=False
+
+            if line:
+                self.idle+=1
+                if self.idle>2:
+                    self.calculatedmin=min(self.peers[p]['history'])
+            else:
+                self.idle=0
 
     def update(self,data):
         ackSum=0
@@ -114,6 +123,7 @@ class DistFlowControl(FlowControl):
         if not self.peers:
             self.send_bw()
             return
+
         self.ackHistory.append(ackSum)
         self.errorHistory.append(errSum)
         if len(self.ackHistory)>self.historySize:
@@ -122,9 +132,8 @@ class DistFlowControl(FlowControl):
 
         self.lastAckSize=self.ackHistory[-1]
 
-        self.checkIdle(data)
 
-        if len(self.ackHistory)>3:
+        if len(self.ackRatioHistory)>5:
             self.checkIdle(data)
 
         lastAck=data['last_ack']
@@ -176,6 +185,9 @@ class DistFlowControl(FlowControl):
         except:
             self.ackRate=0
 
+        self.ackRatioHistory.append(self.ackRate)
+        self.ackRatioHistory=self.ackRatioHistory[-self.idleHistorySize:]
+
         if executeAlgo:
             self.setUmax()
         else:
@@ -199,8 +211,6 @@ class DistFlowControl(FlowControl):
             self.umax = tumax[0]
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
-        self.umaxHistory.append(self.umax)
-        self.umaxHistory=self.umaxHistory[-self.idleHistorySize:]
 
         if not self.errorPhase and self.errorsPer>5:
             self.errorPhase=True
