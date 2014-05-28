@@ -129,6 +129,8 @@ class DistFlowControl(FlowControl):
                     self.idle=2
             else:
                 self.idle=0
+        else:
+            self.idle=0
 
 
     def update(self,data):
