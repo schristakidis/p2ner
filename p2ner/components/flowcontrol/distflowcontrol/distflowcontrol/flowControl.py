@@ -363,7 +363,7 @@ class DistFlowControl(FlowControl):
         temp['calcMin']=self.calculatedmin
         temp['idleAck']=self.idleAck
         temp['idleSttStatus']=self.idleSttStatus
-        temp['lastIdlePAcket']=self.lastIdlePacket
+        temp['lastIdlePacket']=self.lastIdlePacket
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
