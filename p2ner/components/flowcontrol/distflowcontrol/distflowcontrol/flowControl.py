@@ -97,17 +97,19 @@ class DistFlowControl(FlowControl):
             else:
                 isIdle=True
                 for i in self.idlePackets:
-                    if i<=0:
+                    if i<=1:
                         isIdle=False
                         break
                 if isIdle:
                     idle=True
 
-            if idle:
+            if idle and not self.errorPhase:
                 self.idle+=1
                 if self.idle>2:
                     self.calculatedmin=min(self.peers[p]['history'])
                     self.idle=2
+            else:
+                self.idle=0
 
 
     def update(self,data):
@@ -192,7 +194,7 @@ class DistFlowControl(FlowControl):
             lastData=data['sent_data']
             self.totalDataSent=lastData['O_DATA_COUNTER']
             dataPacketsSent=lastData['O_PKG_COUNTER']-lastData['O_ACK_COUNTER']
-            isIdle=dataPacketsSent-self.u
+            isIdle=self.u-dataPacketsSent
             self.idlePackets.append(isIdle)
             self.idlePackets=self.idlePackets[-self.idleHistorySize:]
             self.ackSent=lastData['O_ACK_DATA_COUNTER']*self.TsendRef
