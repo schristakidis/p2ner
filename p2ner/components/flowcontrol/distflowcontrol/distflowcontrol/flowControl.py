@@ -87,7 +87,7 @@ class DistFlowControl(FlowControl):
             if not const:
                 break
             lstt=v[0]
-            for stt in v[1]:
+            for stt in v[1:]:
                 if stt>1.1*lstt or stt<0.9*lstt:
                     const=False
                     break
