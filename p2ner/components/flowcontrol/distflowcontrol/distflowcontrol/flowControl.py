@@ -57,6 +57,7 @@ class DistFlowControl(FlowControl):
         self.idleSttStatus=0
         self.idleAck=0
         self.lastIdlePacket=0
+        self.idlePackets=[]
 
 
 
