@@ -56,6 +56,7 @@ class DistFlowControl(FlowControl):
         self.calculatedmin=0
         self.idleSttStatus=0
         self.idleAck=0
+        self.idlePackets=[]
 
 
 
@@ -65,6 +66,7 @@ class DistFlowControl(FlowControl):
 
     def checkIdle(self,data):
         const=True
+        idle=False
         self.idleSttStatus=0
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
@@ -77,26 +79,36 @@ class DistFlowControl(FlowControl):
             self.idleSttStatus=1
             first=self.ackRatioHistory[0]
             last=self.ackRatioHistory[-1]
-            self.idleAck=max((1.0*(last-first)/last),(1.0*(first-last)/first))
+            # self.idleAck=max((1.0*(last-first)/last),(1.0*(first-last)/first))
+            self.idleAck=1.0*(last-first)/last
 
-            if self.idleAck<0.1:
-                self.idle=0
-                return
-
-            a=1.0*(last-first)/len(self.ackRatioHistory)
-            line=True
-            for x in range(len(self.ackRatioHistory)):
-                point1=0.9*first+a*x
-                point2=1.1*first+a*x
-                if self.ackRatioHistory[x]<point1 or self.ackRatioHistory[x]>point2:
-                    line=False
+            line=False
+            if self.idleAck>0.1:
+                a=1.0*(last-first)/len(self.ackRatioHistory)
+                line=True
+                for x in range(len(self.ackRatioHistory)):
+                    point1=0.9*first+a*x
+                    point2=1.1*first+a*x
+                    if self.ackRatioHistory[x]<point1 or self.ackRatioHistory[x]>point2:
+                        line=False
 
             if line:
+                idle=True
+            else:
+                isIdle=True
+                for i in self.idlePackets:
+                    if i<=0:
+                        isIdle=False
+                        break
+                if isIdle:
+                    idle=True
+
+            if idle:
                 self.idle+=1
                 if self.idle>2:
                     self.calculatedmin=min(self.peers[p]['history'])
-            else:
-                self.idle=0
+                    self.idle=2
+
 
     def update(self,data):
         ackSum=0
@@ -179,6 +191,10 @@ class DistFlowControl(FlowControl):
         try:
             lastData=data['sent_data']
             self.totalDataSent=lastData['O_DATA_COUNTER']
+            dataPacketsSent=lastData['O_PKG_COUNTER']-lastData['O_ACK_COUNTER']
+            isIdle=dataPacketsSent-self.u
+            self.idlePackets.append(isIdle)
+            self.idlePackets=self.idlePackets[-self.idleHistorySize:]
             self.ackSent=lastData['O_ACK_DATA_COUNTER']*self.TsendRef
         except:
             self.totalDataSent=0
