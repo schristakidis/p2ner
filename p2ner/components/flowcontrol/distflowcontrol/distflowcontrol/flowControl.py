@@ -56,7 +56,7 @@ class DistFlowControl(FlowControl):
         self.calculatedmin=0
         self.idleSttStatus=0
         self.idleAck=0
-        self.idlePackets=[]
+        self.lastIdlePacket=0
 
 
 
@@ -195,6 +195,7 @@ class DistFlowControl(FlowControl):
             self.totalDataSent=lastData['O_DATA_COUNTER']
             dataPacketsSent=lastData['O_PKG_COUNTER']-lastData['O_ACK_COUNTER']
             isIdle=self.u-dataPacketsSent
+            self.lastIdlePacket=isIdle
             self.idlePackets.append(isIdle)
             self.idlePackets=self.idlePackets[-self.idleHistorySize:]
             self.ackSent=lastData['O_ACK_DATA_COUNTER']*self.TsendRef
@@ -361,6 +362,7 @@ class DistFlowControl(FlowControl):
         temp['calcMin']=self.calculatedmin
         temp['idleAck']=self.idleAck
         temp['idleSttStatus']=self.idleSttStatus
+        temp['lastIdlePAcket']=self.lastIdlePacket
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
