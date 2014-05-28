@@ -54,6 +54,8 @@ class DistFlowControl(FlowControl):
         self.idleHistorySize=5
         self.ackRatioHistory=[]
         self.calculatedmin=0
+        self.idleSttStatus=0
+        self.idleAck=0
 
 
 
@@ -63,6 +65,7 @@ class DistFlowControl(FlowControl):
 
     def checkIdle(self,data):
         const=True
+        self.idleSttStatus=0
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             lstt=self.peers[p]['history'][0]
@@ -71,6 +74,7 @@ class DistFlowControl(FlowControl):
                     const=False
 
         if const:
+            self.idleSttStatus=1
             first=self.ackRatioHistory[0]
             last=self.ackRatioHistory[-1]
             self.idleAck=max((1.0*(last-first)/last),(1.0*(first-last)/first))
@@ -337,6 +341,8 @@ class DistFlowControl(FlowControl):
         temp['ackSent']=self.ackSent*8/1024
         temp['idleStatus']=self.idle
         temp['calcMin']=self.calculatedmin
+        temp['idleAck']=self.idleAck
+        temp['idleSttStatus']=self.idleSttStatus
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
