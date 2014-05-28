@@ -58,6 +58,7 @@ class DistFlowControl(FlowControl):
         self.idleAck=0
         self.lastIdlePacket=0
         self.idlePackets=[]
+        self.recHistory=[]
 
 
 
@@ -69,12 +70,27 @@ class DistFlowControl(FlowControl):
         const=True
         idle=False
         self.idleSttStatus=0
-        for peer in data['peer_stats']:
-            p=(peer["host"],peer["port"])
-            lstt=self.peers[p]['history'][0]
-            for stt in self.peers[p]['history'][1:]:
+        # for peer in data['peer_stats']:
+        #     p=(peer["host"],peer["port"])
+        #     lstt=self.peers[p]['history'][0]
+        #     for stt in self.peers[p]['history'][1:]:
+        #         if stt>1.1*lstt or stt<0.9*lstt:
+        #             const=False
+
+        temp={}
+        for stt,p in self.recHistory:
+            if p not in temp.keys():
+               temp[p]=[]
+            temp[p].append(stt)
+
+        for p,v in temp.items():
+            if not const:
+                break
+            lstt=v[0]
+            for stt in v[1]:
                 if stt>1.1*lstt or stt<0.9*lstt:
                     const=False
+                    break
 
         if const:
             self.idleSttStatus=1
@@ -107,7 +123,9 @@ class DistFlowControl(FlowControl):
             if idle and not self.errorPhase:
                 self.idle+=1
                 if self.idle>2:
-                    self.calculatedmin=min(self.peers[p]['history'])
+                    for p in temp.keys():
+                        self.peers[p]['calcMin']=min(temp[p])
+                    # self.calculatedmin=min(self.peers[p]['history'])
                     self.idle=2
             else:
                 self.idle=0
@@ -126,6 +144,9 @@ class DistFlowControl(FlowControl):
 
             self.peers[p]['history'].append(peer['avgSTT']*pow(10,-6))
             self.peers[p]['history']=self.peers[p]['history'][-self.idleHistorySize:]
+
+            self.recHistory.append((peer['avgSTT']*pow(10,-6),p))
+            self.recHistory=self.recHistory[-self.idleHistorySize:]
 
             self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
             self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
@@ -176,6 +197,11 @@ class DistFlowControl(FlowControl):
             self.lastAckedSent=lastAck['seq']
             self.lastSleepTime=lastAck['sleep']*pow(10,-6)
             self.lastNack=data['last_nack']
+
+            try:
+                self.calculatedmin=self.peers[lastPeer]['calcMin']
+            except:
+                self.calculatedmin=0
         else:
             executeAlgo=True
             """
