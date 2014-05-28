@@ -53,6 +53,7 @@ class DistFlowControl(FlowControl):
         self.idle=0
         self.idleHistorySize=5
         self.ackRatioHistory=[]
+        self.calculatedmin=0
 
 
 
