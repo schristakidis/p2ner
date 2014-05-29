@@ -59,6 +59,7 @@ class DistFlowControl(FlowControl):
         self.lastIdlePacket=0
         self.idlePackets=[]
         self.recHistory=[]
+        self.qDelayErr=0.1
 
 
 
@@ -70,12 +71,6 @@ class DistFlowControl(FlowControl):
         const=True
         idle=False
         self.idleSttStatus=0
-        # for peer in data['peer_stats']:
-        #     p=(peer["host"],peer["port"])
-        #     lstt=self.peers[p]['history'][0]
-        #     for stt in self.peers[p]['history'][1:]:
-        #         if stt>1.1*lstt or stt<0.9*lstt:
-        #             const=False
 
         temp={}
         for stt,p in self.recHistory:
@@ -125,7 +120,6 @@ class DistFlowControl(FlowControl):
                 if self.idle>2:
                     for p in temp.keys():
                         self.peers[p]['calcMin']=min(temp[p])
-                    # self.calculatedmin=min(self.peers[p]['history'])
                     self.idle=2
             else:
                 self.idle=0
@@ -141,12 +135,6 @@ class DistFlowControl(FlowControl):
             if p not in self.peers:
                 self.peers[p]={}
 
-            if not 'history' in self.peers[p].keys():
-                self.peers[p]['history']=[]
-
-            self.peers[p]['history'].append(peer['avgSTT']*pow(10,-6))
-            self.peers[p]['history']=self.peers[p]['history'][-self.idleHistorySize:]
-
             self.recHistory.append((peer['avgSTT']*pow(10,-6),p))
             self.recHistory=self.recHistory[-self.idleHistorySize:]
 
@@ -159,6 +147,9 @@ class DistFlowControl(FlowControl):
             if not self.peers[p]['errorStt']:
                 self.peers[p]['errorStt']=self.peers[p]['minStt']+0.05
                 self.peers[p]['errorRtt']=self.peers[p]['minRtt']+0.05
+
+            if peer['error_last']:
+                self.qDelayErr=(peer['errSTT']-peer['minSTT'])*pow(10,-6)
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
@@ -188,7 +179,8 @@ class DistFlowControl(FlowControl):
             self.minRtt=self.peers[lastPeer]['minRtt']
             self.minStt=self.peers[lastPeer]['minStt']
             self.errRtt=self.peers[lastPeer]['errorRtt']
-            self.errStt=self.peers[lastPeer]['errorStt']
+            # self.errStt=self.peers[lastPeer]['errorStt']
+            self.errStt=self.minStt+self.qDelayErr
 
 
             errors=sum(self.errorHistory)
