@@ -349,7 +349,7 @@ class DistFlowControl(FlowControl):
         self.send_bw()
 
     def send_bw(self):
-        print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
+        # print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
         bora.bws_set(int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
         if self.peers:
             self.saveStats()

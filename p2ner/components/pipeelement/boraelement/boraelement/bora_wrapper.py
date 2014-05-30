@@ -42,7 +42,7 @@ def scanBlocks(message):
 
 def biter_thread(pipe):
     for b in bora.biter():
-        print "block", b, "RECV"
+        # print "block", b, "RECV"
         block = Container(streamid=b[0], blockid=b[1])
         #print "BITER BLOCK",block
         r = scanBlocks(block)
