@@ -19,6 +19,7 @@ import time
 import bora
 import pprint
 from math import ceil
+from twisted.internet.threads import deferToThread
 
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
@@ -60,6 +61,10 @@ class DistFlowControl(FlowControl):
         self.idlePackets=[]
         self.recHistory=[]
         self.qDelayErr=0.1
+        self.qHistorySize=10
+        self.qDelayHistory=[]
+        self.umaxHistory=[]
+        self.umaxHistorySize=10
 
 
 
@@ -67,7 +72,7 @@ class DistFlowControl(FlowControl):
         reactor.callInThread(bws_thread, self, self.TsendRef)
         self.loopingCall.start(0.1)
 
-    def checkIdle(self,data):
+    def checkIdle(self):
         const=True
         idle=False
         self.idleSttStatus=0
@@ -120,16 +125,22 @@ class DistFlowControl(FlowControl):
                 if self.idle>2:
                     for p in temp.keys():
                         self.peers[p]['calcMin']=min(temp[p])
+                        self.peers[p]['calcMinTime']=time.time()
                     self.idle=2
             else:
                 self.idle=0
         else:
             self.idle=0
 
+    def updateMin(self,peer,data):
+        print 'update minnnnnnnnnnnnn'
+        print 'peer:',peer
+        print data
 
     def update(self,data):
         ackSum=0
         errSum=0
+        shouldCalculateMin=[]
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if p not in self.peers:
@@ -151,6 +162,9 @@ class DistFlowControl(FlowControl):
             if peer['error_last']:
                 self.qDelayErr=(peer['errSTT']-peer['minSTT'])*pow(10,-6)
 
+            if not 'calcMin' in self.peers[p].keys():
+                shouldCalculateMin.append(p)
+
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
 
@@ -168,7 +182,13 @@ class DistFlowControl(FlowControl):
 
 
         if len(self.ackRatioHistory)>3:
-            self.checkIdle(data)
+            self.checkIdle()
+
+        if shouldCalculateMin:
+            goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
+            for p in shouldCalculateMin:
+                d=deferToThread(bora.send.cookie,goodPeer[0],goodPeer[1],p[0],p[1])
+                d.addCallback(self.updateMin,p)
 
         lastAck=data['last_ack']
         executeAlgo=True
@@ -208,6 +228,8 @@ class DistFlowControl(FlowControl):
             """
 
         self.qDelay=self.stt-self.minStt
+        self.qDelayHistory.append(self.qDelay)
+        self.qDelayHistory=self.qDelayHistory[-self.qHistorySize:]
         self.qRef=2*(self.errStt-self.minStt)/4
         self.refStt=self.minStt+self.qRef
 
@@ -277,6 +299,8 @@ class DistFlowControl(FlowControl):
                 self.recoveryPhase=False
                 self.umax=self.maxumax
 
+        self.umaxHistory.append(self.umax)
+        self.umaxHistory=self.umaxHistory[-self.umaxHistorySize:]
         self.setU()
 
     def setU(self):
