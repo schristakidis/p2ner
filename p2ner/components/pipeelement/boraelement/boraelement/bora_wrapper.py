@@ -66,7 +66,7 @@ class BoraElement(PipeElement):
 
 
     def sendblock(self, r, scheduler, block, peer):
-        print "SENDBLOCK"
+        # print "SENDBLOCK"
         if scheduler not in self.schedulers:
             self.log.error("scheduler for stream id %d is not registered to the pipeline" % scheduler.stream.id)
             return
