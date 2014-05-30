@@ -140,7 +140,6 @@ class DistFlowControl(FlowControl):
     def update(self,data):
         ackSum=0
         errSum=0
-        shouldCalculateMin=[]
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if p not in self.peers:
@@ -162,8 +161,6 @@ class DistFlowControl(FlowControl):
             if peer['error_last']:
                 self.qDelayErr=(peer['errSTT']-peer['minSTT'])*pow(10,-6)
 
-            if not 'calcMin' in self.peers[p].keys():
-                shouldCalculateMin.append(p)
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
@@ -184,10 +181,22 @@ class DistFlowControl(FlowControl):
         if len(self.ackRatioHistory)>3:
             self.checkIdle()
 
+        shouldCalculateMin=[]
+        for peer in data['peer_stats']:
+            p=(peer["host"],peer["port"])
+            if not 'calcMin' in self.peers[p].keys():
+                shouldCalculateMin.append(p)
+
+        goodPeer=None
         if shouldCalculateMin:
-            goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
+            try:
+                goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
+            except:
+                pass
+
+        if goodPeer:
             for p in shouldCalculateMin:
-                d=deferToThread(bora.send.cookie,goodPeer[0],goodPeer[1],p[0],p[1])
+                d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
                 d.addCallback(self.updateMin,p)
 
         lastAck=data['last_ack']
