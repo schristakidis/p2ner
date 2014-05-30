@@ -185,7 +185,13 @@ class DistFlowControl(FlowControl):
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if not 'calcMin' in self.peers[p].keys():
-                shouldCalculateMin.append(p)
+                if not 'waitingMin' in self.peer[p].keys():
+                    self.peers[p]['waitingMin']=0
+
+                if not self.peers[p]['waitingMin']:
+                    shouldCalculateMin.append(p)
+                else:
+                    self.peer[p]['waitingMin']-=1
 
         goodPeer=None
         if shouldCalculateMin:
@@ -196,6 +202,7 @@ class DistFlowControl(FlowControl):
 
         if goodPeer:
             for p in shouldCalculateMin:
+                self.peers[p]['waitingMin']=10
                 d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
                 d.addCallback(self.updateMin,p)
 
