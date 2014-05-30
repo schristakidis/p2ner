@@ -185,7 +185,7 @@ class DistFlowControl(FlowControl):
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if not 'calcMin' in self.peers[p].keys():
-                if not 'waitingMin' in self.peer[p].keys():
+                if not 'waitingMin' in self.peers[p].keys():
                     self.peers[p]['waitingMin']=0
 
                 if not self.peers[p]['waitingMin']:
