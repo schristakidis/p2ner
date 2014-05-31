@@ -252,7 +252,7 @@ class DistFlowControl(FlowControl):
         for p,d in qDperPeer.items():
             self.qDelayPerPeer.append(p,d)
 
-        self.qDelayPerPeer=self.qDelayPerPeer[-self.qDelayHistory:]
+        self.qDelayPerPeer=self.qDelayPerPeer[-self.qHistorySize:]
 
         if not self.peers:
             self.send_bw()
