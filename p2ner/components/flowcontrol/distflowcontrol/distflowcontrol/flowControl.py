@@ -71,7 +71,7 @@ class DistFlowControl(FlowControl):
         self.secondNorm=0
         self.secondNormPerPeer=0
         self.qDelayPerPeer=[]
-
+        self.forceIdle=False
 
 
     def start(self):
@@ -188,7 +188,7 @@ class DistFlowControl(FlowControl):
 
     def checkWrongStt(self):
         self.wrongStt=0
-        if not self.qDelayHistory:
+        if not self.qDelayHistory or self.forceIdle:
             self.wrongSttperPeer=0
             return
 
@@ -227,14 +227,17 @@ class DistFlowControl(FlowControl):
             self.wrongSttperPeer+=1
             if self.wrongSttperPeer>2:
                 self.wrongSttperPeer=2
-                self.forceIdle()
+                self.shouldForceIdle()
 
 
-    def forceIdle(self):
+    def shouldForceIdle(self):
         self.forceIdle=True
         for p in self.peers:
-            self.peers[p].pop('calcMin')
-            self.peers[p].pop('calcMinTime')
+            try:
+                self.peers[p].pop('calcMin')
+                self.peers[p].pop('calcMinTime')
+            except:
+                pass
         print 'should force idle'
 
 
@@ -446,6 +449,7 @@ class DistFlowControl(FlowControl):
     def send_bw(self):
         # print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
         if self.forceIdle:
+            print 'setting u to 4'
             u=4
         else:
             u=self.u
