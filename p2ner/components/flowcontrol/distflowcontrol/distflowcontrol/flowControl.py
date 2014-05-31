@@ -187,6 +187,7 @@ class DistFlowControl(FlowControl):
     def checkWrongStt(self):
         self.wrongStt=0
         if not self.qDelayHistory:
+            self.wrongSttperPeer=0
             return
 
         avgDelay=sum(self.qDelayHistory)/len(self.qDelayHistory)
@@ -195,7 +196,6 @@ class DistFlowControl(FlowControl):
             self.wrongStt=1
 
         ###############################################other solution##################
-        self.wrongSttperPeer=0
         temp={}
         for d in self.qDelayPerPeer:
             if not d[0] in temp.keys():
@@ -203,6 +203,7 @@ class DistFlowControl(FlowControl):
             temp[d[0]].append(d[1])
 
         if len(temp.keys())<2:
+            self.wrongSttperPeer=0
             return
 
         cont=True
@@ -221,7 +222,14 @@ class DistFlowControl(FlowControl):
         avgDelay=sum(delays)/len(delays)
         self.secondNormPerPeer=sum([(d-avgDelay)**2 for d in delays])/len(delays)
         if self.secondNormPerPeer>self.wrongThres:
-            self.wrongSttperPeer=1
+            self.wrongSttperPeer+=1
+            if self.wrongSttperPeer>2:
+                self.wrongSttperPeer=2
+                self.forceIdle()
+
+
+    def forceIdle(self):
+        print 'should force idle'
 
 
 
