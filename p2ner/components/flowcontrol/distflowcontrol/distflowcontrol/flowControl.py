@@ -219,7 +219,7 @@ class DistFlowControl(FlowControl):
         if len(self.ackRatioHistory)>3:
             self.checkIdle()
 
-        self.checkMinStt(self,data)
+        self.checkMinStt(data)
 
         lastAck=data['last_ack']
         executeAlgo=True
