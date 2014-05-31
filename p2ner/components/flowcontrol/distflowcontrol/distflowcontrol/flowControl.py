@@ -133,6 +133,8 @@ class DistFlowControl(FlowControl):
                         self.peers[p]['calcMin']=min(temp[p])
                         self.peers[p]['calcMinTime']=time.time()
                     self.idle=2
+                    if self.forceIdle:
+                        self.forceIdle=False
             else:
                 self.idle=0
         else:
@@ -229,6 +231,10 @@ class DistFlowControl(FlowControl):
 
 
     def forceIdle(self):
+        self.forceIdle=True
+        for p in self.peers:
+            self.peers[p].pop('calcMin')
+            self.peers[p].pop('calcMinTime')
         print 'should force idle'
 
 
@@ -439,7 +445,11 @@ class DistFlowControl(FlowControl):
 
     def send_bw(self):
         # print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
-        bora.bws_set(int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
+        if self.forceIdle:
+            u=4
+        else:
+            u=self.u
+        bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
         if self.peers:
             self.saveStats()
 
