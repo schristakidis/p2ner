@@ -66,6 +66,8 @@ class DistFlowControl(FlowControl):
         self.umaxHistory=[]
         self.umaxHistorySize=10
         self.wrongStt=0
+        self.wrongThres=0.01
+        self.secondNorm=0
 
 
 
@@ -184,10 +186,9 @@ class DistFlowControl(FlowControl):
         if not self.qDelayHistory:
             return
 
-        thres=0.01
         avgDelay=sum(self.qDelayHistory)/len(self.qDelayHistory)
-        secondNorm=sum([(d-avgDelay)**2 for d in self.qDelayHistory])/len(self.qDelayHistory)
-        if secondNorm>thres**2:
+        self.secondNorm=sum([(d-avgDelay)**2 for d in self.qDelayHistory])/len(self.qDelayHistory)
+        if self.secondNorm>self.wrongThres**2:
             self.wrongStt=1
 
 
@@ -458,6 +459,8 @@ class DistFlowControl(FlowControl):
         temp['idleSttStatus']=self.idleSttStatus
         temp['lastIdlePacket']=self.lastIdlePacket
         temp['wrongStt']=self.wrongStt
+        temp['wrongThres']=self.wrongThres
+        temp['secondNorm']=self.secondNorm
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
