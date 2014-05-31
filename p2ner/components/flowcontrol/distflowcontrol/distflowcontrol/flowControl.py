@@ -505,7 +505,7 @@ class DistFlowControl(FlowControl):
         temp['idleAck']=self.idleAck
         temp['idleSttStatus']=self.idleSttStatus
         temp['lastIdlePacket']=self.lastIdlePacket
-        temp['wrongStt']=self.wrongSttPerPeer
+        temp['wrongStt']=self.wrongSttperPeer
         temp['wrongThres']=self.wrongThres
         temp['secondNorm']=self.secondNorm
         temp['secondNormPerPeer']=self.secondNormPerPeer
