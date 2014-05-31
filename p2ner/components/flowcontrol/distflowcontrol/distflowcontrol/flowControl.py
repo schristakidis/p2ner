@@ -66,8 +66,10 @@ class DistFlowControl(FlowControl):
         self.umaxHistory=[]
         self.umaxHistorySize=10
         self.wrongStt=0
+        self.wrongSttperPeer=0
         self.wrongThres=0.01**2
         self.secondNorm=0
+        self.qDelayPerPeer=[]
 
 
 
@@ -191,12 +193,31 @@ class DistFlowControl(FlowControl):
         if self.secondNorm>self.wrongThres:
             self.wrongStt=1
 
+        ###############################################other solution##################
+        self.wrongSttperPeer=0
+        temp={}
+        for d in self.qDelayPerPeer:
+            if not d[0] in temp.keys():
+                temp[d[0]]=[]
+            temp[d[0]].append(d[1])
+
+        if len(temp.keys())<2:
+            return
+
+        delays=[sum(d)/len(d) for d in temp.values()]
+        avgDelay=sum(delays)/len(delays)
+        self.secondNormPerPeer=sum([(d-avgDelay)**2 for d in delays])/len(delays)
+        if self.secondNormPerPeer>self.wrongThres:
+            self.wrongSttperPeer=1
+
+
 
 
 
     def update(self,data):
         ackSum=0
         errSum=0
+        qDperPeer={}
         for peer in data['peer_stats']:
             p=(peer["host"],peer["port"])
             if p not in self.peers:
@@ -221,6 +242,17 @@ class DistFlowControl(FlowControl):
 
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
+
+            try:
+                qDperPeer[p]=self.peers[p]['lastStt']-self.peers[p]['calcMin']
+            except:
+                pass
+
+
+        for p,d in qDperPeer.items():
+            self.qDelayPerPeer.append(p,d)
+
+        self.qDelayPerPeer=self.qDelayPerPeer[-self.qDelayHistory:]
 
         if not self.peers:
             self.send_bw()
@@ -463,6 +495,7 @@ class DistFlowControl(FlowControl):
         temp['wrongStt']=self.wrongStt
         temp['wrongThres']=self.wrongThres
         temp['secondNorm']=self.secondNorm
+        temp['secondNormPerPeer']=self.secondNormPerPeer
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
