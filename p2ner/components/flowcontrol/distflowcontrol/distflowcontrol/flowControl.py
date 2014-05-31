@@ -132,10 +132,51 @@ class DistFlowControl(FlowControl):
         else:
             self.idle=0
 
-    def updateMin(self,peer,data):
+    def checkMinStt(self,data):
+        shouldCalculateMin=[]
+        for peer in data['peer_stats']:
+            p=(peer["host"],peer["port"])
+            if not 'calcMin' in self.peers[p].keys():
+                if not 'waitingMin' in self.peers[p].keys():
+                    self.peers[p]['waitingMin']=0
+
+                if not self.peers[p]['waitingMin']:
+                    shouldCalculateMin.append(p)
+                else:
+                    self.peers[p]['waitingMin']-=1
+
+        goodPeer=None
+        if shouldCalculateMin:
+            try:
+                goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
+            except:
+                pass
+
+        if goodPeer:
+            for p in shouldCalculateMin:
+                self.peers[p]['waitingMin']=10
+                d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
+                d.addCallback(self.updateMin,goodPeer,p)
+
+    def updateMin(self,data,goodPeer,peer):
         print 'update minnnnnnnnnnnnn'
+        print 'goodPeer:',goodPeer
         print 'peer:',peer
         print data
+        for line in data:
+            if line['host']==goodPeer[0] and line['port']==goodPeer[1]:
+                goodStt=line['STT']*pow(10,-6)
+            elif line['host']==peer[0] and line['port']==peer[1]:
+                stt=line['STT']*pow(10,-6)
+            else:
+                print 'error in update minnnnnnnnnnnn'
+                return
+
+        delay=goodStt-self.peers[goodPeer]['calcMin']
+        self.peers[peer]['calcMin']=stt-delay
+        self.peers[peer]['waitingMin']=0
+
+
 
     def update(self,data):
         ackSum=0
@@ -175,36 +216,10 @@ class DistFlowControl(FlowControl):
             self.ackHistory=self.ackHistory[-self.historySize:]
             self.errorHistory=self.errorHistory[-self.historySize:]
 
-        self.lastAckSize=self.ackHistory[-1]
-
-
         if len(self.ackRatioHistory)>3:
             self.checkIdle()
 
-        shouldCalculateMin=[]
-        for peer in data['peer_stats']:
-            p=(peer["host"],peer["port"])
-            if not 'calcMin' in self.peers[p].keys():
-                if not 'waitingMin' in self.peers[p].keys():
-                    self.peers[p]['waitingMin']=0
-
-                if not self.peers[p]['waitingMin']:
-                    shouldCalculateMin.append(p)
-                else:
-                    self.peer[p]['waitingMin']-=1
-
-        goodPeer=None
-        if shouldCalculateMin:
-            try:
-                goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
-            except:
-                pass
-
-        if goodPeer:
-            for p in shouldCalculateMin:
-                self.peers[p]['waitingMin']=10
-                d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
-                d.addCallback(self.updateMin,p)
+        self.checkMinStt(self,data)
 
         lastAck=data['last_ack']
         executeAlgo=True
