@@ -228,7 +228,10 @@ class DistFlowControl(FlowControl):
             self.stt=lastAck['STT']*pow(10,-6)
             lastPeer=(lastAck['host'],lastAck['port'])
             self.minRtt=self.peers[lastPeer]['minRtt']
-            self.minStt=self.peers[lastPeer]['minStt']
+            try:
+                self.minStt=self.peers[lastPeer]['calcMin']
+            except:
+                self.minStt=self.peers[lastPeer]['minStt']
             self.errRtt=self.peers[lastPeer]['errorRtt']
             # self.errStt=self.peers[lastPeer]['errorStt']
             self.errStt=self.minStt+self.qDelayErr
