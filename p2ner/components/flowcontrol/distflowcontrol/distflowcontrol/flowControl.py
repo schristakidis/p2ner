@@ -66,7 +66,7 @@ class DistFlowControl(FlowControl):
         self.umaxHistory=[]
         self.umaxHistorySize=10
         self.wrongStt=0
-        self.wrongThres=0.01
+        self.wrongThres=0.01**2
         self.secondNorm=0
 
 
@@ -188,7 +188,7 @@ class DistFlowControl(FlowControl):
 
         avgDelay=sum(self.qDelayHistory)/len(self.qDelayHistory)
         self.secondNorm=sum([(d-avgDelay)**2 for d in self.qDelayHistory])/len(self.qDelayHistory)
-        if self.secondNorm>self.wrongThres**2:
+        if self.secondNorm>self.wrongThres:
             self.wrongStt=1
 
 
@@ -282,6 +282,8 @@ class DistFlowControl(FlowControl):
         self.qDelayHistory=self.qDelayHistory[-self.qHistorySize:]
         self.qRef=2*(self.errStt-self.minStt)/4
         self.refStt=self.minStt+self.qRef
+
+        self.checkWrongStt()
 
         try:
             lastData=data['sent_data']
