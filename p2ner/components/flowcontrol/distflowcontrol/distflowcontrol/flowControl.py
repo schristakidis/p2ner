@@ -67,8 +67,9 @@ class DistFlowControl(FlowControl):
         self.umaxHistorySize=10
         self.wrongStt=0
         self.wrongSttperPeer=0
-        self.wrongThres=0.01**2
+        self.wrongThres=0.005**2
         self.secondNorm=0
+        self.secondNormPerPeer=0
         self.qDelayPerPeer=[]
 
 
@@ -204,6 +205,18 @@ class DistFlowControl(FlowControl):
         if len(temp.keys())<2:
             return
 
+        cont=True
+        for dPeer in temp.values():
+            avg=sum(dPeer)/len(dPeer)
+            second=sum([(d-avg)**2 for d in dPeer])/len(dPeer)
+            if second>self.wrongThres:
+                cont=False
+
+        if not cont:
+            self.wrongSttperPeer=0
+            self.secondNormPerPeer=0
+            return
+
         delays=[sum(d)/len(d) for d in temp.values()]
         avgDelay=sum(delays)/len(delays)
         self.secondNormPerPeer=sum([(d-avgDelay)**2 for d in delays])/len(delays)
@@ -250,7 +263,7 @@ class DistFlowControl(FlowControl):
 
 
         for p,d in qDperPeer.items():
-            self.qDelayPerPeer.append(p,d)
+            self.qDelayPerPeer.append((p,d))
 
         self.qDelayPerPeer=self.qDelayPerPeer[-self.qHistorySize:]
 
@@ -492,7 +505,7 @@ class DistFlowControl(FlowControl):
         temp['idleAck']=self.idleAck
         temp['idleSttStatus']=self.idleSttStatus
         temp['lastIdlePacket']=self.lastIdlePacket
-        temp['wrongStt']=self.wrongStt
+        temp['wrongStt']=self.wrongSttPerPeer
         temp['wrongThres']=self.wrongThres
         temp['secondNorm']=self.secondNorm
         temp['secondNormPerPeer']=self.secondNormPerPeer
