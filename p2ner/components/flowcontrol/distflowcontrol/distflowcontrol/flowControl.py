@@ -383,12 +383,19 @@ class DistFlowControl(FlowControl):
 
     def setUmax(self):
         bw=bora.get_bw_msg()
-        for b in bw:
-            self.bwHistory.append(b['bw'])
-        if len(self.bwHistory)>self.bwHistorySize:
-            self.bwHistory=self.bwHistory[-self.bwHistorySize:]
+        if not bw:
+            self.bwHistory.append(-1)
+        else:
+            for b in bw:
+                self.bwHistory.append(b['bw'])
 
-        if not self.bwHistory:
+        self.bwHistory=self.bwHistory[-self.bwHistorySize:]
+
+        posBwHistory=[]
+        if self.bwHistory:
+            posBwHistory=[b for b in self.bwHistory if b>0]
+
+        if not posBwHistory:
             self.send_bw()
             return
 
@@ -397,6 +404,10 @@ class DistFlowControl(FlowControl):
             self.umax = tumax[-3]
         except:
             self.umax = tumax[0]
+
+        if self.umax<1:
+            self.umax=self.maxumax
+
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
 
