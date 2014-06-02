@@ -100,10 +100,12 @@ class DistFlowControl(FlowControl):
 
         if const:
             self.idleSttStatus=1
-            first=self.ackRatioHistory[0]
-            last=self.ackRatioHistory[-1]
-            # self.idleAck=max((1.0*(last-first)/last),(1.0*(first-last)/first))
-            self.idleAck=1.0*(last-first)/last
+            try:
+                first=self.ackRatioHistory[0]
+                last=self.ackRatioHistory[-1]
+                self.idleAck=1.0*(last-first)/last
+            except:
+                self.idleAck=0
 
             line=False
             if self.idleAck>0.1:
