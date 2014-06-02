@@ -72,6 +72,8 @@ class DistFlowControl(FlowControl):
         self.secondNormPerPeer=0
         self.qDelayPerPeer=[]
         self.forceIdle=False
+        self.ackSentHistory=[]
+        self.ackSentHistorySize=10
 
 
     def start(self):
@@ -357,7 +359,10 @@ class DistFlowControl(FlowControl):
             self.lastIdlePacket=isIdle
             self.idlePackets.append(isIdle)
             self.idlePackets=self.idlePackets[-self.idleHistorySize:]
-            self.ackSent=lastData['O_ACK_DATA_COUNTER']*self.TsendRef
+            self.ackSent=(lastData['O_ACK_DATA_COUNTER']+20*lastData['O_ACK_COUNTER'])/self.TsendRef
+            self.ackSentHistory.append(self.ackSent)
+            self.ackSentHistory=self.ackSentHistory[-self.ackSentHistorySize:]
+            self.ackSent=1.0*sum(self.ackSentHistory)/len(self.ackSentHistory)
         except:
             self.totalDataSent=0
             self.ackSent=0
