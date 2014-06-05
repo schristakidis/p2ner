@@ -369,7 +369,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         if not output:
             output={'comp': 'NullOutput', 'kwargs': {}}
         elif output==1:
-            output={'comp': 'GstOutput', 'kwargs': {'port':gstPort}}
+            output={'comp': 'GstOutput', 'kwargs': {'port': {'value':gstPort}}}
         else:
             output={'comp': 'PureVlcOutput', 'kwargs': {}}
 

@@ -363,7 +363,7 @@ class DistFlowControl(FlowControl):
             self.ackSentHistory.append(self.ackSent)
             self.ackSentHistory=self.ackSentHistory[-self.ackSentHistorySize:]
             self.ackSent=1.0*sum(self.ackSentHistory)/len(self.ackSentHistory)
-        except:
+        except :
             self.totalDataSent=0
             self.ackSent=0
 
@@ -451,8 +451,9 @@ class DistFlowControl(FlowControl):
         if self.errorPhase:
             self.u=self.actualU*self.TsendRef
         self.u=self.u/1408
-        if round(self.u)<=0:
-            self.u=2
+        if round(self.u)<=3:
+            print 'eeeee'
+            self.u=10
 
         self.Tsend=self.TsendRef*ceil(self.u)/self.u
         self.u=int(ceil(self.u))
@@ -471,7 +472,7 @@ class DistFlowControl(FlowControl):
             u=4
         else:
             u=self.u
-        bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)) )
+        bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)))
         if self.peers:
             self.saveStats()
 
