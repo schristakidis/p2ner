@@ -14,9 +14,11 @@
 
 
 class interface(object):
-    specs={'port':1234}
+    specs={'port':1234,
+           'ip':'127.0.0.1'}
 
-    specsGui={'port':{'name':'Port','tooltip':'port for rtp streaming'}}
+    specsGui={'port':{'name':'Port','tooltip':'port for rtp streaming'},
+              'ip':{'name':'IP','tooltip':'ip for rtp streaming'}}
 
 
 
