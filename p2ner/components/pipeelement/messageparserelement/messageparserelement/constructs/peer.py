@@ -29,12 +29,16 @@ class PeerAdapter(Adapter):
                 lip=obj.lip
                 lport=obj.lport
                 ldataport=obj.ldataPort
-                hpunch=obj.hpunch
             else:
                 lip='0.0.0.0'
                 lport=0
                 ldataport=0
+
+            try:
+                hpunch=obj.hpunch
+            except:
                 hpunch=False
+
             return Container(IP = obj.ip,  port = obj.port,  dataport = obj.dataPort, bw=obj.reportedBW, LIP = lip,  lport =lport,  ldataport = ldataport, hpunch=hpunch)
 
     def _decode(self,  obj,  ctx):
@@ -44,19 +48,19 @@ class PeerAdapter(Adapter):
             p.lip=None
             p.lport=None
             p.ldataPort=None
-            p.hpunch=False
         else:
             p.lip=obj.LIP
             p.lport=obj.lport
             p.ldataPort=obj.ldataport
-            p.hpunch=obj.hpunch
+
+        p.hpunch=obj.hpunch
         return p
-    
-PeerStruct = Struct( "peer", 
+
+PeerStruct = Struct( "peer",
                    IpAddressAdapter(Bytes("IP",  4)),
-                   UBInt16("port"), 
+                   UBInt16("port"),
                    UBInt16("dataport"),
-                   UBInt16('bw'), 
+                   UBInt16('bw'),
                    IpAddressAdapter(Bytes("LIP",  4)),
                    UBInt16("lport"),
                    UBInt16("ldataport"),
@@ -66,7 +70,7 @@ PeerStruct = Struct( "peer",
 if __name__ == "__main__":
     q = Container(IP = "127.0.0.1",  port = 10000,  dataport=20000)
     s = "\x7f\x00\x00\x01'\x10N "
-    
+
     parsed = PeerAdapter(PeerStruct).parse(s)
     print parsed
     assert s == PeerAdapter(PeerStruct).build(parsed)
