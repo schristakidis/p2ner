@@ -129,14 +129,6 @@ class HolePuncher(Namespace):
             self.sendMessage(peer)
 
 
-    def receivedPunchReply(self,peer):
-        if peer not in self.peers:
-            self.peers.append(peer)
-        else:
-            print peer, 'is already in holepunching list'
-        peer.conOk=True
-        print 'okkkkkkkkkkkk ',peer
-
 
     def sendMessage(self,peer):
         clean=[]

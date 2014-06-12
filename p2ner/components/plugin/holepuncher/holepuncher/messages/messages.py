@@ -32,7 +32,7 @@ class PunchMessage(ControlMessage):
         if message.message=='port':
             PunchReplyMessage.send(peer,message.message, self.controlPipe,self.holePuncher.punchingRecipientFailed)
         else:
-            PunchReplyMessage.send(peer,message.message, self.holePipe,self.holePuncher.punchingRecipientFailed,self.holePuncher.receivedPunchReply)
+            PunchReplyMessage.send(peer,message.message, self.holePipe,self.holePuncher.punchingRecipientFailed)
 
     @classmethod
     def send(cls, peer,msg, out,err_func):
@@ -49,8 +49,8 @@ class PunchReplyMessage(ControlMessage):
         return True
 
     def action(self, message, peer):
-        self.root.holePuncher.receivedReply(peer,message.message)
         print 'punch reply message received ',message.message,peer
+        self.root.holePuncher.receivedReply(peer,message.message)
         return True
 
     @classmethod
