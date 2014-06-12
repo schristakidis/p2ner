@@ -251,6 +251,7 @@ class NetworkChecker(Namespace):
             else:
                 self.networkUnreichable()
         elif self.type=="Full Cone":
+            self.hpunching=True
             self.networkOk()
         elif 'Restric' in self.type:
             self.hpunching=True
