@@ -42,12 +42,15 @@ def scanBlocks(message):
 
 def biter_thread(pipe):
     for b in bora.biter():
-        # print "block", b, "RECV"
-        block = Container(streamid=b[0], blockid=b[1])
-        #print "BITER BLOCK",block
-        r = scanBlocks(block)
-        reactor.callFromThread(pipe.triggerActions, r, block)
-
+        if len(b) ==2:
+            # print "block", b, "RECV"
+            block = Container(streamid=b[0], blockid=b[1])
+            #print "BITER BLOCK",block
+            r = scanBlocks(block)
+            reactor.callFromThread(pipe.triggerActions, r, block)
+        else:
+            reactor.callFromThread(pipe.datagramReceived, b[2])
+            
 def bpuller_thread(pipe):
     for b in bora.bpuller():
         #print "Asking for data to send"
@@ -63,7 +66,39 @@ class BoraElement(PipeElement):
         flowControl = loadComponent('flowcontrol', 'DistFlowControl')
         self.flowControl = flowControl(_parent=self)
         reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
+        
+    def datagramReceived(self, message):
+        d = self.forwardprev("receive", (message["host"], message["port"]), message["ts"])
+        #reactor.callLater(0, d.callback, data)
+        d.callback(message["message"])
+            
+    def send(self, res, msg, data, peer):
+        to=self.to
 
+        useLocalIp=False
+        try: #for the server
+            if self.root.netChecker.nat and peer.ip==self.root.netChecker.externalIp:
+                useLocalIp=True
+                peer.useLocalIp=True
+        except:
+            pass
+
+        if peer.useLocalIp:
+            ip=peer.lip
+            to='l'+to
+        else:
+            ip=peer.ip
+
+
+
+        #print 'send to:',ip,to,getattr(peer, to)
+
+        if isinstance(res, (list, tuple)):
+            for r in res:
+                bora.send_raw(r, ip, getattr(peer, to))
+        else:
+            bora.send_raw(res, ip, getattr(peer, to))
+        return res
 
     def sendblock(self, r, scheduler, block, peer):
         # print "SENDBLOCK"
