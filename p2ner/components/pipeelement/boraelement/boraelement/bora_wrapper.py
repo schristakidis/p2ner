@@ -208,3 +208,8 @@ class BoraElement(PipeElement):
     def getPort(self):
         return self.port
 
+    def setPort(self, port):
+        self.port = port
+        
+    def setNatPort(self, port):
+        bora.set_nat_port(port)

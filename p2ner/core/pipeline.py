@@ -49,6 +49,11 @@ class Pipeline(Namespace):
     def setPipePort(self,port):
         print 'setting pipe port to',port
         self.pipePort=port
+        try:
+            self.callSimple("setNatPort", port)
+            print "setting pipe port in bora"
+        except:
+            pass
 
     def insert(self, el):
         next = getattr(self, '__first')

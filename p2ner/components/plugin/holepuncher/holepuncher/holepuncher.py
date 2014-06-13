@@ -41,18 +41,7 @@ class HolePuncher(Namespace):
 
         
     def constructPipe(self):
-        self.holePipe=Pipeline(_parent=self.root)
-        mparser = loadComponent("pipeelement", "MessageParserElement")(_parent=self.holePipe)
-        multiparser = loadComponent("pipeelement", "MultiRecipientElement")(_parent=self.holePipe)
-        ackparser = loadComponent("pipeelement", "AckElement")(_parent=self.holePipe)
-        hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.holePipe)
-        whparser = loadComponent("pipeelement", "WrapperHeaderParserElement")(_parent=self.holePipe)
-        
-        self.holePipe.append(mparser)
-        self.holePipe.append(multiparser)
-        self.holePipe.append(ackparser)
-        self.holePipe.append(hparser)
-        self.holePipe.append(whparser)
+        self.holePipe=self.trafficPipe
      
     def check(self,msg,content,peer,d,pipe):
         if not peer:
