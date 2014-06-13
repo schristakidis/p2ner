@@ -182,27 +182,27 @@ class Engine(Namespace):
             self.trafficPipe.append(tport)
         else:
             print 'loading cPipe'
-            
+
             self.log.debug('trying to load pipeline element messageparser')
-            mparser = loadComponent("pipeelement", "MessageParserElement")(_parent=self.controlPipe)
+            mparser = loadComponent("pipeelement", "MessageParserElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(mparser)
 
             self.log.debug('trying to load pipeline element multiReceipient')
-            multiparser = loadComponent("pipeelement", "MultiRecipientElement")(_parent=self.controlPipe)
+            multiparser = loadComponent("pipeelement", "MultiRecipientElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(multiparser)
 
             self.log.debug('trying to load pipeline element ack')
-            ackparser = loadComponent("pipeelement", "AckElement")(_parent=self.controlPipe)
+            ackparser = loadComponent("pipeelement", "AckElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(ackparser)
 
             self.log.debug('trying to load pipeline element headerparser')
-            hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.controlPipe)
+            hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(hparser)
-            
+
             self.log.debug('trying to load pipeline element wrapper headerparser')
-            whparser = loadComponent("pipeelement", "WrapperHeaderParserElement")(_parent=self.holePipe)
+            whparser = loadComponent("pipeelement", "WrapperHeaderParserElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(whparser)
-        
+
             self.log.debug('trying to load pipeline element bora')
             port = self.controlPipe.getElement("UDPPortElement").port +1
             bora = loadComponent("pipeelement", "BoraElement")(_parent=self.trafficPipe, to='dataPort', port=port)
