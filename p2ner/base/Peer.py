@@ -112,6 +112,7 @@ class Peer(object):
             obj.swapRtt=0
             obj.isNeighbour=False
             obj.askedReplace=False
+            obj.natType=0
         return obj
 
 
@@ -136,7 +137,7 @@ class Peer(object):
     def __repr__(self):
         ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort)])])#,str(self.lastRtt),str(self.swapRtt) ])])
         if self.lip:
-            ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch) ])])
+            ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch), str(self.natType) ])])
         return ret
 
     def __getstate__(self):

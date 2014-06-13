@@ -23,41 +23,41 @@ class PunchMessage(ControlMessage):
     type = "basemessage"
     code = MSG.HOLE_PUNCH
     ack = True
-    
+
     def trigger(self, message):
         return True
-    
+
     def action(self, message, peer):
         print 'punch message received ',message.message,peer
         if message.message=='port':
             PunchReplyMessage.send(peer,message.message, self.controlPipe,self.holePuncher.punchingRecipientFailed)
         else:
-            PunchReplyMessage.send(peer,message.message, self.holePipe,self.holePuncher.punchingRecipientFailed,self.holePuncher.receivedPunchReply)
-    
+            PunchReplyMessage.send(peer,message.message, self.holePipe,self.holePuncher.punchingRecipientFailed)
+
     @classmethod
     def send(cls, peer,msg, out,err_func):
         msg = Container(message=msg)
-        d=out._send(cls, msg, peer).addErrback(probe_all,err_func=err_func)        
+        d=out._send(cls, msg, peer).addErrback(probe_all,err_func=err_func)
         return d
-        
+
 class PunchReplyMessage(ControlMessage):
     type = "basemessage"
     code = MSG.PUNCH_REPLY
     ack = True
-    
+
     def trigger(self, message):
         return True
-    
+
     def action(self, message, peer):
-        self.root.holePuncher.receivedReply(peer,message.message)
         print 'punch reply message received ',message.message,peer
+        self.root.holePuncher.receivedReply(peer,message.message)
         return True
-    
+
     @classmethod
     def send(cls, peer,msg, out,err_func,suc_func=None):
         msg = Container(message=msg)
         return out._send(cls, msg, peer).addErrback(probe_all,suc_func,err_func)
-    
+
 class KeepAliveMessage(ControlMessage):
     type = "basemessage"
     code = MSG.KEEP_ALIVE
@@ -65,53 +65,53 @@ class KeepAliveMessage(ControlMessage):
 
     def trigger(self, message):
         return True
-    
+
     def action(self, message, peer):
         print 'keep alive message received from ',peer
-        return True    
-    
+        return True
+
     @classmethod
     def send(cls, peer, out,func):
         msg = Container(message=None)
         return out._send(cls, msg, peer).addErrback(probe_ack,func)
-    
+
 class AskServerPunchMessage(ControlMessage):
     type = "peermessage"
     code = MSG.PUNCH_SERVER
     ack = True
-    
-    
+
+
     def trigger(self, message):
         return True
-    
+
     def action(self, message, peer):
         print 'receive message from ',peer,' to help punching with ',message.peer
         StartPunchingMessage.send(peer,message.peer,self.root.controlPipe)
-        return True    
-    
+        return True
+
     @classmethod
     def send(cls, peer , server, out,suc_func, err_func, arg):
         d=out._send(cls, Container(peer=peer), server)
-        d.addErrback(probe_all,suc_func,err_func,arg)
+        d.addErrback(probe_all,suc_func,err_func,**{'peer':arg})
         return d
-    
-    
+
+
 class StartPunchingMessage(ControlMessage):
     type = "peermessage"
     code = MSG.START_PUNCH
     ack = True
-     
+
     def trigger(self, message):
         return True
-    
+
     def action(self, message, peer):
         print 'receive message from ',peer,' to start punching with ',message.peer
         self.root.holePuncher._startPunching(None,message.peer)
-        return True    
-    
+        return True
+
     @classmethod
     def send(cls, peer , server, out):
         d=out._send(cls, Container(peer=peer), server)
         d.addErrback(trap_sent)
         return d
-    
+

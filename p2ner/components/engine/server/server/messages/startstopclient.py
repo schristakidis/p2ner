@@ -21,7 +21,7 @@ class ClientStartedMessage(ControlMessage):
     type = "registermessage"
     code = MSG.CLIENT_STARTED
     ack = True
-    
+
     def trigger(self, message):
         return True
 
@@ -33,12 +33,13 @@ class ClientStartedMessage(ControlMessage):
             peer.lport=message.peer.port
             peer.ldataPort=message.peer.dataPort
             peer.hpunch=message.peer.hpunch
-        
+            peer.natType=message.peer.natType
+
         print 'received client started message from ',peer,' bw:',message.bw
-     
+
         self.log.debug('received client started message from %s',peer)
         if peer not in self.knownPeers:
-            self.knownPeers.append(peer)        
+            self.knownPeers.append(peer)
             self.log.debug('appending %s to known peers',peer)
 
 
