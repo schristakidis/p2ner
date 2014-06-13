@@ -34,6 +34,7 @@ class NetworkChecker(Namespace):
         self.log.debug('initting network checker')
         self.measureBW=True
         self.difnat=False
+        self.natType=0
         self.getIP(ip,port)
 
 
@@ -112,22 +113,12 @@ class NetworkChecker(Namespace):
         reactor.callLater(0.2,self.checkDataPort)
 
     def checkDataPort(self):
-        if 'Symmetric' not in self.type:
-            self.log.debug('contacting stun server for data port')
-            d=deferToThread(get_ip_info,'0.0.0.0',self.dataPort)
-            d.addCallback(self._checkDataPort)
-            d.addErrback(self.stunFailed)
-            return
+        self.log.debug('contacting stun server for data port')
+        d=deferToThread(get_ip_info,'0.0.0.0',self.dataPort)
+        d.addCallback(self._checkDataPort)
+        d.addErrback(self.stunFailed)
+        return
 
-        #self.root.trafficPipe.call('listen')
-
-        self.log.debug('peer is  behind nat')
-        print 'peer is behind nat'
-        self.nat=True
-        if not self.secondRun:
-            reactor.callLater(0.1,self.checkUPNP)
-        else:
-            self.checkStun()
 
     def _checkDataPort(self,ret):
         type,externalIp,self.extDataPort=ret
@@ -159,12 +150,9 @@ class NetworkChecker(Namespace):
 
     def checkUPNP(self):
         self.log.info('trying upnp')
-        if self.upnp:
-            self.networkUnreachable()
-            return
 
         valid=self.preferences.getUPNP()
-        if not valid:
+        if not valid or self.upnpDevice:
             self.log.info('upnp is deactivated')
             self.checkStun()
             return
@@ -251,9 +239,19 @@ class NetworkChecker(Namespace):
             else:
                 self.networkUnreichable()
         elif self.type=="Full Cone":
+            self.hpunching=False
+            self.natType=0
+            self.networkOk()
+        elif 'Restric' in self.type and not 'Port' in self.type:
+            self.natType=1
             self.hpunching=True
             self.networkOk()
-        elif 'Restric' in self.type:
+        elif 'Port' in self.type:
+            self.natType=2
+            self.hpunching=True
+            self.networOk()
+        elif 'Symmetric' in self.type:
+            self.natType=3
             self.hpunching=True
             self.networkOk()
         else:
@@ -269,14 +267,14 @@ class NetworkChecker(Namespace):
         first,bw,previp=self.preferences.getFirstRun()
         if first:
             print 'first boot'
-            self.root.setBW(30)
-            self.measureBW=True
+            self.root.setBW(300)
+            self.measureBW=False #True
         else:
             if not previp==self.externalIp:
                 print 'different location'
-                self.root.setBW(bw)
-                self.measureBW=True
+                self.root.setBW(300) #(bw)
+                self.measureBW=False #True
             else:
                 print 'same location'
                 self.measureBW=False
-                self.root.setBW(bw)
+                self.root.setBW(300) #(bw)

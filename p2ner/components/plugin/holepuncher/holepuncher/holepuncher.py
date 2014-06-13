@@ -176,7 +176,10 @@ class HolePuncher(Namespace):
         self.log.error("hole punching failed for %s",peer)
         peer.conProb=True
 
-        actions=self.checkPeers.pop(peer)
+        try:
+            actions=self.checkPeers.pop(peer)
+        except:
+            return
 
         for m in actions:
             id=m['id']

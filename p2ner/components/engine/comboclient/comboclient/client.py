@@ -74,6 +74,7 @@ class Client(Engine):
             p=Peer(self.netChecker.localIp,self.netChecker.controlPort,self.netChecker.dataPort)
             if self.netChecker.hpunching:
                 p.hpunch=True
+            p.natType=self.netChecker.natType
         return p,port
 
     def registerStream(self,stream,input,output):
