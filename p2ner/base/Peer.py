@@ -56,7 +56,7 @@ def findNatedPeer(ip,lip=None,port=None,dataPort=None):
         if port:
             peer.natport=port
         else:
-            peer.natdataPort=port
+            peer.natdataPort=dataPort
 
         return peer
 

@@ -50,7 +50,7 @@ def biter_thread(pipe):
             reactor.callFromThread(pipe.triggerActions, r, block)
         else:
             reactor.callFromThread(pipe.datagramReceived, b[2])
-            
+
 def bpuller_thread(pipe):
     for b in bora.bpuller():
         #print "Asking for data to send"
@@ -66,12 +66,12 @@ class BoraElement(PipeElement):
         flowControl = loadComponent('flowcontrol', 'DistFlowControl')
         self.flowControl = flowControl(_parent=self)
         reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
-        
+
     def datagramReceived(self, message):
         d = self.forwardprev("receive", (message["host"], message["port"]), message["ts"], True)
         #reactor.callLater(0, d.callback, data)
         d.callback(message["message"])
-            
+
     def send(self, res, msg, data, peer):
         to=self.to
 
@@ -88,6 +88,8 @@ class BoraElement(PipeElement):
             to='l'+to
         else:
             ip=peer.ip
+            if peer.natType==3 and getattr(peer,'nat'+to):
+                to='nat'+to
 
 
 
@@ -210,6 +212,6 @@ class BoraElement(PipeElement):
 
     def setPort(self, port):
         self.port = port
-        
+
     def setNatPort(self, port):
         bora.set_nat_port(port)

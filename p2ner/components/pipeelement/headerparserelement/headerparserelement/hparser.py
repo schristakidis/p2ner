@@ -66,7 +66,7 @@ class HeaderParserElement(PipeElement):
             if not dataPort:
                 peer = findNatedPeer(host,lip=lip,port=port)
             else:
-                peer = Peer(host,lip=lip, dataPort=port)
+                peer = findNatedPeer(host,lip=lip, dataPort=port)
 
         if not peer:
             if header.port:
@@ -76,8 +76,6 @@ class HeaderParserElement(PipeElement):
                 peer = Peer(host, port)
             else:
                 peer = Peer(host, dataPort=port)
-        else:
-            self.log.error('found local peer %s',peer)
 
         return peer,header
 
