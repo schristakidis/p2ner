@@ -199,10 +199,6 @@ class Engine(Namespace):
             hparser = loadComponent("pipeelement", "HeaderParserElement")(_parent=self.trafficPipe)
             self.trafficPipe.append(hparser)
 
-            self.log.debug('trying to load pipeline element wrapper headerparser')
-            whparser = loadComponent("pipeelement", "WrapperHeaderParserElement")(_parent=self.trafficPipe)
-            self.trafficPipe.append(whparser)
-
             self.log.debug('trying to load pipeline element bora')
             port = self.controlPipe.getElement("UDPPortElement").port +1
             bora = loadComponent("pipeelement", "BoraElement")(_parent=self.trafficPipe, to='dataPort', port=port)
