@@ -76,8 +76,8 @@ class UDPPortElement(PipeElement, DatagramProtocol):
             to='l'+to
         else:
             ip=peer.ip
-
-
+            if peer.natType==3:
+                to='nat'+to
 
         #print 'send to:',ip,to,getattr(peer, to)
 

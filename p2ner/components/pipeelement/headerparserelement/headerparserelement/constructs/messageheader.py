@@ -17,10 +17,16 @@
 from construct import *
 
 
+class IpAddressAdapter(Adapter):
+    def _encode(self, obj, context):
+        return "".join(chr(int(b)) for b in obj.split("."))
+    def _decode(self, obj, context):
+        return ".".join(str(ord(b)) for b in obj)
 
-MessageHeader = Struct("header", 
+MessageHeader = Struct("header",
         UBInt16("port"),
         Flag("ack"),
         UBInt16("seq"),
         UBInt8("code"),
+        Optional(IpAddressAdapter(Bytes("localIP",  4))),
         )

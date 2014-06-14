@@ -49,6 +49,17 @@ def findLocalPeer(ip, port=-1, dataPort=-1):
 
     return None
 
+def findNatedPeer(ip,lip=None,port=None,dataPort=None):
+    l = [p for p in Peer._peerPool.values() if p.ip==ip and p.lip==lip]
+    if l:
+        peer=l[0]
+        if port:
+            peer.natport=port
+        else:
+            peer.natdataPort=port
+
+        return peer
+
 def getPeerList():
     '''
     returns the whole list of cached peers
@@ -113,6 +124,8 @@ class Peer(object):
             obj.isNeighbour=False
             obj.askedReplace=False
             obj.natType=0
+            obj.natport=None
+            obj.natdataPort=None
         return obj
 
 
@@ -138,6 +151,8 @@ class Peer(object):
         ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort)])])#,str(self.lastRtt),str(self.swapRtt) ])])
         if self.lip:
             ret=" ".join(["Peer:",  ", ".join([str(self.ip), str(self.port),  str(self.dataPort), str(self.lip), str(self.lport),  str(self.ldataPort), str(self.hpunch), str(self.natType) ])])
+        if self.natType==3:
+            ret=" ".join([ret,str(self.natport),str(self.natdataPort)])
         return ret
 
     def __getstate__(self):
