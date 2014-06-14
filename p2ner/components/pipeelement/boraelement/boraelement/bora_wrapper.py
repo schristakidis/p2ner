@@ -68,7 +68,7 @@ class BoraElement(PipeElement):
         reactor.addSystemEventTrigger('before', 'shutdown', bora.die)
         
     def datagramReceived(self, message):
-        d = self.forwardprev("receive", (message["host"], message["port"]), message["ts"])
+        d = self.forwardprev("receive", (message["host"], message["port"]), message["ts"], True)
         #reactor.callLater(0, d.callback, data)
         d.callback(message["message"])
             
