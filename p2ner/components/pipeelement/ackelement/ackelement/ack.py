@@ -94,7 +94,18 @@ class AckElement(PipeElement):
                 duplicate=True
 
             port=self._parent.controlPipe.getElement(name="UDPPortElement").port
-            ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK))
+
+            localIP=None
+            lip=False
+            try:
+                nType=self.root.netChecker.natType
+            except:
+                nType=0
+            if nType==3:
+                localIP=self.root.netChecker.localIp
+                lip=True
+
+            ack = Container(header=Container(port=port, ack=False, seq=header.seq, code=MSG.ACK,lip=lip,localIP=localIP))
             d = self.forwardnext("send", None, ack, peer)
             reactor.callLater(0, d.callback, "")
 

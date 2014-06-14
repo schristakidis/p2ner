@@ -24,25 +24,25 @@ class RequestStreamMessage(BaseControlMessage):
     type = "sidmessage"
     code = MSG.REQUEST_STREAM
     ack = True
-    
+
     @classmethod
     def send(cls, sid, peer, out,func):
         d=out.send(cls, Container(streamid = sid), peer)
         d.addErrback(probe_ack,func)
         return d
-    
-        
+
+
 class CheckContentsMessage(BaseControlMessage):
     type='basemessage'
     code=MSG.CHECK_CONTENTS
     ack=True
-    
+
     @classmethod
     def send(cls,  server, out,func):
         d=out.send(cls, Container(message=None), server)
         d.addErrback(probe_ack,func)
-        return d 
-    
+        return d
+
 class StreamMessage(BaseControlMessage):
     type = "streammessage"
     code = MSG.PUBLISH_STREAM
@@ -53,7 +53,7 @@ class StreamMessage(BaseControlMessage):
         d=out.send(cls, Container(stream=stream), server)
         d.addErrback(probe_ack,func)
         return d
-    
+
 class ClientStartedMessage(BaseControlMessage):
     type = "registermessage"
     code = MSG.CLIENT_STARTED

@@ -173,14 +173,16 @@ class Pipeline(Namespace):
                 content.header.port = self.pipePort
             else:
                 content.header.port = 0
+
+            content.header.localIP=None
+            content.header.lip=False
             try:
                 nType=self.root.netChecker.natType
             except:
                 nType=0
             if nType==3:
                 content.header.localIP=self.root.netChecker.localIp
-            else:
-                content.header.localIP=None
+                content.header.lip=True
         if not d:
             d = self.call("send",msg, content, peer)
             return d

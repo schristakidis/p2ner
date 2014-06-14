@@ -24,19 +24,19 @@ def decodemsgs(binmsg, messagetypes, decoded=None):
         if t not in MSG_TYPES:
             #self.log.error('received message has unknown type:%d',t)
             raise TypeError
-        if t not in decoded: 
+        if t not in decoded:
             decoded[t] = MSG_TYPES[t].parse(binmsg)
     #print "decoded"
     #print decoded
     return decoded
-    
+
 def triggermsg(totrigger, triggers):
     triggered = []
     for msg in totrigger:
         if msg.trigger(triggers[msg.type]):
             triggered.append((msg, triggers[msg.type]))
     return triggered
-    
+
 def scanMessages(header, message):
     codefiltered = ControlMessage.codefilter(header.code)
     messagetypes = [msg.type for msg in codefiltered]

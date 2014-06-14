@@ -17,7 +17,7 @@
 from p2ner.abstract.pipeelement import PipeElement
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
-from constructs.messageheader import MessageHeader
+from constructs.messageheader import MessageHeader,MessageHeaderIp,MessageHeaderSimple
 from p2ner.base.Peer import Peer,findLocalPeer,findNatedPeer
 
 class HeaderParserElement(PipeElement):
@@ -31,7 +31,10 @@ class HeaderParserElement(PipeElement):
 
     def redir(self, res, message, recTime):
         peer,header = res
-        todecode = message[MessageHeader.sizeof():]
+        if header.localIP:
+            todecode = message[MessageHeaderIp.sizeof():]
+        else:
+            todecode = message[MessageHeaderSimple.sizeof():]
         d = self.forwardprev("receive", todecode, peer, recTime)
         reactor.callLater(0, d.callback, header)
         self.breakCall()

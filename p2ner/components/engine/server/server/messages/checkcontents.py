@@ -22,14 +22,14 @@ class CheckContentsMessage(ControlMessage):
     type = "basemessage"
     code = MSG.CHECK_CONTENTS
     ack = True
-    
+
     def trigger(self, message):
         return True
 
     def action(self, message, peer):
         self.log.debug('received message check contents from %s',peer)
         self.root.sendContents(peer)
-        
+
 
     @classmethod
     def send(cls, stream, peer, out):

@@ -28,5 +28,25 @@ MessageHeader = Struct("header",
         Flag("ack"),
         UBInt16("seq"),
         UBInt8("code"),
-        Optional(IpAddressAdapter(Bytes("localIP",  4))),
+        Flag("lip"),
+        If(lambda ctx: ctx["lip"],
+            IpAddressAdapter(Bytes("localIP",  4))
+           ),
+        )
+
+MessageHeaderSimple = Struct("header",
+        UBInt16("port"),
+        Flag("ack"),
+        UBInt16("seq"),
+        UBInt8("code"),
+        Flag("lip"),
+        )
+
+MessageHeaderIp = Struct("header",
+        UBInt16("port"),
+        Flag("ack"),
+        UBInt16("seq"),
+        UBInt8("code"),
+        Flag("lip"),
+        IpAddressAdapter(Bytes("localIP",  4)),
         )
