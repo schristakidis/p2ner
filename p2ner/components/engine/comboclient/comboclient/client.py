@@ -301,7 +301,7 @@ def startDaemonClient():
     from twisted.internet import reactor
     import sys,getopt
     try:
-        optlist,args=getopt.getopt(sys.argv[1:],'bp:v:P:hs',['basic','port=','vizir=','vizirPort=','help','stats'])
+        optlist,args=getopt.getopt(sys.argv[1:],'bp:v:P:chs',['basic','port=','vizir=','vizirPort=','help','stats'])
     except getopt.GetoptError as err:
         usage(err=err,daemon=True)
 
