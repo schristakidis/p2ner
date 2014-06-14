@@ -90,7 +90,7 @@ class HolePuncher(Namespace):
                 KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
 
     def startPunching(self,peer):
-        if peer.hpunch:
+        if True:# peer.hpunch:
             print 'sending ask server punch message to ',peer.learnedFrom,' for ',peer
             AskServerPunchMessage.send(peer,peer.learnedFrom,self.controlPipe,self._startPunching,self.failedInterPunch,peer)
         else:

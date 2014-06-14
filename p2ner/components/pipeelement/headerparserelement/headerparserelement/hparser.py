@@ -60,9 +60,6 @@ class HeaderParserElement(PipeElement):
                 lip=0
 
         if lip:
-            if header.port:
-                port=header.port
-
             if not dataPort:
                 peer = findNatedPeer(host,lip=lip,port=port)
             else:
