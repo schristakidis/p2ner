@@ -127,7 +127,7 @@ class VlcInput(Input):
                     proc = ['vlcProcess', filename,arg1,arg2]+(vlc_defaults[platform][type]%args).split()
             elif type=='tv':
                 file=filename[0]
-                args=(int(filename[1]),int(self.width),int(self.height),int(videorate),int(videorate),int(self.scheduler.blocksSec))
+                args=(int(filename[1]),int(self.width),int(self.height),int(videorate),int(videorate),self.acodec,int(self.scheduler.blocksSec))
                 proc = ['vlcProcess', file]+(vlc_defaults[platform][type]%args).split()
             else:
                 proc = ['vlcProcess', filename,arg1,arg2]+(vlc_defaults[platform][type]%args).split()
