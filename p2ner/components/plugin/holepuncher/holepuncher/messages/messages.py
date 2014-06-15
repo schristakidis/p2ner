@@ -106,7 +106,7 @@ class StartPunchingMessage(ControlMessage):
 
     def action(self, message, peer):
         print 'receive message from ',peer,' to start punching with ',message.peer
-        self.root.holePuncher._startPunching(None,message.peer)
+        self.root.holePuncher._startPunching(None,message.peer,init=False)
         return True
 
     @classmethod

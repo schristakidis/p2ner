@@ -30,6 +30,7 @@ class HolePuncher(Namespace):
         self.loopingCall.start(30)
         self.checkPeers={}
         self.mcount=0
+        self.requestingPeers=[]
 
     def registerMessages(self):
         self.messages = []
@@ -85,7 +86,12 @@ class HolePuncher(Namespace):
             KeepAliveMessage._send(p, self.holePipe,self.keepAliveFailed)
 
         servers=[s.server for s in self.root.getAllStreams()]
-        if self.netChecker.nat:
+        try:
+            nat=self.root.netChecker.nat
+        except:
+            nat=False
+
+        if nat:
             for p in servers:
                 KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
 
@@ -100,8 +106,10 @@ class HolePuncher(Namespace):
         print 'failed to start punching with ',peer,' through ',server
         self.punchingFailed(peer)
 
-    def _startPunching(self,server,peer):
+    def _startPunching(self,server,peer,init=True):
         print 'punchingggggggggggggggggggggggg',peer
+        if not init:
+            self.requestingPeers.append(peer)
         PunchMessage.send(peer,'port', self.controlPipe,self.punchingFailed)
         PunchMessage.send(peer, 'dataPort', self.holePipe,self.punchingFailed)
 
@@ -115,6 +123,10 @@ class HolePuncher(Namespace):
             self.peers.append(peer)
             peer.conOk=True
             print 'okkkkkkkkkkkk ',peer
+            try:
+                self.requestingPeers.remove(peer)
+            except:
+                pass
             self.sendMessage(peer)
 
 
