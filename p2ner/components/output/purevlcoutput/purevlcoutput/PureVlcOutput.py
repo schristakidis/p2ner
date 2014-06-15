@@ -93,7 +93,8 @@ class vlcProtocol(protocol.ProcessProtocol):
         self.log=log
 
     def write(self, data):
-        self.transport.write(data)
+        if (data):
+            self.transport.write(data)
 
     def errReceived(self, data):
         # print "PURE VLC OUTPUT:", data
