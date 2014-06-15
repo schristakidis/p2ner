@@ -122,7 +122,7 @@ class ControlMessage(Message):
         if len(msglist)==0:
             print "No matches for msg code", code
             #cls.Log.warning("No matches for msg code:%s", code)
-            print "Message instances: ", [m() for m in cls.__instances__]
+            # print "Message instances: ", [m() for m in cls.__instances__]
             #cls.Log.warning("Message instances:%s ",str( [m() for m in cls.__instances__]))
         return msglist
 

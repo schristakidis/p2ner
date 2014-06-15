@@ -81,11 +81,11 @@ class HolePuncher(Namespace):
 
         for p in self.peers:
             print 'sending keep allive to ',p
-            KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
-            KeepAliveMessage.send(p, self.holePipe,self.keepAliveFailed)
+            KeepAliveMessage._send(p, self.controlPipe,self.keepAliveFailed)
+            KeepAliveMessage._send(p, self.holePipe,self.keepAliveFailed)
 
         servers=[s.server for s in self.root.getAllStreams()]
-        if True:#self.netChecker.hpunching:
+        if self.netChecker.nat:
             for p in servers:
                 KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
 
