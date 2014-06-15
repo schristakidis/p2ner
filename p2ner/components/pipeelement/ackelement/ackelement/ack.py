@@ -21,7 +21,6 @@ from p2ner.base.ControlMessage import MessageSent, MessageError
 from construct import Container
 from random import uniform
 from time import time
-import copy
 
 class AckElement(PipeElement):
 
