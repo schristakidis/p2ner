@@ -82,8 +82,8 @@ class HolePuncher(Namespace):
 
         for p in self.peers:
             print 'sending keep allive to ',p
-            KeepAliveMessage._send(p, self.controlPipe,self.keepAliveFailed)
-            KeepAliveMessage._send(p, self.holePipe,self.keepAliveFailed)
+            KeepAliveMessage.send(p, self.controlPipe,self.keepAliveFailed)
+            KeepAliveMessage.send(p, self.holePipe,self.keepAliveFailed)
 
         servers=[s.server for s in self.root.getAllStreams()]
         try:
