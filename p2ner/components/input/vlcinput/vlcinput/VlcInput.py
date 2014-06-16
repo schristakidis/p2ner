@@ -210,6 +210,7 @@ class vlcInputProtocol(protocol.ProcessProtocol):
         if not self.stopped:
             self.log.debug('vlc input has exitted')
             self.stopped=False
+            self.parent.streamComponent.stop()
 
 
 if __name__=='__main__':
