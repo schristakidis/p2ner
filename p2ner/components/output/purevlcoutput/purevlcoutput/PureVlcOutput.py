@@ -62,10 +62,10 @@ class PureVlcOutput(Output):
         else:
             so = ''
 
-        proc='vlcProcess','-' ,  so, 'vlc://quit'
+        proc='vlcProcess','-' ,'--ignore-config','--no-qt-privacy-ask',  so, 'vlc://quit'
         if 'win' in sys.platform:
             if vlc_path() != None:
-                proc='vlcProcess','-' , '-I', 'dummy-quiet',  so, 'vlc://quit'
+                proc='vlcProcess','-' , '-I', 'dummy-quiet','--ignore-config','--no-qt-privacy-ask',  so, 'vlc://quit'
                 exe=vlc_path() + "\\vlc.exe "
                 self.proto=vlcProtocol(self,self.log)
         else:
