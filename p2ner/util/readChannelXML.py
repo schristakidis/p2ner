@@ -38,8 +38,13 @@ def readChannels(file):
         ext=ch.getElementsByTagName('extension')[0]
         prog=getText(ext.getElementsByTagName('vlc:option')[0]).split('=')[1]
         channels[name]={}
+        loc=str(loc)
+        fields=loc.split(',')
+        dfield=fields[0]
+        loc=[f for f in fields if 'bandwidth' in f][0]
+        loc=",".join([dfield,loc])
         channels[name]['location']=str(loc)
         channels[name]['program']=int(prog)
 
     return channels
-    
+
