@@ -35,13 +35,15 @@ class AckElement(PipeElement):
 
     def send(self, res, msg, data, peer):
         if getattr(msg, "ack", False):
+            cdata = data.copy()
+            cdata.header = data.header.copy()
             peer.ackRtt[self.seq]=time()
             d = defer.Deferred()
-            data.header.seq = self.seq
-            data.header.ack = True
-            tosend = {'res':res, 'msg':msg, 'data':data, 'peer':peer, 'retries':self.retries, 'd':d}
+            cdata.header.seq = self.seq
+            cdata.header.ack = True
+            tosend = {'res':res, 'msg':msg, 'data':cdata, 'peer':peer, 'retries':self.retries, 'd':d}
             self.cache[self.seq] = tosend
-            fwd = self.forwardnext("send", msg, data, peer)
+            fwd = self.forwardnext("send", msg, cdata, peer)
             reactor.callLater(0, fwd.callback, res)
             reactor.callLater(uniform(0.3, self.timeout), self.checkAck, self.seq)
             self.seq += 1

@@ -48,7 +48,7 @@ class Deploy():
     def deploy_eggs(self):
         from p2ner.core.components import _entry_points
         from sys import executable
-        excludes=['vlcoutput', 'gstinput']
+        excludes=['vlcoutput', 'gstinput','gstoutput']
         cd =  os.path.dirname( os.path.realpath( __file__ ) )
         COMPONENTS_DIR = os.path.join(cd, "p2ner", "components")
         os.system(executable + " setup.py bdist_egg --exclude-source-files")
@@ -243,7 +243,7 @@ class Deploy():
             options = {"build_exe": {
                             "build_exe": self.dist_dir,
                             "packages": find_packages(),
-                            "includes": ['gtk', 'cairo', 'pangocairo', 'pango', 'atk', 'gobject','logging.handlers',
+                            "includes": ['miniupnpc', 'bora', 'gtk', 'cairo', 'pangocairo', 'pango', 'atk', 'gobject','logging.handlers',
                                         'gio', 'zlib','wmi','matplotlib','matplotlib.backends.backend_gtkagg','code','pylab','xml.dom.minidom','twisted.web.client','miniupnpc','twisted.web.static','twisted.web.resource','twisted.web.server','networkx','sqlite3'], #'gst', 'pygst'
                             "bin_excludes": ["tcl85.dll", "tk85.dll", "gdiplus.dll", "mfc90.dll", "gst-inspect.exe", "gst-launch.exe", "gst-typefind.exe", "gst-xmlinspect.exe"],
                             "excludes": ["pywin.debugger", "pywin.debugger.dbgcon","bz2",
