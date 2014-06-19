@@ -127,8 +127,6 @@ class AckElement(PipeElement):
             tosend['retries'] -= 1
             if tosend['retries']:
                 tosend['peer'].ackRtt[seq]=time()
-                print 'retransmitting to:',tosend['peer']
-                print 'msg:',tosend['msg']
                 d = self.forwardnext("send", tosend['msg'], tosend['data'], tosend['peer'])
                 reactor.callLater(0, d.callback, tosend['res'])
                 reactor.callLater(self.timeout, self.checkAck, seq)

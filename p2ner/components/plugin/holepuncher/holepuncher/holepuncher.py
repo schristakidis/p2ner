@@ -15,7 +15,7 @@ from p2ner.core.namespace import Namespace, initNS
 
 import p2ner.util.utilities as util
 from messages.messages import PunchMessage,PunchReplyMessage,KeepAliveMessage,AskServerPunchMessage,StartPunchingMessage
-from twisted.internet import reactor,task
+from twisted.internet import reactor,task,defer
 from p2ner.core.pipeline import Pipeline
 from p2ner.core.components import loadComponent
 from time import time
