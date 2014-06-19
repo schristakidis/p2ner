@@ -85,6 +85,7 @@ class UDPPortElement(PipeElement, DatagramProtocol):
             for r in res:
                self.sockwrite(r, ip, getattr(peer, to))
         else:
+            print 'sent to:',ip,getattr(peer,to),to
             self.sockwrite(res, ip, getattr(peer, to))
         return res
 

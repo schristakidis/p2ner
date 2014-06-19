@@ -24,7 +24,7 @@ from time import time
 
 class AckElement(PipeElement):
 
-    def initElement(self, retries=15, timeout=0.5, dupeTimeout=10, **kargs):
+    def initElement(self, retries=5, timeout=0.5, dupeTimeout=10, **kargs):
         self.seq = 0
         self.timeout = timeout
         self.dupeTimeout = dupeTimeout
