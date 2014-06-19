@@ -249,7 +249,7 @@ class NetworkChecker(Namespace):
         elif 'Port' in self.type:
             self.natType=2
             self.hpunching=True
-            self.networOk()
+            self.networkOk()
         elif 'Symmetric' in self.type:
             self.natType=3
             self.hpunching=True
