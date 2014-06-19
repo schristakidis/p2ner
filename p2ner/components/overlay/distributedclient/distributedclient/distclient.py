@@ -254,7 +254,10 @@ class DistributedClient(Overlay):
             pass
 
         ClientStoppedMessage.send(self.stream.id, self.server, self.controlPipe)
-        ClientStoppedMessage.send(self.stream.id, self.producer, self.controlPipe)
+        try:
+            ClientStoppedMessage.send(self.stream.id, self.producer, self.controlPipe)
+        except:
+            pass
         for n in self.getNeighbours():
             self.log.debug('sending clientStopped message to %s',n)
             ClientStoppedMessage.send(self.stream.id, n, self.controlPipe)
