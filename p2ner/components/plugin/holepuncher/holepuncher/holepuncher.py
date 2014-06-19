@@ -104,7 +104,6 @@ class HolePuncher(Namespace):
 
     def failedInterPunch(self,server,peer):
         print 'failed to start punching with ',peer,' through ',server
-        self.startPunching(server,peer)
         self.punchingFailed(peer)
 
     def _startPunching(self,server,peer,init=True):
@@ -176,6 +175,8 @@ class HolePuncher(Namespace):
     def punchingFailed(self,peer):
         print "hole punching failed for ",peer
         self.log.error("hole punching failed for %s",peer)
+        self._startPunching(None,peer,True)
+        return
         peer.conProb=True
 
         try:
