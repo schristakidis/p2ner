@@ -19,6 +19,7 @@ from twisted.internet import reactor,task
 from p2ner.core.pipeline import Pipeline
 from p2ner.core.components import loadComponent
 from time import time
+from p2ner.base.ControlMessage import MessageSent, MessageError
 
 class HolePuncher(Namespace):
     @initNS
@@ -183,6 +184,7 @@ class HolePuncher(Namespace):
             return
 
         for m in actions:
+            m['msg'][3].errback(defer.failure.Failure(MessageError(peer)))
             id=m['id']
             peers=[p for p in m['peers'] if p!=peer]
             for p in peers:
