@@ -201,6 +201,7 @@ class DistributedClient(Overlay):
     def failedProducer(self,peer):
         self.log.error('failed to add %s as producer',peer)
         print 'failed to add ',peer,' as producer'
+        self.parent.streamComponent.stop()
 
     def removeNeighbour(self, peer):
         try:
