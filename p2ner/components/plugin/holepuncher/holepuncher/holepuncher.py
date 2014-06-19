@@ -175,8 +175,6 @@ class HolePuncher(Namespace):
     def punchingFailed(self,peer):
         print "hole punching failed for ",peer
         self.log.error("hole punching failed for %s",peer)
-        self._startPunching(None,peer,True)
-        return
         peer.conProb=True
 
         try:
