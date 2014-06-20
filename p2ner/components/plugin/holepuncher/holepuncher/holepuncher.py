@@ -20,6 +20,7 @@ from p2ner.core.pipeline import Pipeline
 from p2ner.core.components import loadComponent
 from time import time
 from p2ner.base.ControlMessage import MessageSent, MessageError
+from p2ner.base.Consts import MessageCodes as MSG
 
 class HolePuncher(Namespace):
     @initNS
@@ -56,7 +57,8 @@ class HolePuncher(Namespace):
             if not self.netChecker.hpunching and not p.hpunch:
                 p.conOk=True
             elif p.conOk:
-                p.lastSend=time()
+                if msg.code!=MSG.KEEP_ALIVE:
+                    p.lastSend=time()
             elif p.conProb:
                 print "can't connect to peer ",p," as determined from previous try"
             elif p.hpunch or self.netChecker.hpunching and p.dataPort:
@@ -79,6 +81,10 @@ class HolePuncher(Namespace):
 
 
     def sendKeepAlive(self):
+        oldPeers=[p for p in self.peers if p.lastSend-time()>=240]
+        for p in oldPeers:
+            print 'old peerssssssssssssssssssssssssssssSS:',p
+            p.conOk=False
         self.peers=[p for p in self.peers if p.lastSend-time()<240]
 
         for p in self.peers:
