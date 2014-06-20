@@ -81,11 +81,10 @@ class HolePuncher(Namespace):
 
 
     def sendKeepAlive(self):
-        oldPeers=[p for p in self.peers if p.lastSend-time()>=240]
+        oldPeers=[p for p in self.peers if p.lastSend and time()-p.lastSend>=240]
         for p in oldPeers:
-            print 'old peerssssssssssssssssssssssssssssSS:',p
             p.conOk=False
-        self.peers=[p for p in self.peers if p.lastSend-time()<240]
+        self.peers=[p for p in self.peers if not p.lastSend or time()-p.lastSend<240]
 
         for p in self.peers:
             print 'sending keep allive to ',p
@@ -127,6 +126,7 @@ class HolePuncher(Namespace):
         else:
             peer.dataPortOk=True
         if peer.portOk and peer.dataPortOk:
+            peer.lastSend=0
             self.peers.append(peer)
             peer.conOk=True
             print 'okkkkkkkkkkkk ',peer
