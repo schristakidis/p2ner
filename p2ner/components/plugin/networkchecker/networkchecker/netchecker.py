@@ -205,6 +205,7 @@ class NetworkChecker(Namespace):
         print 'hole punching:',self.hpunching
         print 'type:',self.type
         if self.upnp:
+            self.hpunching=True
             print 'upnp control:',self.upnpControlPort
             print 'upnp data:',self.upnpDataPort
             self.root.controlPipe.setPipePort(self.upnpControlPort)
