@@ -137,10 +137,16 @@ class NetworkChecker(Namespace):
         self.log.debug('peer is  behind nat')
         print 'peer is behind nat'
         self.nat=True
+        if self.type=="Full Cone":
+            self.hpunching=False
+            self.natType=0
+            self.networkOk()
+            return
         reactor.callLater(0.1,self.checkUPNP)
 
     def stunFailed(self,error=None):
         if not self.secondRun:
+            print 'errrrrror:',error
             self.secondRun=True
             self.check()
             return
@@ -205,7 +211,6 @@ class NetworkChecker(Namespace):
         print 'hole punching:',self.hpunching
         print 'type:',self.type
         if self.upnp:
-            self.hpunching=True
             print 'upnp control:',self.upnpControlPort
             print 'upnp data:',self.upnpDataPort
             self.root.controlPipe.setPipePort(self.upnpControlPort)
