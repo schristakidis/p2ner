@@ -123,10 +123,11 @@ class PullClient(Scheduler):
                     self.log.error("blocks:%s,requests:%s,blocks before:%s"%(bl,peer.s[self.stream.id]["request"],bl2))
                     self.log.error("happened while searching for rarest:%s"%rarest)
                     continue
-                #print "SENDING BLOCK", blockID, peer
+                print "SENDING BLOCK", blockID, peer
                 self.lastReqCheck=time()
                 return (blockID, peer)
             else:
+                print 'sending nothing'
                 peer.s[self.stream.id]["request"]=[]
 
 
@@ -155,7 +156,7 @@ class PullClient(Scheduler):
         #print missingBlocks
         #exclude receiving
         # print "MISSING", missingBlocks
-        # print "RECEIVING", receivingBlocks
+        print "RECEIVING", receivingBlocks
         def dd(self, receivingBlocks, missingBlocks, neighbours):
             if not neighbours:
                 return
@@ -261,6 +262,7 @@ class PullClient(Scheduler):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
             #self.log.debug('sending requests to %s %s',peer,r)
+            print('sending requests to %s %s',peer,r)
             BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
