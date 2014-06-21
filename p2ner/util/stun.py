@@ -197,7 +197,7 @@ def get_nat_type(s, source_ip, source_port, stun_host=None):
         resp = ret['Resp']
     else:
         for i in range(7):
-            host=stun_servers_list[int(uniform(0,7))]
+            host=stun_servers_list[int(uniform(0,len(stun_servers_list)))]
             print host
             log.debug('Trying STUN host: %s' % host)
             try:
