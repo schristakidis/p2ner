@@ -21,7 +21,11 @@ class Block(BlockMessage):
     type = "blockfragment"
 
     def trigger(self, block):
-        if block.streamid == self.stream.id:
+        try:
+            sid=self.stream.id
+        except:
+            sid=0
+        if block.streamid == sid:
             return True
         return False
 
