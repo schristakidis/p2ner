@@ -472,7 +472,6 @@ class DistFlowControl(FlowControl):
             u=4
         else:
             u=self.u
-        print 'uuuuuuuuuuuuuuuuuu:',u
         bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)))
         if self.peers:
             self.saveStats()
