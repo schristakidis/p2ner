@@ -49,8 +49,6 @@ class BufferMessage(ControlMessage):
             peer.s[sid]["buffer"] = message.buffer
             peer.s[sid]['lastRequest']=time()
         #self.log.debug('buffer:%s',str(message.buffer))
-        print 'buffer:',message.buffer
-        print 'lpb:',message.buffer.lpb
         #if isinstance(message.request, list):
         if message.buffer.lpb%self.scheduler.reqInterval ==0:
             if isinstance(message.request, list):
@@ -60,13 +58,11 @@ class BufferMessage(ControlMessage):
                 peer.s[sid]["request"]=[]
                 check=False
 
-            print 'requetsssssssss:',peer.s[sid]['request']
             #self.log.debug('requests:%s',str(message.request))
             #print "RUNNING", self.scheduler.running
             peer.s[sid]['lastRequest']=time()
             #self.log.debug('received buffer message from %s %s %s',peer,peer.s[sid]['buffer'],peer.s[sid]["request"])
             if not self.scheduler.running and check:
-                print 'restarting schedulerrrrrrrrrrrrrrrrrrrr'
                 #self.log.warning('scheduler is not running')
                 #"RESTART SCHEDULER"
                 #self.log.debug('received buffer message from %s and should start scheduler',peer)

@@ -136,7 +136,7 @@ class BoraElement(PipeElement):
         incomplete = bora.incomplete_block_list()
         #print "incomplete:", incomplete
         if len(incomplete):
-            incomplete = [i for i in incomplete if incomplete[0]==scheduler.stream.id]
+            incomplete = [i for i in incomplete if int(i['sid'])==int(scheduler.stream.id)]
         #print "incomplete2", incomplete
         return incomplete
 
