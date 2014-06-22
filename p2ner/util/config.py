@@ -50,7 +50,7 @@ def create_default_config(filename):
     config.set('Components','input','VlcInput')
     config.set('Components','output','PureVlcOutput')
     config.set('Components','scheduler','PullClient')
-    config.set('Components','overlay','CentralClient')
+    config.set('Components','overlay','DistributedClient')
 
     config.add_section('ColumnVisibility')
 
@@ -60,14 +60,18 @@ def create_default_config(filename):
     config.set('UPNP','on','true')
 
     config.add_section('DefaultServ')
-    config.set('DefaultServ', 'ip', '150.140.186.118')
+    config.set('DefaultServ', 'ip', '150.140.186.114')
     config.set('DefaultServ', 'port', '16000')
 
     config.add_section('Server0')
-    config.set('Server0', 'ip', '150.140.186.118')
+    config.set('Server0', 'ip', '150.140.186.114')
     config.set('Server0', 'port', '16000')
     config.set('Server0', 'valid', 'true')
     config.add_section('Server1')
+    config.set('Server1', 'ip', '150.140.187.171')
+    config.set('Server1', 'port', '16000')
+    config.set('Server1', 'valid', 'true')
+    config.add_section('Server2')
     config.set('Server1', 'ip', '127.0.0.1')
     config.set('Server1', 'port', '16000')
     config.set('Server1', 'valid', 'true')
