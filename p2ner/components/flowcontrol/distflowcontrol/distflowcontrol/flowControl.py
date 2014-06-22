@@ -452,8 +452,7 @@ class DistFlowControl(FlowControl):
             self.u=self.actualU*self.TsendRef
         self.u=self.u/1408
         if round(self.u)<=3:
-            print 'eeeee'
-            self.u=10
+            self.u=4
 
         self.Tsend=self.TsendRef*ceil(self.u)/self.u
         self.u=int(ceil(self.u))
@@ -468,7 +467,6 @@ class DistFlowControl(FlowControl):
     def send_bw(self):
         # print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
         if self.forceIdle:
-            print 'setting u to 4'
             u=4
         else:
             u=self.u
