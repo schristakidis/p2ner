@@ -72,9 +72,9 @@ def create_default_config(filename):
     config.set('Server1', 'port', '16000')
     config.set('Server1', 'valid', 'true')
     config.add_section('Server2')
-    config.set('Server1', 'ip', '127.0.0.1')
-    config.set('Server1', 'port', '16000')
-    config.set('Server1', 'valid', 'true')
+    config.set('Server2', 'ip', '127.0.0.1')
+    config.set('Server2', 'port', '16000')
+    config.set('Server2', 'valid', 'true')
 
 
     # Writing configuration file
