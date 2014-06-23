@@ -897,7 +897,10 @@ class clientGui(UI):
             self.indicator.set_from_icon_name(gtk.STOCK_STOP,gtk.ICON_SIZE_MENU)
 
     def logNGui(self,text):
-        self.nGui.addText(text)
+        try:
+            self.nGui.addText(text)
+        except:
+            pass
 
     def getStreamsIds(self):
         colid=self.getColumnByName('streamID')

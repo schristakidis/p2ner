@@ -217,12 +217,12 @@ class NetworkChecker(Namespace):
             self.root.holePuncher.holePipe.setPipePort(self.upnpDataPort)
             self.root.trafficPipe.setPipePort(self.upnpDataPort)
         self.log.debug('network is ok')
-        if not self.nat:
-            self.log.debug('global internet')
-        elif self.upnp:
-            self.log.debug('using upnp')
-        else:
-            self.log.debug('using hole punching for nat type %s',self.type)
+        self.log.debug('external ip:%s',self.externalIp)
+        self.log.debug('upnp:%s',self.upnp)
+        self.log.debug('nat:%s',self.nat)
+        self.log.debug('hole punching:%s',self.hpunching)
+        if self.nat:
+            self.log.debug('type:%s',self.type)
         self.getFirstRun()
         self.root.interface.networkStatus(True)
         return
