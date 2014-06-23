@@ -194,46 +194,46 @@ class Deploy():
         icon = None
         )
 
-        P2NER_SERVER = Executable(
-        script = "startServer.py",
-        packages = find_packages(),
-        initScript = None,
-        targetDir = self.dist_dir,
-        targetName = "p2nerServer.exe",
-        compress = True,
-        copyDependentFiles = True,
-        appendScriptToExe = False,
-        appendScriptToLibrary = True,
-        icon = None
-        )
+        # P2NER_SERVER = Executable(
+        # script = "startServer.py",
+        # packages = find_packages(),
+        # initScript = None,
+        # targetDir = self.dist_dir,
+        # targetName = "p2nerServer.exe",
+        # compress = True,
+        # copyDependentFiles = True,
+        # appendScriptToExe = False,
+        # appendScriptToLibrary = True,
+        # icon = None
+        # )
 
-        P2NER_BASICNET = Executable(
-        script = "startBasicNet.py",
-        packages = find_packages(),
-        initScript = None,
-        #base = 'Win32GUI',
-        targetDir = self.dist_dir,
-        targetName = "p2nerBasicNet.exe",
-        compress = True,
-        copyDependentFiles = True,
-        appendScriptToExe = False,
-        appendScriptToLibrary = True,
-        icon = None
-        )
+        # P2NER_BASICNET = Executable(
+        # script = "startBasicNet.py",
+        # packages = find_packages(),
+        # initScript = None,
+        # #base = 'Win32GUI',
+        # targetDir = self.dist_dir,
+        # targetName = "p2nerBasicNet.exe",
+        # compress = True,
+        # copyDependentFiles = True,
+        # appendScriptToExe = False,
+        # appendScriptToLibrary = True,
+        # icon = None
+        # )
 
-        P2NER_GUI = Executable(
-        script = "startGui.py",
-        packages = find_packages(),
-        initScript = None,
-        base = 'Win32GUI',
-        targetDir = self.dist_dir,
-        targetName = "p2nerGui.exe",
-        compress = True,
-        copyDependentFiles = True,
-        appendScriptToExe = False,
-        appendScriptToLibrary = True,
-        icon = None
-        )
+        # P2NER_GUI = Executable(
+        # script = "startGui.py",
+        # packages = find_packages(),
+        # initScript = None,
+        # base = 'Win32GUI',
+        # targetDir = self.dist_dir,
+        # targetName = "p2nerGui.exe",
+        # compress = True,
+        # copyDependentFiles = True,
+        # appendScriptToExe = False,
+        # appendScriptToLibrary = True,
+        # icon = None
+        # )
 
 
         setup(
@@ -256,7 +256,7 @@ class Deploy():
                             'include_files': self.get_datafiles(),
                         }
                     },
-            executables = [P2NER_Target, P2NER_SERVER,P2NER_GUI,P2NER_BASICNET],
+            executables = [P2NER_Target]#, P2NER_SERVER,P2NER_GUI,P2NER_BASICNET],
         )
 
     def makeInstaller(self):
