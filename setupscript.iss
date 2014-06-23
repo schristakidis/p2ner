@@ -14,7 +14,4 @@ Source: "win32\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs cr
 
 [Icons]
 Name: "{group}\P2NER"; Filename: "{app}\P2ner.exe"
-Name: "{group}\P2NER Server"; Filename: "{app}\P2nerServer.exe"
-Name: "{group}\P2NER Remote Gui"; Filename: "{app}\P2nerGui.exe"
-Name: "{group}\P2NER Basic Net"; Filename: "{app}\P2nerBasicNet.exe"
 
