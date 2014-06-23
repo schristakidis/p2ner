@@ -295,7 +295,10 @@ class PullClient(Scheduler):
 
         #self.log.debug('%s',self.buffer)
 
-        idleRatio=self.idleTime/(time()-self.startTime)
+        try:
+            idleRatio=self.idleTime/(time()-self.startTime)
+        except:
+            idleRatio=0
         #self.log.debug('idle:%f',idleRatio)
         setValue(self,'idle',idleRatio*1000)
         #print self.buffer
