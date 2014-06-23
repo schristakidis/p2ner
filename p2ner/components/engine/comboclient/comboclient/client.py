@@ -255,7 +255,7 @@ def startClient():
     vizir=False
     vPort=9000
     stat=None
-    cPipe=False
+    cPipe=True
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -272,7 +272,7 @@ def startClient():
         elif opt in ('-s','--stats'):
             stat='ZabbixStats'
         elif opt in ('-c','--cPipe'):
-            cPipe=True
+            cPipe=False
         elif opt in ('-h','--help'):
             usage()
     if interface=='XMLRPCControlUI':
@@ -310,7 +310,7 @@ def startDaemonClient():
     vizir=False
     vPort=9000
     stat=None
-    cPipe=False
+    cPipe=True
     for opt,a in optlist:
         if opt in ('-b','--basic'):
             basic=True
@@ -324,7 +324,7 @@ def startDaemonClient():
         elif opt in ('-s','--stats'):
             stat='ZabbixStats'
         elif opt in ('-c','--cPipe'):
-            cPipe=True
+            cPipe=False
         elif opt in ('-h','--help'):
             usage(daemon=True)
 
@@ -355,7 +355,7 @@ def usage(err=None,daemon=False):
     print ' -v, --vizir [ip] :run daemon with XMLRPC and vizir interface and connect to ip'
     print ' -P, --vizirPort port :set the vizir controller port'
     print '-s, --stats : enable Zabbix Statistics'
-    print '-c, --cPipe : enable c traffic Pipeline'
+    print '-c, --cPipe : disable c traffic Pipeline'
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')
