@@ -17,14 +17,20 @@
 from p2ner.core.namespace import Namespace, initNS
 from abc import abstractmethod
 from twisted.internet import defer, reactor
+from p2ner.base.ControlMessage import MessageSent, MessageError
 
 class StopPipe(Exception):
     def __init__(self):
         pass
 
-def errtrap(failure):
-    failure.trap(StopPipe)
-    
+def errtrap(failure,log=None):
+    try:
+        failure.trap(StopPipe)
+    except:
+        if not failure.check(MessageSent,MessageError):
+            log.error('%s\n%s',failure.getBriefTraceback(),failure.getErrorMessage())
+        return failure
+
 class PipeElement(Namespace):
 
     @initNS
@@ -36,11 +42,11 @@ class PipeElement(Namespace):
         else:
             self.name = self.__class__.__name__
         self.initElement(*args, **kwargs)
-        
+
     @abstractmethod
     def initElement(self, *args, **kwargs):
         pass
-    
+
     def breakCall(self):
         raise StopPipe
 
@@ -55,9 +61,9 @@ class PipeElement(Namespace):
             if callable(meth):
                 d.addCallback(meth, *args, **kwargs)
             next = next.next
-        d.addErrback(errtrap)
+        d.addErrback(errtrap,self.log)
         return d
-    
+
     def forwardprev(self, FUNC, *args, **kwargs):
         d = defer.Deferred()
         prev = self.prev
@@ -69,17 +75,17 @@ class PipeElement(Namespace):
             if callable(meth):
                 d.addCallback(meth, *args, **kwargs)
             prev = prev.prev
-        d.addErrback(errtrap)
+        d.addErrback(errtrap,self.log)
         return d
-        
+
     @property
     def next(self):
         ret = getattr(self, '__next')
         return ret
-        
+
     @property
     def prev(self):
         ret = getattr(self, '__prev')
         return ret
-    
-    
+
+

@@ -132,7 +132,7 @@ class AckElement(PipeElement):
                 reactor.callLater(self.timeout, self.checkAck, seq)
             else:
                 self.log.warning("send failed:%s %s %s", seq,tosend['peer'],tosend['msg'])
-                print 'message ack failedddddddddddddddd'
+                # print 'message ack failedddddddddddddddd'
                 """
                 print '--------------'
                 print 'message sent failedddddddddddddddd'

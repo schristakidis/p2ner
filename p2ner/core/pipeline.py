@@ -214,7 +214,7 @@ class Pipeline(Namespace):
             if callable(meth):
                 d.addCallback(meth, *args, **kwargs)
             el = el.next
-        d.addErrback(errtrap)
+        d.addErrback(errtrap,self.log)
         if res:
             reactor.callLater(0, d.callback, res)
             return d
@@ -235,7 +235,7 @@ class Pipeline(Namespace):
             if callable(meth):
                 d.addCallback(meth, *args, **kwargs)
             el = el.next
-        d.addErrback(errtrap)
+        d.addErrback(errtrap,self.log)
         return d
 
 
