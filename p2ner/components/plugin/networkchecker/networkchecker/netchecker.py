@@ -222,7 +222,7 @@ class NetworkChecker(Namespace):
         self.log.error('nat:%s',self.nat)
         self.log.error('hole punching:%s',self.hpunching)
         if self.nat:
-            self.log.debug('type:%s',self.type)
+            self.log.error('type:%s',self.type)
         self.getFirstRun()
         self.root.interface.networkStatus(True)
         return

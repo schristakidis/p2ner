@@ -51,6 +51,7 @@ class HolePuncher(Namespace):
             return
         #print 'checkinggggggg ',peer
         toCheck=[]
+        send=True
         if not isinstance(peer, (list, tuple)):
             peer=[peer]
         for p in peer:
@@ -62,16 +63,19 @@ class HolePuncher(Namespace):
             elif p.conProb:
                 print "can't connect to peer ",p," as determined from previous try"
             elif p.hpunch or self.netChecker.hpunching and p.dataPort:
+                send=False
                 pr=[i for i in peer if i!=p]
                 if self.checkPeers.has_key(p):
                     self.checkPeers[p].append({'msg':(msg,content,peer,d,pipe),'peers':pr,'id':self.mcount})
                 else:
                     self.checkPeers[p]=[{'msg':(msg,content,peer,d,pipe),'peers':pr,'id':self.mcount}]
+                    if not p in self.requestingPeers:
+                        toCheck.append(p)
+
                 self.mcount+=1
-                toCheck.append(p)
 
         #print 'to check ',toCheck
-        if not toCheck:
+        if send:
             if len(peer)==1:
                 peer=peer[0]
             pipe._send(msg,content,peer,d)

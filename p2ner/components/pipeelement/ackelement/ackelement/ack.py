@@ -37,7 +37,15 @@ class AckElement(PipeElement):
         if getattr(msg, "ack", False):
             cdata = data.copy()
             cdata.header = data.header.copy()
-            peer.ackRtt[self.seq]=time()
+            try:
+                peer.ackRtt[self.seq]=time()
+            except:
+                self.log.error('problem in send in ack module')
+                self.log.error('peer:%s',peer)
+                self.log.error('msg:%s',msg)
+                self.log.error('data header:%s',cdata.header)
+                self.log.error('seq:%s',self.seq)
+                self.breakCall()
             d = defer.Deferred()
             cdata.header.seq = self.seq
             cdata.header.ack = True
