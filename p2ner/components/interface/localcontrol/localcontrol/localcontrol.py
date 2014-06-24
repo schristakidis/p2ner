@@ -20,12 +20,17 @@ from p2ner.base.Stream import Stream
 from p2ner.util.interfacelog import DatabaseLog
 from twisted.internet.threads import deferToThread
 import sys
+from twisted.web.xmlrpc import Proxy
 
 
 class localControl(Interface):
 
     def initInterface(self):
         self.logger=DatabaseLog(_parent=self)
+        self.debugMode=True
+        if self.debugMode:
+            url="http://150.140.187.171:8881/XMLRPC"
+            self.debugProxy=Proxy(url)
 
     def start(self):
         pass
@@ -99,6 +104,11 @@ class localControl(Interface):
             self.controlUI.logNGui(record.getMessage())
         if record.levelno==40:
             sys.stderr.write(record.getMessage()+'\n')
+            if self.debugMode:
+                try:
+                    self.debugProxy.callRemote('logError',record.getMessage())
+                except:
+                    pass
         self.logger.addRecord(record)
 
     def getLogRecords(self,func):
