@@ -25,33 +25,33 @@ from p2ner.core.statsFunctions import setLPB, counter,setValue
 
 
 class SimpleProducer(Scheduler):
-    
+
     def registerMessages(self):
         self.messages = []
         self.messages.append(RetransmitMessage())
-        
-    
+
+
     def initScheduler(self):
         self.log.info('initing producer scheduler')
         self.registerMessages()
         self.loopingCall = task.LoopingCall(self.shift)
-        self.blocksSec = self.stream.scheduler['blocksec'] 
+        self.blocksSec = self.stream.scheduler['blocksec']
         self.frequency = 1.0/self.stream.scheduler['blocksec']
         self.buffer = Buffer(buffersize=self.stream.scheduler['bufsize'],log=self.log)
         self.blockCache = {}
-        
+
     def produceBlock(self):
         pass
-    
+
     def sendLPB(self, peer):
         print peer
         self.log.debug('sending LPB message to %s',peer)
         ServerLPBMessage.send(self.stream.id, self.buffer.lpb, peer, self.controlPipe)
-        
+
     def start(self):
         self.log.info('producer scheduler starts running')
         self.loopingCall.start(self.frequency)
-        
+
     def stop(self):
         self.log.info('producer scheduler is stopping')
         try:
@@ -60,8 +60,8 @@ class SimpleProducer(Scheduler):
             pass
         self.buffer = Buffer(buffersize=self.stream.scheduler['bufsize'],log=self.log)
         self.blockCache = {}
-        
-    
+
+
     def shift(self):
         from time import time
         #print "SHIFT: ", time()
@@ -73,13 +73,13 @@ class SimpleProducer(Scheduler):
             self.log.warning('empty chunk')
             self.stop()
             return "EOF"
-        
+
         if len(chunk) > 0:
             self.buffer.update(lpb)
             d = self.trafficPipe.call("inputblock", self, lpb, chunk)
             destination = self.overlay.getNeighbours()
             if len(destination)>0:
-                
+
                 for i in range(min(len(destination),1)):
                     #peer = choice(destination)
                     #ip='150.140.186.112'
@@ -87,10 +87,10 @@ class SimpleProducer(Scheduler):
                     #if p:
                     #   peer=p[0]
                     #peer=sorted(destination, key=lambda p:p.reportedBW)[-1]
-                    peer=destination[0]#choice(destination)
+                    peer=choice(destination)
                     self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
                     d.addCallback(self.sendblock, lpb, peer)
-        
+
         outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)
         #self.log.debug('%s',self.buffer)
@@ -98,17 +98,17 @@ class SimpleProducer(Scheduler):
         outdata.addCallback(self.output.write)
         counter(self, "sent_block")
         setValue(self,'scheduler',1000)
-        
+
     def sendblock(self, r, bid, peer):
         return self.trafficPipe.call("sendblock", self, bid, peer)
 
     def isRunning(self):
         return self.loopingCall.running
-    
+
     def retransmit(self,block,fragments,peer):
         print 'should retransmit to ',peer,block,fragments
         b={}
         b['blockid']=block
         b['fragments']=fragments
         self.trafficPipe.call('sendFragments',self,b,peer)
-        
+
