@@ -81,7 +81,11 @@ class AckElement(PipeElement):
                     #print peer,peer.lastRtt
 
                 d.errback(defer.failure.Failure(MessageSent(p)))
-                self.breakCall()
+            else:
+                self.log.error('ack %d not in cache',header.seq)
+                self.log.error('header:%s',header)
+                self.log.error('%s',self.cache)
+            self.breakCall()
         elif header.ack:
             """
             print '--------------------------------'

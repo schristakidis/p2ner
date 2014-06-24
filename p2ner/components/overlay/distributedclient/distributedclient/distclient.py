@@ -291,7 +291,7 @@ class DistributedClient(Overlay):
         self.swapState[swapid][ROLE]=INITIATOR
         self.swapState[swapid][STATE]=ASK_SWAP
         self.swapState[swapid][PARTNER]=peer
-        check = reactor.callLater(2,self.checkStatus,swapid,peer)
+        check = reactor.callLater(3,self.checkStatus,swapid,peer)
         self.swapState[swapid][MSGS]={}
         self.swapState[swapid][MSGS][peer]=check
 
@@ -1229,9 +1229,12 @@ class DistributedClient(Overlay):
 
 
     def cleanSwapState(self,swapid):
-        temp=self.swapState.pop(swapid)
-        for v in temp[MSGS].values():
-            v.cancel()
+        try:
+            temp=self.swapState.pop(swapid)
+            for v in temp[MSGS].values():
+                v.cancel()
+        except:
+            self.log.error('swapid:%d not in swap state:%d in cleanSwapState',swapid,self.swapState)
 
     def actionCompleted(self,swapid,peer):
         action=self.swapState[swapid][MSGS].pop(peer)
