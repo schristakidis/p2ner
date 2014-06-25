@@ -16,20 +16,21 @@
 __requires__ = 'ComboClient==0.1'
 import sys
 from pkg_resources import load_entry_point
+import atexit, os
+
+
+
+def taskkill_this():
+
+    # kill this process
+
+    current_pid = os.getpid()
+
+    os.system("taskkill /pid %s /f" % current_pid)
 
 if __name__ == '__main__':
-  sys.exit(
-    load_entry_point('ComboClient==0.1', 'console_scripts', 'p2nerClient')()
-  )
+    atexit.register(taskkill_this)
+    sys.exit(
+        load_entry_point('ComboClient==0.1', 'console_scripts', 'p2nerClient')()
+    )
 
-
-#from p2ner.base import *
-#import p2ner.abstract.engine
-#import subprocess
-#import p2ner.base.messages.bootstrap, twisted.application.internet, twisted.web.xmlrpc
-#from p2ner.core.components import getComponents, _entry_points, loadComponent
-#import weakref, twisted.internet, bitarray, construct
-#Client = loadComponent("engine", "ComboClient")
-#from twisted.internet import reactor
-#P2NER = Client(_parent=None,interface=('LocalControl',[],{}),UI=('GtkGui',[],{}),basic=False,port=50000)
-#reactor.run()
