@@ -105,11 +105,12 @@ class localControl(Interface):
         if record.levelno==40:
             sys.stderr.write(record.getMessage()+'\n')
             if self.debugMode:
-                try:
-                    self.debugProxy.callRemote('logError',record.getMessage())
-                except:
-                    pass
+                d=self.debugProxy.callRemote('logError',record.getMessage())
+                d.addErrback(self.debugProxyFailed)
         self.logger.addRecord(record)
+
+    def debugProxyFailed(self,failure):
+        self.debugMode=False
 
     def getLogRecords(self,func):
         d=self.logger.getRecords()
