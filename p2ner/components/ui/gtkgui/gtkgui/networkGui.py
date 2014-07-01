@@ -28,28 +28,33 @@ class NetworkGui(UI):
 
         self.builder.add_from_string(resource_string(__name__, 'networkGui.glade'))
         self.builder.connect_signals(self)
-            
-        self.tview=self.builder.get_object('textview')    
+
+        self.tview=self.builder.get_object('textview')
         self.tbuffer=gtk.TextBuffer()
         self.tview.set_buffer(self.tbuffer)
-        
+
         self.addText('Checking network conditions...')
 
+        self.builder.get_object('startUpButton').set_active(not self.preferences.getCheckNetAtStart())
         self.ui=self.builder.get_object('ui')
         #self.ui.show()
-        
+
     def show(self):
         self.ui.show()
-        
+
     def addText(self,text):
         text +='\n'
         self.tbuffer.insert(self.tbuffer.get_end_iter(),text)
         self.tview.scroll_to_mark(self.tbuffer.get_insert(),0)
-       
-        
+
+
     def on_closeButton_clicked(self,widget):
         self.preferences.setCheckNetAtStart(not self.builder.get_object('startUpButton').get_active(),save=True)
         self.ui.destroy()
-        
+
     def on_startUpButton_toggled(self,widget):
         print 'on start :',widget.get_active()
+
+    def checkClose(self):
+        if self.builder.get_object('startUpButton').get_active():
+            self.ui.destroy()

@@ -35,6 +35,7 @@ class NetworkChecker(Namespace):
         self.measureBW=True
         self.difnat=False
         self.natType=0
+        self.alreadyFired=False
         self.getIP(ip,port)
 
 
@@ -45,7 +46,7 @@ class NetworkChecker(Namespace):
             self.localIp=None
             self.log.warning('no local ip found')
             if not self.basic:
-                self.networkUnreichable()
+                reactor.callLater(1,self.networkUnreichable)
 
         self.log.info('local ip is %s',self.localIp)
         print 'ippppppppppppppppppp:',self.localIp
@@ -196,6 +197,10 @@ class NetworkChecker(Namespace):
 
 
     def networkUnreichable(self):
+        if  self.alreadyFired:
+            return
+        self.alreadyFired=True
+
         self.interface.networkStatus(False)
         print 'no network'
         self.log.error('there is a problem with network configuration')

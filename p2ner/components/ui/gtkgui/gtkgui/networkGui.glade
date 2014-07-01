@@ -51,7 +51,7 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkCheckButton" id="startUpButton">
-                <property name="label" translatable="yes">don't show again at start</property>
+                <property name="label" translatable="yes">close after check</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>

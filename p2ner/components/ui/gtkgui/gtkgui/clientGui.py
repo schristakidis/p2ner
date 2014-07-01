@@ -143,9 +143,10 @@ class clientGui(UI):
         if self.remote:
             self.getStreams()
         else:
+            self.ui.set_sensitive(False)
             self.nGui=NetworkGui(_parent=self)
-            if self.preferences.getCheckNetAtStart():
-                self.nGui.show()
+            # if self.preferences.getCheckNetAtStart():
+            self.nGui.show()
             checkVersion()
 
 
@@ -891,10 +892,16 @@ class clientGui(UI):
             self.extIP=ip
             if measure:
                 self.on_measureUploadMenuItem_activate()
+
+            self.nGui.checkClose()
         else:
             if not self.remote:
-                self.nGui.show()
+                try:
+                    self.nGui.show()
+                except:
+                    pass
             self.indicator.set_from_icon_name(gtk.STOCK_STOP,gtk.ICON_SIZE_MENU)
+        self.ui.set_sensitive(True)
 
     def logNGui(self,text):
         try:

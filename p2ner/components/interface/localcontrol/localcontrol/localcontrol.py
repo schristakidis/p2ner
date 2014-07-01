@@ -155,7 +155,7 @@ class localControl(Interface):
         return ret
 
     def networkUnreachable(self,status):
-        reactor.callLater(0,self.displayError,'network conditions are not valid',True)
+        reactor.callLater(0,self.displayError,'network conditions are not valid',False)
         self.networkStatus(status)
 
 
