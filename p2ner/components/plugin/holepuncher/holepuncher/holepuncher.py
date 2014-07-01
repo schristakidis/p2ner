@@ -85,10 +85,12 @@ class HolePuncher(Namespace):
 
 
     def sendKeepAlive(self):
-        oldPeers=[p for p in self.peers if p.lastSend and time()-p.lastSend>=240]
+        for p in self.peers:
+            print p, p.lastSend,time()-p.lastSend
+        oldPeers=[p for p in self.peers if p.lastSend and time()-p.lastSend>=60]
         for p in oldPeers:
             p.conOk=False
-        self.peers=[p for p in self.peers if not p.lastSend or time()-p.lastSend<240]
+        self.peers=[p for p in self.peers if not p.lastSend or time()-p.lastSend<60]
 
         for p in self.peers:
             print 'sending keep allive to ',p

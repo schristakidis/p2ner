@@ -18,17 +18,17 @@ from p2ner.base.ControlMessage import ControlMessage, trap_sent
 from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
 
-        
-class AddProducerMessage(ControlMessage):   
+
+class AddProducerMessage(ControlMessage):
     type = "overlaymessage"
     code = MSG.ADD_PRODUCER
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
-        return True    
-       
+        return True
+
     def action(self, message, peer):
         peer.dataPort=message.port
         peer.reportedBW=message.bw
@@ -37,6 +37,8 @@ class AddProducerMessage(ControlMessage):
             peer.lport=message.peer.port
             peer.ldataPort=message.peer.dataPort
             peer.hpunch=message.peer.hpunch
+            peer.natType=message.peer.natType
+
         self.log.debug('received add neigh to producermessage from %s',peer)
         print 'received add neigh to producermessage from ',peer
-        self['overlay'].addNeighbour(peer)       
+        self['overlay'].addNeighbour(peer)
