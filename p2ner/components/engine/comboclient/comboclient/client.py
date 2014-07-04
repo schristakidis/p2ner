@@ -77,6 +77,29 @@ class Client(Engine):
             p.natType=self.netChecker.natType
         return p,port
 
+    def getPeerObject(self):
+        if self.netChecker.upnp:
+            cPort=self.netChecker.upnpControlPort
+            dPort=self.netChecker.upnpDataPort
+        else:
+            cPort=self.netChecker.extControlPort
+            dPort=self.netChecker.extDataPort
+
+        extIP=self.netChecker.externalIp
+        lIP=self.netChecker.localIp
+
+        p=Peer(extIP,cPort,dPort)
+
+        if extIP==lIP or self.basic:
+            return p
+
+        p.lip=lIP
+        p.lport=self.netChecker.controlPort
+        p.ldataPort=self.netChecker.dataPort
+        p.natType=self.netChecker.natType
+        p.hpunch=self.netChecker.hpunching
+        return p
+
     def registerStream(self,stream,input,output):
         print output['comp']
         p=stream.getServer()

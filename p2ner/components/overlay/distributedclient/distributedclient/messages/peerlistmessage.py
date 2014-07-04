@@ -63,12 +63,12 @@ class PeerListPMessage(ControlMessage):
     def action(self, message, peer):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
         print 'receive peer list message for producer from ',peer,' for ',message.peer
-        inpeer,port=self.root.checkNatPeer()
+        inpeer=self.root.getPeerObject()
         bw=int(self.trafficPipe.callSimple('getBW')/1024)
         for p in message.peer:
             p.learnedFrom=peer
             print 'sending add producer message to ',p
-            AddProducerMessage.send(self.stream.id,port,bw,inpeer,p,self['overlay'].addProducer,self['overlay'].failedProducer,self.root.controlPipe)
+            AddProducerMessage.send(self.stream.id,0,bw,inpeer,p,self['overlay'].addProducer,self['overlay'].failedProducer,self.root.controlPipe)
 
 
 

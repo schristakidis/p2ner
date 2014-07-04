@@ -30,14 +30,15 @@ class AddProducerMessage(ControlMessage):
         return True
 
     def action(self, message, peer):
-        peer.dataPort=message.port
+        peer=message.peer
         peer.reportedBW=message.bw
-        if message.peer:
-            peer.lip=message.peer.ip
-            peer.lport=message.peer.port
-            peer.ldataPort=message.peer.dataPort
-            peer.hpunch=message.peer.hpunch
-            peer.natType=message.peer.natType
+        # peer.dataPort=message.port
+        # if message.peer:
+        #     peer.lip=message.peer.ip
+        #     peer.lport=message.peer.port
+        #     peer.ldataPort=message.peer.dataPort
+        #     peer.hpunch=message.peer.hpunch
+        #     peer.natType=message.peer.natType
 
         self.log.debug('received add neigh to producermessage from %s',peer)
         print 'received add neigh to producermessage from ',peer
