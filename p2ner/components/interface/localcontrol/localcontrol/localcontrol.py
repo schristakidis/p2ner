@@ -29,7 +29,7 @@ class localControl(Interface):
         self.logger=DatabaseLog(_parent=self)
         self.debugMode=True
         if self.debugMode:
-            url="http://150.140.187.171:8881/XMLRPC"
+            url="http://150.140.186.114:8881/XMLRPC"
             self.debugProxy=Proxy(url)
 
     def start(self):
