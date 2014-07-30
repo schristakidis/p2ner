@@ -239,6 +239,7 @@ class NetworkChecker(Namespace):
         self.root.controlPipe.call('listen')
         self.root.trafficPipe.call('listen')
         self.getFirstRun()
+        self.root.interface.networkStatus(True)
         return
 
     def checkStun(self):
