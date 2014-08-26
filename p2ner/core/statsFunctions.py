@@ -17,172 +17,146 @@
 
 import time
 
+def getClassInfo(caller,_name):
+    cname=caller.__class__.__name__
+    try:
+        sid=caller.stream.id
+    except:
+        sid=-1
+    return (cname,_name,sid)
+
 def setLPB(caller, lpb):
     """set the LPB
-    
+
     This function sets the current LPB in the stats component, you should update it from the scheduler each time LPB changes in order to get consinstent stat values.
-    
+
     :param caller: the calling Component (this is usually *self*)
     :param lpb: the current lpb
     :type caller: Namespace
     :type lpb: int
     :returns: nothing
     :rtype: None
-    
+
     :Example:
-    
+
     from p2ner.core.statsFunctions import setLPB
     setLPB(self, 231)
-    
+
     """
     for s in caller.__stats__:
         s.setLPB(lpb)
-    
+
 
 def counter(caller, _name):
     """increment a counter
-    
+
     This function creates a stats key if it doesn't exist yet, and increment it by 1 every time it's called.
-    
+
     :param caller: the calling Component (this is usually *self*)
     :param _name: the key name
     :type caller: Namespace
-    :type _name: string
+    :type _name: string (component name,stat name,streamid)
     :returns: nothing
     :rtype: None
-    
+
     :Example:
-    
+
     from p2ner.core.statsFunctions import counter
     counter(self, "myCounter")
-    
+
     """
-    
+
+    _name=getClassInfo(caller,_name)
+
     for s in caller.__stats__:
         try:
             s.incrementKey(_name)
         except:
             s.addKey(_name, 1)
-    
-def setValue(caller, _name, value):
+
+def setValue(caller, _name, value,incrX=False):
     """set a stats key to a given value
-       
+
     This function creates a stats key if it doesn't exist yet, and increment it by 1 every time it's called.
-    
+
     :param caller: the calling Component (this is usually *self*)
     :param _name: the key name
     :param value: the key value
     :type caller: Namespace
-    :type _name: string
+    :type _name: string (component name,stat name,streamid)
     "type value: any
     :returns: nothing
     :rtype: None
-    
+
     :Example:
-    
+
     from p2ner.core.statsFunctions import setValue
     setValue(self, "myCounter", 244)
-    
+
     """
+
+    _name=getClassInfo(caller,_name)
+
+    for s in caller.__stats__:
+        try:
+            s.setKey(_name, value)
+        except:
+            s.addKey(_name, value,incrX)
+
+
+def setValueWithX(caller, _name, value,x):
+    _name=getClassInfo(caller,_name)
+
     for s in caller.__stats__:
         try:
             s.setKey(_name, value)
         except:
             s.addKey(_name, value)
-    
-#def valuecounter(caller, _name, _value, ret):
-#    """increment a counter
-#    
-#    This function creates and increment a counter every time it's called.
-#    
-#    :param caller: the calling Component (this is usually *self*)
-#    :param _name: the counter name
-#    :type caller: Namespace
-#    :type lpb: string
-#    :returns: nothing
-#    :rtype: None
-#    
-#    :Example:
-#   
-#    from p2ner.core.statsFunctions import counter
-#    counter(self, "myCounter")
-#    
-#    """
-#    if caller.__stats__:
-#        if ret==_value:
-#            try:
-#                caller.__stats__.incrementKey(_name)
-#            except:
-#                caller.__stats__.addKey(_name, 1)
-#    
-#def neqvaluecounter(caller, _name, _value, ret):
-#    """increment a counter
-#    
-#    This function creates and increment a counter every time it's called.
-#    
-#    :param caller: the calling Component (this is usually *self*)
-#    :param _name: the counter name
-#    :type caller: Namespace
-#    :type lpb: string
-#    :returns: nothing
-#    :rtype: None
-#    
-#    :Example:
-#    
-#    from p2ner.core.statsFunctions import counter
-#    counter(self, "myCounter")
-#    
-#    """
-#    if caller.__stats__:
-#        if ret != _value:
-#           try:
-#                caller.__stats__.incrementKey(_name)
-#            except:
-#                caller.__stats__.addKey(_name, 1)
-
 def incrementValuecounter(caller, _name, incr):
     """increment a counter by a given value
-    
+
     This function creates and increment a counter by a given value every time it's called.
-    
+
     :param caller: the calling Component (this is usually *self*)
     :param _name: the counter name
     :param incr: the increment value
     :type caller: Namespace
-    :type _name: string
+    :type _name: string (component name,stat name,streamid)
     :type incr: int
     :returns: nothing
     :rtype: None
-    
+
     :Example:
-    
+
     from p2ner.core.statsFunctions import incrementValuecounter
     incrementValuecounter(self, "myCounter", 23)
-    
+
     """
+    _name=getClassInfo(caller,_name)
+
     for s in caller.__stats__:
         try:
             s.incrementKey(_name, incr)
         except:
             s.addKey(_name, incr)
-    
+
 #def ratio(caller, _name, _up, _down):
 #    """increment a counter
-#    
+#
 #    This function creates and increment a counter every time it's called.
-#    
+#
 #    :param caller: the calling Component (this is usually *self*)
 #    :param _name: the counter name
 #    :type caller: Namespace
 #    :type lpb: string
 #    :returns: nothing
 #    :rtype: None
-#    
+#
 #    :Example:
-#    
+#
 #    from p2ner.core.statsFunctions import counter
 #    counter(self, "myCounter")
-#    
+#
 #    """
 #    if caller.__stats__:
 #        if caller.__stats__.hasKey(_down):
@@ -195,24 +169,24 @@ def incrementValuecounter(caller, _name, incr):
 #                    caller.__stats__.setKey(_name, r)
 #                except:
 #                    caller.__stats__.addKey(_name, r)
-#    
+#
 #def timeratio(caller, _name, _up):
 #    """increment a counter
-#    
+#
 #    This function creates and increment a counter every time it's called.
-#    
+#
 #    :param caller: the calling Component (this is usually *self*)
 #    :param _name: the counter name
 #    :type caller: Namespace
 #    :type lpb: string
 #    :returns: nothing
 #    :rtype: None
-#    
+#
 #    :Example:
-#    
+#
 #    from p2ner.core.statsFunctions import counter
 #    counter(self, "myCounter")
-#    
+#
 #    """
 #    if caller.__stats__:
 #        if hasattr(caller.__stats__, 't0'):
@@ -225,21 +199,21 @@ def incrementValuecounter(caller, _name, incr):
 #                    caller.__stats__.setKey(_name, r)
 #                except:
 #                    caller.__stats__.addKey(_name, r)
-    
+
 def dumpStats(caller):
     """dumps the current stats dictionary
-    
+
     This functions returns a copy of the stats dictionary with all stats key/values
-    
+
     :param caller: the calling Component (this is usually *self*)
     :type caller: Namespace
     :returns: { 'key1':value1, 'key2':value2, ...}
     :rtype: dict
     :Example:
-    
+
     from p2ner.core.statsFunctions import caller
     dumpStats()
-    
+
     """
     ret = {}
     for s in caller.__stats__:

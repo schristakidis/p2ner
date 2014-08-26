@@ -36,7 +36,7 @@ class statFrame(genericFrame):
                 type=v['gtype']
             else:
                 type=str(v['type'])
-            
+
             if type=='check':
                 box=gtk.HBox()
                 check=gtk.CheckButton(label=v['name'])
@@ -91,9 +91,9 @@ class statFrame(genericFrame):
                 self.fields[entry]={'check':False,'par':k}
                 box.pack_end(entry,False,False)
                 self.frame.pack_start(box,False,False)
-                
+
         self.frame.show()
-        
+
     def refresh(self):
         for k,v in self.fields.items():
             if v['check']:
@@ -104,59 +104,59 @@ class statFrame(genericFrame):
                     k.set_active(False)
             else:
                 k.set_text(str(self.settings[v['par']]['value']))
-    
+
     def browse(self,widget,par,dir):
         if not self.remote:
             self.browseLocally(par,dir)
         else:
             RemoteFileChooser(self.browseFinished,self.interface,onlyDir=dir,args=par)
-            
+
     def browseLocally(self,par,onlydir):
         if not onlydir:
             action=gtk.FILE_CHOOSER_ACTION_OPEN
         else:
             action=gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER
-   
+
         dialog = gtk.FileChooserDialog("Open..",
                                None,
                                action,
                                (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                 gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)
- 
-            
+
+
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
-            filename = dialog.get_filename()       
-            self.browseFinished(filename,par)    
-            
+            filename = dialog.get_filename()
+            self.browseFinished(filename,par)
+
         elif response == gtk.RESPONSE_CANCEL:
             filename=None
 
-        
+
         dialog.destroy()
-        
+
     def browseFinished(self,filename,par):
         if filename:
             par['value']=filename
             self.refresh()
-            
+
     def toggled(self,widget,par):
         par['value']=widget.get_active()
 
-    
+
     def entryEdited(self,widget,event,par):
         text=widget.get_text()
         try:
             text=par['type'](text)
         except:
             text=None
-            
+
         if text is not None:
              par['value']=text
         else:
-            widget.set_text(str(par['value']))   
-       
+            widget.set_text(str(par['value']))
+
 class filestatsFrame(statFrame):
     def initUI(self):
         self.fields={}
@@ -164,4 +164,10 @@ class filestatsFrame(statFrame):
         self.settings=self.preferences.statsPrefs[self.statistic]['par']
         self.constructFrame()
 
-       
+
+class dbstatsFrame(statFrame):
+    def initUI(self):
+        self.fields={}
+        self.statistic='DBStats'
+        self.settings=self.preferences.statsPrefs[self.statistic]['par']
+        self.constructFrame()

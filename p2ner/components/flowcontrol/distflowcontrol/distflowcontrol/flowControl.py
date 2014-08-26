@@ -20,6 +20,7 @@ import bora
 import pprint
 from math import ceil
 from twisted.internet.threads import deferToThread
+from p2ner.core.statsFunctions import setValue
 
 def bws_thread(flowcontrol, interval):
         pp = pprint.PrettyPrinter(indent=4)
@@ -519,6 +520,7 @@ class DistFlowControl(FlowControl):
 
     def saveStats(self):
         temp={}
+        setValue(self,'x',self.count)
         temp['x']=self.count
         temp['u']=self.u
         temp['umax']=self.umax*8/1024
