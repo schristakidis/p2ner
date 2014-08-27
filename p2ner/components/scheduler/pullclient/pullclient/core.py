@@ -223,7 +223,7 @@ class PullClient(Scheduler):
 
                 if execute:
                     try:
-                        F=nx.max_flow_min_cost(G,'s','e')
+                        F=nx.min_cost_flow(G,'s','e')
                     except:
                         self.log.error('scheduler matching failed')
                         import sys
@@ -253,7 +253,7 @@ class PullClient(Scheduler):
 
                 if execute:
                     try:
-                        F=nx.max_flow_min_cost(G,'s','e')
+                        F=nx.min_cost_flow(G,'s','e')
                     except:
                         self.log.error('scheduler matching failed')
                         import sys
