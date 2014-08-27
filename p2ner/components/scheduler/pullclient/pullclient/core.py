@@ -261,7 +261,8 @@ class PullClient(Scheduler):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
             #self.log.debug('sending requests to %s %s',peer,r)
-            BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
+            bw=self.root.trafficPipe.callSimple('getReportedBw')
+            BufferMessage.send(self.stream.id,bw, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
         self.log.warning('sending LPB message to %s',peer)
@@ -291,7 +292,8 @@ class PullClient(Scheduler):
                 d.addErrback(self.errback)
             else:
                 #print 'sending buffer'
-                BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
+                bw=self.root.trafficPipe.callSimple('getReportedBw')
+                BufferMessage.send(self.stream.id, bw, self.buffer, None, n, self.controlPipe)
 
         #self.log.debug('%s',self.buffer)
 

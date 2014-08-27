@@ -74,6 +74,7 @@ class DistFlowControl(FlowControl):
         self.forceIdle=False
         self.ackSentHistory=[]
         self.ackSentHistorySize=10
+        self.reportedU=self.u
 
 
     def start(self):
@@ -474,6 +475,7 @@ class DistFlowControl(FlowControl):
             if self.u<6:
                 self.u=6
             u=self.u
+        self.reportedU=u
         bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)))
         if self.peers:
             self.saveStats()
@@ -562,3 +564,5 @@ class DistFlowControl(FlowControl):
         self.stats=[]
         return ret
 
+    def getReportedBW(self):
+        return self.reportedU

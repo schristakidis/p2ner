@@ -48,6 +48,7 @@ class BufferMessage(ControlMessage):
         else:
             peer.s[sid]["buffer"] = message.buffer
             peer.s[sid]['lastRequest']=time()
+        peer.reportedBW=message.bw
         #self.log.debug('buffer:%s',str(message.buffer))
         #if isinstance(message.request, list):
         if message.buffer.lpb%self.scheduler.reqInterval ==0:
@@ -76,9 +77,9 @@ class BufferMessage(ControlMessage):
 
 
     @classmethod
-    def send(cls, sid, buffer, req, peer, out):
+    def send(cls, sid,bw, buffer, req, peer, out):
         if not req:
             req=None
-        c = Container(streamid=sid, buffer=buffer, request=req)
+        c = Container(streamid=sid,bw=bw, buffer=buffer, request=req)
         out.send(cls, c, peer)
 
