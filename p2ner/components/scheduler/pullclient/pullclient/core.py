@@ -318,8 +318,8 @@ class PullClient(Scheduler):
                 if len(v)>3:
                     blocksToRequest[k]=v[:3]
             #self.log.debug('requesting blocks %s',blocksToRequest)
-            print "BLOCKS TO REQUEST:"
-            print blocksToRequest
+            # print "BLOCKS TO REQUEST:"
+            # print blocksToRequest
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
