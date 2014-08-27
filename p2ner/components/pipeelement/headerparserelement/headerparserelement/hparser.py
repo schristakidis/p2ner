@@ -87,5 +87,6 @@ class HeaderParserElement(PipeElement):
             print data.header
             print header
             print res
+            self.breakCall()
         return ret
 
