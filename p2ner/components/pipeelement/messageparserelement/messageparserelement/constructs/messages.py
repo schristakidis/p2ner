@@ -56,7 +56,7 @@ MStreamMessage = Struct("mstreammessage",
 # Container( streamid = <UInt16>, buffer = <Buffer obj>)
 BufferMessage = Struct("buffermessage",
         UBInt16("streamid"),
-        UBInt8('bw'),
+        UBInt16('bw'),
         BufferAdapter(BufferStruct),
         Optional(RequestAdapter(MetaField("request",  lambda ctx: -(-ctx["buffer"].buffersize>>3)))),
         )

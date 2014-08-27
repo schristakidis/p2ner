@@ -229,10 +229,8 @@ class PullClient(Scheduler):
                         import sys
                         sys.exit()
 
-                    print '1111111111111111111111'
                     for peer,id in ids.items():
                         reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
-                        print peer,reqBlocks
                         blocksToRequest[peer] +=reqBlocks
                         for b in reqBlocks:
                             del requestableBlocks[b]
@@ -261,12 +259,10 @@ class PullClient(Scheduler):
                         import sys
                         sys.exit()
 
-                    print '22222222222222222222222222'
                     for peer,id in ids.items():
 
                         reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
                         blocksToRequest[peer] +=reqBlocks
-                        print peer,reqBlocks
                         for b in reqBlocks:
                             del requestableBlocks[b]
 
@@ -292,11 +288,9 @@ class PullClient(Scheduler):
                         import sys
                         sys.exit()
 
-                    print '33333333333333333333333333'
                     for peer,id in ids.items():
                         reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
                         blocksToRequest[peer] +=reqBlocks
-                        print peer,reqBlocks
                         for b in reqBlocks:
                             del requestableBlocks[b]
             keys = tmpBlocksToRequest.keys()
@@ -310,8 +304,8 @@ class PullClient(Scheduler):
                     peer = requestableBlocks[b][0]
                     blocksToRequest[peer].append(b)
                     del requestableBlocks[b]
-            #while There are blocks to request
             """
+            #while There are blocks to request
             while len(requestableBlocks) > 0:
                 #get the block with less sources
                 block = min([ (len(requestableBlocks[x]),x) for x in requestableBlocks])[1]
@@ -321,11 +315,11 @@ class PullClient(Scheduler):
                 blocksToRequest[peer].append(block)
 
             for k,v in blocksToRequest.items():
-                if len(v)>5:
-                    blocksToRequest[k]=v[:5]
-                    print 'cuttttttttttting'
-            print "BLOCKSTOREQUESTSSSS", blocksToRequest
+                if len(v)>3:
+                    blocksToRequest[k]=v[:3]
             #self.log.debug('requesting blocks %s',blocksToRequest)
+            print "BLOCKS TO REQUEST:"
+            print blocksToRequest
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)

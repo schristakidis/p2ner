@@ -1234,7 +1234,7 @@ class DistributedClient(Overlay):
             for v in temp[MSGS].values():
                 v.cancel()
         except:
-            self.log.error('swapid:%d not in swap state:%d in cleanSwapState',swapid,self.swapState)
+            self.log.error('swapid:%d not in swap state:%s in cleanSwapState',swapid,self.swapState)
 
     def actionCompleted(self,swapid,peer):
         action=self.swapState[swapid][MSGS].pop(peer)
