@@ -43,12 +43,12 @@ class DBStats(Stats):
 
     def updateDatabase(self):
         stats=[]
-        for sid in self.statkeys:
-            for comp in self.statkeys[sid]:
-                for key,v in self.statkeys[sid][comp].items():
+        for comp in self.statkeys:
+            for sid in self.statkeys[comp]:
+                for key,v in self.statkeys[comp][sid].items():
                     while v['values']:
                         temp=v['values'].popleft()
-                        stats.append([sid,comp,key]+temp)
+                        stats.append([comp,sid,key]+temp)
         if stats:
             self.db.update(stats)
 
@@ -61,11 +61,11 @@ class DBStats(Stats):
         comp,key,sid=key
         if not self.startTime:
             self.startTime=int(100*time.time())
-        if sid not in self.statkeys:
-            self.statkeys[sid]={}
-        if comp not in self.statkeys[sid]:
-            self.statkeys[sid][comp]={}
-        if key not in self.statkeys[sid][comp]:
+        if comp not in self.statkeys:
+            self.statkeys[comp]={}
+        if sid not in self.statkeys[comp]:
+            self.statkeys[comp][sid]={}
+        if key not in self.statkeys[comp][sid]:
             t=(int(100*time.time())-self.startTime)/100
             if incrX:
                 x=0
@@ -79,46 +79,46 @@ class DBStats(Stats):
                 x +=1
             temp['x']=x
             temp['lastValue']=initValue
-            self.statkeys[sid][comp][key]=temp
+            self.statkeys[comp][sid][key]=temp
 
     def setKey(self, key, value):
         comp,key,sid=key
         try:
-            x=self.statkeys[sid][comp][key]['x']
+            x=self.statkeys[comp][sid][key]['x']
         except:
             raise KeyError('Key does not exists')
 
-        t=(int(100*time.time())-self.startTime)/100
-        self.statkeys[sid][comp][key]['values'].append([value,x,t,self.lpb])
-        self.statkeys[sid][comp][key]['lastValue']=value
+        t=(int(100*time.time())-self.startTime)/100.0
+        self.statkeys[comp][sid][key]['values'].append([value,x,t,self.lpb])
+        self.statkeys[comp][sid][key]['lastValue']=value
         if x!=-1:
-            self.statkeys[sid][comp][key]['x']+=1
+            self.statkeys[comp][sid][key]['x']+=1
 
     def incrementKey(self, key, by=1):
         comp,key,sid=key
         try:
-            x=self.statkeys[sid][comp][key]['x']
+            x=self.statkeys[comp][sid][key]['x']
         except:
             raise KeyError('Key does not exists')
 
-        lv=self.statkeys[sid][comp][key]['lastValue']
-        t=(int(100*time.time())-self.startTime)/100
-        self.statkeys[sid][comp][key]['values'].append([lv+by,x,t,self.lpb])
+        lv=self.statkeys[comp][sid][key]['lastValue']
+        t=(int(100*time.time())-self.startTime)/100.0
+        self.statkeys[comp][sid][key]['values'].append([lv+by,x,t,self.lpb])
         if x!=-1:
-            self.statkeys[sid][comp][key]['x']+=1
-        self.statkeys[sid][comp][key]['lastValue']+=by
+            self.statkeys[comp][sid][key]['x']+=1
+        self.statkeys[comp][sid][key]['lastValue']+=by
 
     def getKey(self, key):
         comp,key,sid=key
         try:
-            return self.statkeys[sid][comp][key]
+            return self.statkeys[comp][sid][key]
         except:
             raise KeyError('Key does not exists')
 
     def hasKey(self, key):
         comp,key,sid=key
         try:
-            x=self.statkeys[sid][comp][key]['x']
+            x=self.statkeys[comp][sid][key]['x']
             ret=True
         except:
             ret=False
@@ -133,10 +133,7 @@ class DBStats(Stats):
         return
 
     def getAvailableStats(self):
-
-
-
-
+        return self.dumpKeys()
 
 
     def subscribe(self,caller,func,keys):

@@ -529,6 +529,7 @@ class DistFlowControl(FlowControl):
         setValue(self,'x',self.count)
         temp['x']=self.count
         temp['u']=self.u
+        setValue(self,'u',self.u,True)
         temp['umax']=self.umax*8/1024
         temp['rtt']=self.rtt
         temp['stt']=self.stt

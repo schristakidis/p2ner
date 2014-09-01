@@ -30,14 +30,14 @@ class DB(object):
         return self.dbpool.runOperation('DROP TABLE IF EXISTS stat')
 
     def createDB(self,d):
-        return self.dbpool.runOperation('CREATE TABLE stat(id INTEGER PRIMARY KEY AUTOINCREMENT, sid INTEGER, comp TEXT, name TEXT, value REAL, x REAL, time REAL, lpb INTEGER) ')
+        return self.dbpool.runOperation('CREATE TABLE stat(id INTEGER PRIMARY KEY AUTOINCREMENT, comp TEXT, sid INTEGER, name TEXT, value REAL, x REAL, time REAL, lpb INTEGER) ')
 
     def update(self,stats):
         d=self.dbpool.runInteraction(self._commitRecord,stats)
 
     def _commitRecord(self,txn,args):
         for arg in args:
-            txn.execute('INSERT INTO stat(sid, comp, name, value, x, time, lpb) VALUES(?,?,?,?,?,?,?)',arg)
+            txn.execute('INSERT INTO stat(comp, sid, name, value, x, time, lpb) VALUES(?,?,?,?,?,?,?)',arg)
 
     def getRecords(self):
         d=self._getRecords()

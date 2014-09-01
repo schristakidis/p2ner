@@ -31,7 +31,7 @@ from options.options import optionsGui
 from console import start_console
 from p2ner.core.namespace import Namespace, initNS
 from p2ner.abstract.ui import UI
-from statsGui import statsGui
+from statsGui2 import statsGui
 from versioncheck import getVersion as checkVersion
 from measureupload import MeasureUpload
 from networkGui import NetworkGui
@@ -274,7 +274,7 @@ class clientGui(UI):
             self.logger.start()
 
     def on_statsMenuItem_activate(self,widget):
-        statsGui(self.interface,self.remote)
+        statsGui(_parent=self)#self.interface,self.remote)
 
     def on_chatMenuItem_activate(self,widget):
         try:

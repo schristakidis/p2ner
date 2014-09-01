@@ -41,19 +41,19 @@ from pkg_resources import resource_string
 
 class optionsGui(UI):
     def initUI(self):
-    
+
         self.lastSelected=None
-        
-        path = os.path.realpath(os.path.dirname(sys.argv[0])) 
+
+        path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
 
         self.builder.add_from_string(resource_string(__name__, 'options.glade'))
         self.builder.connect_signals(self)
-        
+
         optionsModel=gtk.TreeStore(str)
         self.optionsView=self.builder.get_object('optionsView')
         self.optionsView.set_model(optionsModel)
-        
+
         optionsModel.append(None,['General'])
         optionsModel.append(None,['View'])
         optionsModel.append(None,['Servers'])
@@ -68,26 +68,26 @@ class optionsGui(UI):
         optionsModel.append(None,['UPNP'])
         optionsModel.append(None,['DVB'])
         optionsModel.append(None,['RemoteProducer'])
-               
-        renderer=gtk.CellRendererText()   
+
+        renderer=gtk.CellRendererText()
         column=gtk.TreeViewColumn('Options',renderer, text=0)
         column.set_resizable(True)
         column.set_visible(True)
         self.optionsView.append_column(column)
-            
+
         self.optionsView.show()
         self.ui=self.builder.get_object('ui')
         self.ui.set_title('Preferences')
-        
-        self.optionsModel=optionsModel  
-        
+
+        self.optionsModel=optionsModel
+
         self.mainBox=self.builder.get_object('vbox4')
-        
+
         self.frames={}
         self.boxes={}
         self.makeFrames()
-        
-        
+
+
     def makeFrames(self):
         optionsModel=self.optionsModel
         piter = optionsModel.get_iter_first()
@@ -96,7 +96,7 @@ class optionsGui(UI):
                 path = optionsModel.get_path(piter)
             except:
                 break
-            
+
             try:
                 box=self.builder.get_object((optionsModel[path][0].lower()+'Frame'))
                 box.set_visible(False)
@@ -104,21 +104,21 @@ class optionsGui(UI):
                 box=gtk.HBox()
                 self.mainBox.pack_end(box,True,True)
                 box.set_visible(False)
-                
+
             self.boxes[optionsModel[path][0].lower()]=box
-            
+
             frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
 
             self.frames[optionsModel[path][0]]=frame
-            
+
             self.boxes[optionsModel[path][0].lower()].pack_start(frame.getFrame(),True,True,0)
-            
+
             iter = optionsModel.iter_children(piter)
             while True:
                 try:
                    path = optionsModel.get_path(iter)
                 except:
-                    break                
+                    break
                 try:
                     box=self.builder.get_object((optionsModel[path][0].lower()+'Frame'))
                     box.set_visible(False)
@@ -126,29 +126,29 @@ class optionsGui(UI):
                     box=gtk.HBox()
                     self.mainBox.pack_end(box,True,True)
                     box.set_visible(False)
-               
+
                 self.boxes[optionsModel[path][0].lower()]=box
-                    
-                #try:
-                frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
-                #except:
-                 #   print 'failed to load in option gui:',optionsModel[path][0].lower()
-                 #   frame=genericFrame(_parent=self)    
-                    
-               
+
+                try:
+                    frame=eval(optionsModel[path][0].lower()+'Frame(_parent=self)')
+                except:
+                   print 'failed to load in option gui:',optionsModel[path][0].lower()
+                   frame=genericFrame(_parent=self)
+
+
                 self.boxes[optionsModel[path][0].lower()].pack_start(frame.getFrame(),True,True,0)
-                
+
                 self.frames[optionsModel[path][0]]=frame
                 iter=optionsModel.iter_next(iter)
             piter=optionsModel.iter_next(piter)
-      
-    
+
+
     def showUI(self):
         for v in self.frames.values():
             v.refresh()
         self.ui.show()
-        
-            
+
+
     def on_optionsView_cursor_changed(self,widget):
         treeselection=self.optionsView.get_selection()
         (model, iter) = treeselection.get_selected()
@@ -156,7 +156,7 @@ class optionsGui(UI):
             path = model.get_path(iter)
         except:
             path=(0,)
-        
+
         opt=model[path][0]
         if opt!=self.lastSelected:
             if self.lastSelected:
@@ -165,22 +165,22 @@ class optionsGui(UI):
             self.builder.get_object('descLabel').set_text(opt)
             self.boxes[opt.lower()].set_visible(True)
             self.frames[opt].refresh()
-    
-        
+
+
     def on_saveButton_clicked(self,widget):
         self.preferences.save()
-        
-        
+
+
     def on_setDeafualtButton_clicked(self,widget):
         for v in self.frames.values():
             v.setDefaults()
         self.preferences.save()
-        
 
-        
+
+
     def on_okButton_clicked(self,widget):
         self.ui.hide()
-            
+
     def loadColumnViews(self):
         if 'View' not in self.frames.keys():
             reactor.callLater(0.2,self.loadColumnViews)
@@ -190,10 +190,10 @@ class optionsGui(UI):
 
     def getTable(self,component,sub,bar,id):
         return self.frames[component].constructPage(sub,bar,id)
-    
-    
-    
-        
+
+
+
+
 if __name__=='__main__':
     s=optionsGUI()
     s.showUI()
