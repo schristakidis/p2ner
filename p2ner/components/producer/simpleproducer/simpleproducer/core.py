@@ -79,17 +79,19 @@ class SimpleProducer(Scheduler):
             d = self.trafficPipe.call("inputblock", self, lpb, chunk)
             destination = self.overlay.getNeighbours()
             if len(destination)>0:
+                sent=[]
+                for i in range(min(len(destination),2)):
+                    gp=[p for p in destination if '150.140.186' in p.getIP() and p not in sent]
+                    if gp:
+                        np=gp
+                    else:
+                        np=[p for p in destination if p not in sent]
 
-                for i in range(min(len(destination),1)):
-                    #peer = choice(destination)
-                    #ip='150.140.186.112'
-                    #p=[p for p in destination if p.getIP()=='150.140.186.112']
-                    #if p:
-                    #   peer=p[0]
-                    #peer=sorted(destination, key=lambda p:p.reportedBW)[-1]
-                    peer=choice(destination)
-                    self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
-                    d.addCallback(self.sendblock, lpb, peer)
+                    if np:
+                        peer=choice(np)
+                        self.log.debug('sending block to %s %d %d',peer,self.buffer.lpb,len(chunk))
+                        d.addCallback(self.sendblock, lpb, peer)
+                        sent.append(peer)
 
         outID,hit = self.buffer.shift()
         setLPB(self, self.buffer.lpb)

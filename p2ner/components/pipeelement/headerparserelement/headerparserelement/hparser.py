@@ -77,15 +77,19 @@ class HeaderParserElement(PipeElement):
         return peer,header
 
     def encodeheader(self, res, msg, data):
-        #print data
-        #print '----------------------'
         header = MessageHeader.build(data.header)
         try:
             ret = "".join([header, res])
-        except:
+        except Exception as e:
             print 'problem in encodeheaderrrrr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            print data.header
-            print header
-            print res
+            # print 'data header:'
+            # print data.header
+            # print 'header:'
+            # print header
+            # print 'res:'
+            # print res
+            # print 'message'
+            # print e.message
+            self.breakCall()
         return ret
 

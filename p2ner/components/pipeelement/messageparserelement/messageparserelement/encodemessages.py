@@ -23,11 +23,11 @@ def encodemsg(msg, content):
 
     try:
         encoded = MSG_TYPES[msg.type].build(content)
-    except:
-        import sys
-        print sys.exc_info()[0]
+    except Exception as e:
         print '#############################'
         print content
+        print e.message
+        print e
         raise TypeError
 
     return encoded

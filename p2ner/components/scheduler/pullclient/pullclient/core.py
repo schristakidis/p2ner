@@ -194,42 +194,105 @@ class PullClient(Scheduler):
             if not requestableBlocks:
                 return {}
 
-            """
             blocksToRequest={}
             for p in neighbours:
                 blocksToRequest[p]=[]
 
+            reqBlockList = requestableBlocks.keys()
+            for b in reqBlockList:
+                if len(requestableBlocks[b]) == 1:
+                    peer = requestableBlocks[b][0]
+                    blocksToRequest[peer]+=[b]
+                    del requestableBlocks[b]
 
-            while True:
-
-                reqBlockList = requestableBlocks.keys()
-                for b in reqBlockList:
-                    if len(requestableBlocks[b]) == 1:
-                        peer = requestableBlocks[b][0]
-                        blocksToRequest[peer]+=[b]
-                        del requestableBlocks[b]
-
+            if  requestableBlocks:
                 G=nx.DiGraph()
+                #first only good peers
+                execute=False
                 for b,peers in requestableBlocks.items():
                     G.add_edge('s',b,capacity=1)
                     for p in peers:
-                        G.add_edge(b,ids[p],capacity=1)#,weight=len(peers))
+                        if p.reportedBW>20:
+                            G.add_edge(b,ids[p],capacity=1,weight=len(peers))
+                            execute=True
+                        else:
+                            G.add_edge(b,ids[p],capacity=0,weight=len(peers))
 
                 for id in ids.values():
-                    G.add_edge(id,'e')#,capacity=1)
+                    G.add_edge(id,'e',capacity=1)
 
+                if execute:
+                    try:
+                        F=nx.min_cost_flow(G,'s','e')
+                    except:
+                        self.log.error('scheduler matching failed')
+                        import sys
+                        sys.exit()
 
-                try:
-                    flow, F = nx.ford_fulkerson(G, 's', 'e')
-                    #F=nx.max_flow_min_cost(G,'s','e')
-                except:
-                    self.log.error('scheduler matching failed')
+                    for peer,id in ids.items():
+                        reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                        blocksToRequest[peer] +=reqBlocks
+                        for b in reqBlocks:
+                            del requestableBlocks[b]
 
-                for peer,id in ids.items():
-                    blocksToRequest[peer] +=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+            if  requestableBlocks:
+                G=nx.DiGraph()
+                #then only bad peers
+                execute=False
+                for b,peers in requestableBlocks.items():
+                    G.add_edge('s',b,capacity=1)
+                    for p in peers:
+                        if p.reportedBW<=20:
+                            G.add_edge(b,ids[p],capacity=1,weight=len(peers))
+                            execute=True
+                        else:
+                            G.add_edge(b,ids[p],capacity=0,weight=len(peers))
 
+                for id in ids.values():
+                    G.add_edge(id,'e',capacity=1)
+
+                if execute:
+                    try:
+                        F=nx.min_cost_flow(G,'s','e')
+                    except:
+                        self.log.error('scheduler matching failed')
+                        import sys
+                        sys.exit()
+
+                    for peer,id in ids.items():
+
+                        reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                        blocksToRequest[peer] +=reqBlocks
+                        for b in reqBlocks:
+                            del requestableBlocks[b]
 
             """
+            if  requestableBlocks:
+                G=nx.DiGraph()
+                #finally all
+                execute=False
+                for b,peers in requestableBlocks.items():
+                    G.add_edge('s',b,capacity=1)
+                    for p in peers:
+                        G.add_edge(b,ids[p],capacity=1,weight=len(peers))
+                        execute=True
+
+                for id in ids.values():
+                    G.add_edge(id,'e')
+
+                if execute:
+                    try:
+                        F=nx.max_flow_min_cost(G,'s','e')
+                    except:
+                        self.log.error('scheduler matching failed')
+                        import sys
+                        sys.exit()
+
+                    for peer,id in ids.items():
+                        reqBlocks=[b for b in F.keys() if b in requestableBlocks.keys() and  F[b].has_key(id) and int(F[b][id])==1]
+                        blocksToRequest[peer] +=reqBlocks
+                        for b in reqBlocks:
+                            del requestableBlocks[b]
             keys = tmpBlocksToRequest.keys()
             blocksToRequest = {}
             for k in keys:
@@ -241,6 +304,7 @@ class PullClient(Scheduler):
                     peer = requestableBlocks[b][0]
                     blocksToRequest[peer].append(b)
                     del requestableBlocks[b]
+            """
             #while There are blocks to request
             while len(requestableBlocks) > 0:
                 #get the block with less sources
@@ -250,8 +314,12 @@ class PullClient(Scheduler):
                 del requestableBlocks[block]
                 blocksToRequest[peer].append(block)
 
-            #print "BLOCKSTOREQUESTSSSS", blocksToRequest
+            for k,v in blocksToRequest.items():
+                if len(v)>3:
+                    blocksToRequest[k]=v[:3]
             #self.log.debug('requesting blocks %s',blocksToRequest)
+            # print "BLOCKS TO REQUEST:"
+            # print blocksToRequest
             return blocksToRequest
         return deferToThread(dd, self, receivingBlocks, missingBlocks, neighbours)
         #return dd(self, receivingBlocks, missingBlocks, neighbours)
@@ -261,7 +329,8 @@ class PullClient(Scheduler):
         for peer in self.overlay.getNeighbours():
             r= requests.get(peer)
             #self.log.debug('sending requests to %s %s',peer,r)
-            BufferMessage.send(self.stream.id, self.buffer, r, peer, self.controlPipe)
+            bw=self.root.trafficPipe.callSimple('getReportedBw')
+            BufferMessage.send(self.stream.id,bw, self.buffer, r, peer, self.controlPipe)
 
     def sendLPB(self, peer):
         self.log.warning('sending LPB message to %s',peer)
@@ -291,7 +360,8 @@ class PullClient(Scheduler):
                 d.addErrback(self.errback)
             else:
                 #print 'sending buffer'
-                BufferMessage.send(self.stream.id, self.buffer, None, n, self.controlPipe)
+                bw=self.root.trafficPipe.callSimple('getReportedBw')
+                BufferMessage.send(self.stream.id, bw, self.buffer, None, n, self.controlPipe)
 
         #self.log.debug('%s',self.buffer)
 

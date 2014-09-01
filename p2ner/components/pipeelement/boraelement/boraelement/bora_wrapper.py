@@ -217,3 +217,6 @@ class BoraElement(PipeElement):
 
     def setNatPort(self, port):
         bora.set_nat_port(port)
+
+    def getReportedBw(self):
+        return self.flowControl.getReportedBW()
