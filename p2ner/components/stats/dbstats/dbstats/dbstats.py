@@ -37,19 +37,24 @@ class DBStats(Stats):
         self.lpb = -1
         self.startTime=None
         self.db=database(dir)
+        self.subscribers={}
         self.loop = task.LoopingCall(self.updateDatabase)
         self.loop.start(2.0)
 
 
     def updateDatabase(self):
+        subsStats={}
         stats=[]
         for comp in self.statkeys:
             for sid in self.statkeys[comp]:
                 for key,v in self.statkeys[comp][sid].items():
+                    subsStats[(comp,sid,key)]=[]
                     while v['values']:
                         temp=v['values'].popleft()
                         stats.append([comp,sid,key]+temp)
+                        subsStats[(comp,sid,key)].append(temp)
         if stats:
+            self.updateSubscribers(subsStats)
             self.db.update(stats)
 
 
@@ -137,4 +142,19 @@ class DBStats(Stats):
 
 
     def subscribe(self,caller,func,keys):
+        self.subscribers[caller]={}
+        self.subscribers[caller]['func']=func
+        self.subscribers[caller]['stats']=keys
+
+    def unsubscribe(self,caller):
+        del self.subscribers[caller]
+
+    def getStats(self,stats):
         pass
+
+    def updateSubscribers(self,stats):
+        for v in self.subscribers.values():
+            ret={}
+            for k in v['stats']:
+                ret[k]=stats[k]
+            v['func'](ret)

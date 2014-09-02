@@ -526,18 +526,21 @@ class DistFlowControl(FlowControl):
 
     def saveStats(self):
         temp={}
-        setValue(self,'x',self.count)
+        setValue(self,'x',self.count,True)
         temp['x']=self.count
         temp['u']=self.u
         setValue(self,'u',self.u,True)
         temp['umax']=self.umax*8/1024
         temp['rtt']=self.rtt
         temp['stt']=self.stt
+        setValue(self,'stt',self.stt,True)
+        setValue(self,'rtt',self.rtt,True)
         temp['minStt']=self.minStt
         temp['minRtt']=self.minRtt
         temp['errStt']=self.errStt
         temp['errRtt']=self.errRtt
         temp['ackRate']=self.ackRate*8/1024
+        setValue(self,'ackRate',self.ackRate*8/1024,True)
         temp['refStt']=self.refStt
         temp['qRef']=self.qRef
         temp['qDelay']=self.qDelay

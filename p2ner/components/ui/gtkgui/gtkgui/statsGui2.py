@@ -1,4 +1,3 @@
-import os, sys
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import os, sys
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import os, sys
 from twisted.internet import gtk2reactor
 try:
     gtk2reactor.install()
@@ -27,6 +27,8 @@ from p2ner.util.utilities import get_user_data_dir
 from plot import PlotGui
 from pkg_resources import resource_string
 from p2ner.abstract.ui import UI
+from plotGui import PlotGui
+from copy import deepcopy
 
 class statsGui(UI):
     def initUI(self):#interface=None,remote=False)
@@ -37,9 +39,15 @@ class statsGui(UI):
         # self.file=None
         self.makingNewGraph=False
 
-        self.getStatKeys()
+        for s in self.root.__stats__:
+            if 'db' in s:
+                self.statCollector=s
 
-        # return
+        self.getStatKeys()
+        self.plots={}
+        self.pid=0
+        self.showing=True
+
         path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
         self.builder.add_from_string(resource_string(__name__, 'stats3.glade'))
@@ -47,6 +55,7 @@ class statsGui(UI):
 
         self.ui = self.builder.get_object("ui")
 
+        self.ui.connect('delete-event', self.on_delete_event)
         #component
         self.componentTreeview = self.builder.get_object("compTreeview")
         model=self.componentTreeview.get_model()
@@ -106,8 +115,7 @@ class statsGui(UI):
         self.ui.show()
 
     def getStatKeys(self):
-        for s in self.root.__stats__:
-            self.statKeys=s.getAvailableStats()
+        self.statKeys=self.statCollector.getAvailableStats()
 
     def initStats(self):
         model=self.componentTreeview.get_model()
@@ -176,8 +184,8 @@ class statsGui(UI):
         for child in children:
             self.subBox.remove(child)
         widget.set_sensitive(False)
-        # if not self.newGraphBox.get_visible():
-        self.ui.resize(1,1)#set_size_request(0,-1)
+        self.ui.resize(1,1)
+        self.on_sub_clicked(None)
 
     def on_sub_clicked(self,widget):
         if self.subCount:
@@ -187,6 +195,9 @@ class statsGui(UI):
             self.newSubGraph=[]
         if not self.makingNewGraph:
             self.makingNewGraph=True
+            self.sharedButton=gtk.CheckButton('sharedX')
+            self.subBox.pack_start(self.sharedButton,False,False)
+            self.sharedButton.show()
         else:
             l=gtk.Label('------------------')
             l.show()
@@ -205,7 +216,7 @@ class statsGui(UI):
         h.pack_start(l)
         l.show()
         combo=gtk.combo_box_entry_new_text()
-        combo.append_text('custom')
+        combo.append_text('customX')
         combo.append_text('lpb')
         combo.append_text('time')
         combo.set_active(0)
@@ -242,26 +253,65 @@ class statsGui(UI):
         for k,v in self.newGraph.items():
             self.newGraph[k]['name']=v['name'].get_text()
             self.newGraph[k]['x']=v['x'].get_active_text()
-        print self.newGraph
+        self.makeGraph()
         self.on_subCancel_clicked(widget)
 
 
     def on_subCancel_clicked(self,widget):
         self.makingNewGraph=False
-
         self.newGraphBox.set_visible(False)
         self.builder.get_object('newButton').set_sensitive(True)
         self.ui.resize(1,1)
 
-        pass
 
     def on_refreshButton_clicked(self,widget=None):
         self.getStatKeys()
         self.initStats()
 
 
+    def makeGraph(self):
+        stats=[]
+        sharedx=self.sharedButton.get_active()
+        plot={}
+        for k,v in self.newGraph.items():
+            plot[v['name']]=[]
+            for s in v['stats']:
+                plot[v['name']].append(s)
+                if s not in stats:
+                    stats.append(s)
 
 
+        newPlot= PlotGui(self.pid,deepcopy(self.newGraph),sharedx,self.statCollector.getStats,_parent=self)
+        self.plots[self.pid]=newPlot
+        self.statCollector.subscribe(newPlot,newPlot.updatePlots,stats)
+        self.pid+=1
+
+    def plotDestroyed(self,plot):
+        if plot not in self.plots:
+            return
+        self.statCollector.unsubscribe(self.plots[plot])
+        del self.plots[plot]
+
+    def on_closeButton_clicked(self,widget):
+        self.ui_hide()
+
+    def ui_destroy(self):
+        self.ui.destroy()
+
+    def ui_hide(self):
+        self.ui.hide()
+        self.showing=False
+
+    def ui_show(self):
+        self.ui.show()
+        self.showing=True
+
+    def on_delete_event(self,widget,event):
+        try:
+            self.ui_hide()
+        except:
+            pass
+        return True
 
 if __name__=='__main__':
     statsGui()

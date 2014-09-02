@@ -46,6 +46,7 @@ class clientGui(UI):
 
     def initUI(self,remote=True):
         self.remote=remote
+        self.statsGui=None
         if remote:
             from interface.xml.xmlinterface import Interface
             from interface.xml.connectgui import ConnectGui
@@ -274,7 +275,11 @@ class clientGui(UI):
             self.logger.start()
 
     def on_statsMenuItem_activate(self,widget):
-        statsGui(_parent=self)#self.interface,self.remote)
+        if not self.statsGui:
+            self.statsGui=statsGui(_parent=self)#self.interface,self.remote)
+        else:
+            self.statsGui.ui_show()
+
 
     def on_chatMenuItem_activate(self,widget):
         try:
