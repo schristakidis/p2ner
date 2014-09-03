@@ -30,16 +30,19 @@ class DBStats(Stats):
         else:
             dir=get_user_data_dir()
 
+        port=kwargs['port']
         if not os.path.isdir(dir):
             os.mkdir(dir)
 
         self.statkeys = {}
         self.lpb = -1
         self.startTime=None
-        self.db=database(dir)
+        self.db=database(dir,port)
         self.subscribers={}
         self.loop = task.LoopingCall(self.updateDatabase)
         self.loop.start(2.0)
+        self.waitingStats={}
+        self.waitingStatsCount=0
 
 
     def updateDatabase(self):
@@ -149,8 +152,29 @@ class DBStats(Stats):
     def unsubscribe(self,caller):
         del self.subscribers[caller]
 
-    def getStats(self,stats):
-        pass
+    def getStats(self,stats,func):
+        self.waitingStats[self.waitingStatsCount]={}
+        for s in stats:
+            expr='WHERE %s < %s AND comp IS "%s" AND sid IS %s AND name IS "%s" ORDER BY %s ASC'%(s[1],s[2],s[0][0],s[0][1],s[0][2],s[1])
+            self.waitingStats[self.waitingStatsCount][(s[0][0],s[0][1],s[0][2])]=-1
+            d=self.db.getRecords(expr)
+            d.addCallback(self.returnStats,self.waitingStatsCount,func)
+        self.waitingStatsCount+=1
+
+    def returnStats(self,stat,count,func):
+        for k,v in stat.items():
+            self.waitingStats[count][k]=v
+
+        ready=True
+        for v in self.waitingStats[count].values():
+            if v==-1:
+                ready=False
+
+        if ready:
+            ret=self.waitingStats[count]
+            del self.waitingStats[count]
+            func(ret)
+
 
     def updateSubscribers(self,stats):
         for v in self.subscribers.values():

@@ -74,14 +74,6 @@ class Engine(Namespace):
         self.preferences=Preferences(_parent=self)
         self.preferences.start()
 
-        ##TEMPORARY LOAD STATS
-        stats=self.preferences.getActiveStats()
-        for s in stats:
-            self.__stats__.append(loadComponent("stats", s[0])(_parent=self,**s[1]))
-
-        if 'stats' in kwargs:
-            stats=kwargs['stats']
-            self.__stats__.append(loadComponent("stats",stats)(_parent=self))
 
         self.controlPipe=Pipeline(_parent=self)
 
@@ -119,6 +111,7 @@ class Engine(Namespace):
             IF=k["interface"]
 
         k['port']=findNextConsecutivePorts(port,IF)
+        port=k['port']
 
 
         self.log.debug('trying to load pipeline element updport')
@@ -134,6 +127,16 @@ class Engine(Namespace):
 
         #self.controlPipe.printall()
         #self.controlPipe.call('listen')
+
+        ##TEMPORARY LOAD STATS
+        stats=self.preferences.getActiveStats()
+        for s in stats:
+            s[1]['port']=port
+            self.__stats__.append(loadComponent("stats", s[0])(_parent=self,**s[1]))
+
+        if 'stats' in kwargs:
+            stats=kwargs['stats']
+            self.__stats__.append(loadComponent("stats",stats)(_parent=self,**{'port':port}))
 
         self.initEngine(*args, **kwargs)
 

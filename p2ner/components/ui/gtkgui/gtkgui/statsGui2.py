@@ -220,6 +220,7 @@ class statsGui(UI):
         combo.append_text('lpb')
         combo.append_text('time')
         combo.set_active(0)
+        combo.get_children()[0].set_editable(False)
         combo.show()
         h.pack_start(combo,True,True)
         h.show()

@@ -33,7 +33,7 @@ levels = {
 
 class Logger(object):
 
-    def __init__(self,level='debug',name='p2ner'):
+    def __init__(self,level='debug',name='p2ner',server=False):
         self.log = logging.getLogger(name)
         name=name+'.'
         self.lname=name
@@ -44,10 +44,11 @@ class Logger(object):
             os.mkdir(os.path.join(userdatadir, "log"))
         self.dir= os.path.join(get_user_data_dir(), "log",name)
         self.names=[]
-        self.setupLogger(level)
+        self.setLoggerLevel(level)
+        if server:
+            self.setupLogger(level)
 
     def setupLogger(self,level="debug", filename=None, filemode="a"):
-
         if not filename:
             filename = self.dir+"log"
 
@@ -68,15 +69,6 @@ class Logger(object):
 
         self.log.debug('\n---------\nLog started on %s.\n---------\n' % time.asctime())
 
-        """
-        logging.basicConfig(
-                 level=levels[level],
-                 format="[%(levelname)-8s] %(name)s  %(asctime)s %(module)s(%(funcName)s):%(lineno)d %(message)s",
-                 datefmt="%H:%M:%S",
-                 filename=filename,
-                 filemode=filemode
-                 )
-        """
     def setLoggerLevel(self,level):
         if level not in levels:
             return

@@ -20,5 +20,5 @@ from p2ner.core.components import getComponents, _entry_points, loadComponent
 import weakref, twisted.internet, bitarray, construct
 Server = loadComponent("engine", "Server")
 from twisted.internet import reactor
-P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":16000}),logger=('Logger',{'name':'p2nerServer'}),interface=('NullControl',[],{}))
+P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":16000}),logger=('Logger',{'name':'p2nerServer','server':True}),interface=('NullControl',[],{}))
 reactor.run()

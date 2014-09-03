@@ -27,7 +27,7 @@ from time import localtime
 defaultStream = ("StreamClient", [], {})
 
 class Server(Engine):
-    
+
     def registerMessages(self):
         self.log.debug('registering messages')
         self.messages = []
@@ -36,7 +36,7 @@ class Server(Engine):
         self.messages.append(CheckContentsMessage())
         self.messages.append(KeepAliveMessage())
         self.messages.append(AskServerPunchMessage())
-    
+
     def initEngine(self, *args, **kwargs):
         self.sanityCheck(["control", "controlPipe"])
         self.registerMessages()
@@ -51,21 +51,21 @@ class Server(Engine):
         if 'plot' in kwargs:
             self.drawPlots=kwargs['plot']
         #self.startweb()
-        
+
     def startweb(self):
         ws = ("ServerWebUI", [], {"serverport":8880})
         s, a, k = ws
         webserver = loadComponent("ui", s)
         self.webserver = webserver(_parent=self, *a, **k)
-        
+
     def start(self, sid):
         pass
-    
+
 
     def hasStream(self, streamId):
         #return streamId in [ov.stream.id for ov in self.overlays]
         return streamId in self.overlays.keys()
-    
+
     def generateStreamId(self,p,s):
         m=md5()
         m.update(p.getIP()+str(p.getPort())+s[0]+str(s[1])+str(localtime()))
@@ -78,7 +78,7 @@ class Server(Engine):
             id += 1
         self.log.info('new stream id is %d',id)
         return id
-    
+
     def newStream(self, producer, stream):
         overlay = ("CentralServer", [producer, stream], {})
         s, a, k = overlay
@@ -89,12 +89,12 @@ class Server(Engine):
         self.log.info('new stream %s',stream)
         StreamIdMessage.send(stream.id, stream.streamHash(), producer, self.controlPipe)
         self.chatServer.newRoom(stream.id)
-        
+
     def sendContents(self,peer):
         #s=[ov.stream for ov in self.overlays]
         s=[ov.stream for ov in self.overlays.values()]
         ContentsMessage.send(s,peer,self.controlPipe)
-        
+
     def unregisterStream(self,id):
         try:
             ov=self.overlays.pop(id)
@@ -110,9 +110,9 @@ class Server(Engine):
             ov.removes()
             self.log.info('unregistering stream:%s',ov.stream)
             self.chatServer.removeRoom(id)
-        self.overlays={}  
+        self.overlays={}
         print 'server restarted'
-            
+
 def startServer():
     from twisted.internet import reactor
     import sys,getopt
@@ -120,8 +120,8 @@ def startServer():
         optlist,args=getopt.getopt(sys.argv[1:],'p:v:P:hg',['port=','vizir=','vizirPort=','help','graph'])
     except getopt.GetoptError as err:
         usage(err=err)
-        
-   
+
+
     interface='NullControl'
     port=16000
     vizir=False
@@ -140,17 +140,17 @@ def startServer():
             plots=True
         elif opt in ('-h','--help'):
             usage()
-            
+
     if interface=='ServerXMLRPCControl':
         kwargs={'vizir':vizir,'vizirIP':vIP,'vizirPort':vPort}
     else:
         kwargs={}
 
     mkwargs={'plot':plots}
-    
-    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":port}),logger=('Logger',{'name':'p2nerServer'}),interface=(interface,[],kwargs),**mkwargs)
+
+    P2NER = Server(_parent=None, control = ("UDPCM", [], {"port":port}),logger=('Logger',{'name':'p2nerServer','server':True}),interface=(interface,[],kwargs),**mkwargs)
     reactor.run()
-    
+
 def usage(err=None):
     import sys
     if err:
@@ -165,6 +165,6 @@ def usage(err=None):
     print ' -h, --help :print help'
     print ' -------------------------------------------------------------------------'
     sys.exit(' ')
-    
+
 if __name__ == "__main__":
     startServer()

@@ -157,6 +157,7 @@ class PlotFig(object):
 class PlotGui(UI):
     def initUI(self,pid,plots,sharedx,statCollector):
         self.pid=pid
+        self.statCollector=statCollector
         self.plots=plots
         self.fig={}
         self.builder = gtk.Builder()
@@ -285,4 +286,40 @@ class PlotGui(UI):
 
     def changeToolbar(self):
         self.fig['rtt']['toolbar'].canvas=self.fig['bw']['fig'].getCanvas()
+
+    def on_allButton_clicked(self,widget):
+        req=[]
+        for k,v in self.data.items():
+            stat=[]
+            stat.append(k)
+            for x in (('customX','x'),('time','time'),('lpb','lpb')):
+                if x[0] in v:
+                    stat.append(x[1])
+                    stat.append(self.data[k][x[0]][0])
+                    break
+            req.append(stat)
+        if req:
+            self.statCollector(req,self.getAllStats)
+            self.builder.get_object('allButton').set_sensitive(False)
+
+    def getAllStats(self,stats):
+        data={}
+        for k,values in stats.items():
+            if not k in data:
+                data[k]={}
+                data[k]['y']=[]
+                for x in ('customX','time','lpb'):
+                    data[k][x]=[]
+            for v in values:
+                data[k]['y'].append(v[0])
+                for x,pos in [('customX',1),('time',2),('lpb',3)]:
+                    data[k][x].append(v[pos])
+
+        for k,values in self.data.items():
+            for v in values.keys():
+                self.data[k][v]=data[k][v]+self.data[k][v]
+
+        self.on_reloadButton_clicked(None)
+        self.builder.get_object('allButton').set_sensitive(True)
+
 

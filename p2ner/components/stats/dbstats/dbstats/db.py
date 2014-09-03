@@ -20,8 +20,9 @@ import os
 import time
 
 class DB(object):
-    def __init__(self, dir):
-        dbname= os.path.join(dir,'stats.db')
+    def __init__(self, dir,port):
+        name='stats'+str(port)+'.db'
+        dbname= os.path.join(dir,name)
         self.dbpool=adbapi.ConnectionPool('sqlite3',dbname, check_same_thread=False)
         d=self.deleteDB()
         d.addCallback(self.createDB)
@@ -39,32 +40,23 @@ class DB(object):
         for arg in args:
             txn.execute('INSERT INTO stat(comp, sid, name, value, x, time, lpb) VALUES(?,?,?,?,?,?,?)',arg)
 
-    def getRecords(self):
-        d=self._getRecords()
+    def getRecords(self,expr):
+        d=self._getRecords(expr)
         d.addCallback(self.updateId)
         return d
 
-    def _getRecords(self):
-        return self.dbpool.runQuery(('SELECT * FROM log WHERE id BETWEEN %d AND %d'%(self.id,self.lastId)))
+    def _getRecords(self,expr):
+        expr = 'SELECT * FROM stat '+expr
+        return self.dbpool.runQuery((expr))
 
-    def updateId(self,records):
-        dictR=[]
-        self.id +=(len(records)+0)
-        for r in records:
-            dr={}
-            dr['ip']=r[1]
-            dr['port']=r[2]
-            dr['level']=r[3]
-            dr['log']=r[4]
-            dr['time']=r[5]
-            dr['epoch']=r[6]
-            dr['msecs']=r[7]
-            dr['module']=r[8]
-            dr['func']=r[9]
-            dr['lineno']=r[10]
-            dr['msg']=r[11]
-            dictR.append(dr)
-        return dictR
+    def updateId(self,stats):
+        ret={}
+        for s in stats:
+            key=(s[1],s[2],s[3])
+            if (key) not in ret:
+                ret[key]=[]
+            ret[key].append([s[4],s[5],s[6],s[7]])
+        return ret
 
     def stop(self):
         self.dbpool.disconnect()
