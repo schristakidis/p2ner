@@ -395,4 +395,9 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
             ret[s[0]][s[1]]=s[2]
         return dumps(ret)
 
+    def xmlrpc_copyStatFile(self,filename):
+        f=open(filename,'rb')
+        b=f.readlines()
+        f.close()
+        return dumps(b)
 

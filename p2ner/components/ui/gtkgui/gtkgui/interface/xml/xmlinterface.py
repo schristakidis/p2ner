@@ -225,3 +225,7 @@ class Interface(Interface):
 
     def failedStats(self,f,func,ip,port):
         func(-1,ip,port)
+
+    def copyStatFile(self,filename):
+        d=self.proxy.callRemote("copyStatFile",filename)
+        return d

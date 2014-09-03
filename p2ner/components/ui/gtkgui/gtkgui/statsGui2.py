@@ -29,21 +29,22 @@ from pkg_resources import resource_string
 from p2ner.abstract.ui import UI
 from plotGui import PlotGui
 from copy import deepcopy
+from statsdb import DB
+from cPickle import loads
 
 class statsGui(UI):
-    def initUI(self):#interface=None,remote=False)
-        # self.interface=interface
-        # self.remote=remote
-        # self.selectedStats=[]
-        # self.combine=False
-        # self.file=None
+    def initUI(self):
         self.makingNewGraph=False
+        self.liveMode=True
+        self.localdb=None
 
-        for s in self.root.__stats__:
-            if 'db' in s:
-                self.statCollector=s
+        if not self.parent.remote:
+            for s in self.root.__stats__:
+                if 'db' in s:
+                    self.statCollector=s
 
         self.getStatKeys()
+
         self.plots={}
         self.pid=0
         self.showing=True
@@ -56,6 +57,23 @@ class statsGui(UI):
         self.ui = self.builder.get_object("ui")
 
         self.ui.connect('delete-event', self.on_delete_event)
+
+        ######## MENU
+        menuBar=gtk.MenuBar()
+
+        menu_item=gtk.MenuItem('Load')
+        menu_item.connect('activate',self.on_loadButton_clicked)
+        menu_item.show()
+
+        fileMenu=gtk.Menu()
+        fileMenu.append(menu_item)
+        root_menu=gtk.MenuItem('File')
+        root_menu.show()
+        root_menu.set_submenu(fileMenu)
+        menuBar.append(root_menu)
+        menuBar.show()
+
+        self.builder.get_object('vbox1').pack_start(menuBar,False,False)
         #component
         self.componentTreeview = self.builder.get_object("compTreeview")
         model=self.componentTreeview.get_model()
@@ -113,9 +131,14 @@ class statsGui(UI):
         self.subBox.show()
         self.initStats()
         self.ui.show()
+        if self.parent.remote:
+            self.builder.get_object('refreshButton').set_sensitive(False)
 
     def getStatKeys(self):
-        self.statKeys=self.statCollector.getAvailableStats()
+        if not self.parent.remote:
+            self.statKeys=self.statCollector.getAvailableStats()
+        else:
+            self.statKeys=[]
 
     def initStats(self):
         model=self.componentTreeview.get_model()
@@ -266,6 +289,9 @@ class statsGui(UI):
 
 
     def on_refreshButton_clicked(self,widget=None):
+        self.liveMode=True
+        if self.localdb:
+            self.localdb.stop()
         self.getStatKeys()
         self.initStats()
 
@@ -281,16 +307,32 @@ class statsGui(UI):
                 if s not in stats:
                     stats.append(s)
 
+        if self.liveMode:
+            self.makeLiveGraph(stats,sharedx)
+        else:
+            self.makeFileGraph(stats,sharedx)
 
+    def makeLiveGraph(self,stats,sharedx):
         newPlot= PlotGui(self.pid,deepcopy(self.newGraph),sharedx,self.statCollector.getStats,_parent=self)
         self.plots[self.pid]=newPlot
         self.statCollector.subscribe(newPlot,newPlot.updatePlots,stats)
         self.pid+=1
 
+    def makeFileGraph(self,stats,sharedx):
+        newPlot= PlotGui(self.pid,deepcopy(self.newGraph),sharedx,None,_parent=self)
+        self.plots[self.pid]={}
+        self.plots[self.pid]['plot']=newPlot
+        for s in stats:
+            self.plots[self.pid][s]=-1
+            d=self.localdb.getStats(s)
+            d.addCallback(self.retFileValues,self.pid)
+        self.pid+=1
+
     def plotDestroyed(self,plot):
         if plot not in self.plots:
             return
-        self.statCollector.unsubscribe(self.plots[plot])
+        if not type(self.plots[plot])==dict:
+            self.statCollector.unsubscribe(self.plots[plot])
         del self.plots[plot]
 
     def on_closeButton_clicked(self,widget):
@@ -313,6 +355,102 @@ class statsGui(UI):
         except:
             pass
         return True
+
+    def on_loadButton_clicked(self,widget,data=None):
+        if self.makingNewGraph:
+            print "you can't load file while making new Graph"
+            return
+        if self.parent.remote:
+            self.browseRemote()
+        else:
+            self.browseLocal()
+
+    def browseRemote(self):
+        RemoteFileChooser(self.getRemoteFileStat,self.parent.interface,dname=get_user_data_dir())
+
+    def getRemoteFileStat(self,filename):
+        if not filename:
+            return
+        baseFile=os.path.basename(filename)
+        # targetFile=os.path.join(get_user_data_dir(),'stats')
+        targetFile=get_user_data_dir()
+
+        targetFile=os.path.join(targetFile,'r'+baseFile)
+
+        d=self.parent.interface.copyStatFile(filename)
+        d.addCallback(self.writeRemoteStatFile,targetFile)
+
+    def writeRemoteStatFile(self,rFile,targetFile):
+        f=open(targetFile,'wb')
+        rFile=loads(rFile)
+        for line in rFile:
+            f.write(line)
+        f.close()
+        self.browseFinished(targetFile)
+
+
+    def browseLocal(self):
+        filter=gtk.FileFilter()
+        filter.set_name('stat files')
+        filter.add_pattern('*.db')
+
+        dialog = gtk.FileChooserDialog("Open..",
+                               None,
+                               gtk.FILE_CHOOSER_ACTION_OPEN,
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        if not dialog.set_current_folder(os.path.join(get_user_data_dir(),'stats')):
+             dialog.set_current_folder(get_user_data_dir())
+
+        dialog.add_filter(filter)
+
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            #print dialog.get_filename(), 'selected'
+            filename = dialog.get_filename()
+        elif response == gtk.RESPONSE_CANCEL:
+            filename=None
+            print 'Closed, no files selected'
+        dialog.destroy()
+        self.browseFinished(filename)
+
+    def browseFinished(self,filename=None):
+        if not filename:
+            return
+        self.liveMode=False
+        if self.localdb:
+            self.localdb.stop()
+        self.localdb=DB(filename)
+        d=self.localdb.getKeys()
+        d.addCallback(self.updateKeys)
+
+    def updateKeys(self,keys):
+        self.statKeys={}
+        for stat in keys:
+            if not stat[0] in self.statKeys:
+                self.statKeys[stat[0]]={}
+            if not stat[1] in self.statKeys[stat[0]]:
+                self.statKeys[stat[0]][stat[1]]={}
+            self.statKeys[stat[0]][stat[1]][stat[2]]={}
+        self.initStats()
+
+    def retFileValues(self,stats,pid):
+        for k,v in stats.items():
+            self.plots[pid][k]=v
+
+        for v in self.plots[pid].values():
+            if v==-1:
+                return
+
+        data={}
+        for k,v in self.plots[pid].items():
+            if k!='plot':
+                data[k]=v
+        self.plots[pid]['plot'].updatePlots(data)
+
+
 
 if __name__=='__main__':
     statsGui()

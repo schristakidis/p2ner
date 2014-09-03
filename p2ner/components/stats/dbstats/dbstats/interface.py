@@ -13,8 +13,9 @@
 #   limitations under the License.
 
 from p2ner.util.utilities import get_user_data_dir
+import os.path
 
 class interface(object):
-    specs={'statsDir':get_user_data_dir()}
-    
+    specs={'statsDir':os.path.join(get_user_data_dir(),'stats')}
+
     specsGui={'statsDir':{'name':'Statistics Directory','tooltip':'The directory to save statistics','type':'browseDir'}}

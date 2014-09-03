@@ -190,6 +190,10 @@ class PlotGui(UI):
         self.count=0
         self.sharedx=sharedx
 
+        if not self.statCollector:
+            self.builder.get_object('allButton').set_sensitive(False)
+            self.builder.get_object('pauseButton').set_sensitive(False)
+
         self.makePlots()
         self.showing=True
         self.ui.show_all()
@@ -281,6 +285,7 @@ class PlotGui(UI):
                 for x,pos in [('customX',1),('time',2),('lpb',3)]:
                     if x in self.data[k]:
                         self.data[k][x].append(v[pos])
+
         for n,f in self.fig.items():
             f['fig'].updatePlot(self.data)
 
