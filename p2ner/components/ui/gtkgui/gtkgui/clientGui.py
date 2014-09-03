@@ -31,7 +31,7 @@ from options.options import optionsGui
 from console import start_console
 from p2ner.core.namespace import Namespace, initNS
 from p2ner.abstract.ui import UI
-from statsGui2 import statsGui
+from statsGui import statsGui
 from versioncheck import getVersion as checkVersion
 from measureupload import MeasureUpload
 from networkGui import NetworkGui
