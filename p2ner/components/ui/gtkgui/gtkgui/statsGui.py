@@ -30,11 +30,12 @@ from p2ner.abstract.ui import UI
 from plotGui import PlotGui
 from copy import deepcopy
 from statsdb import DB
-from cPickle import loads
+from cPickle import loads,dumps,load,dump
 
 class statsGui(UI):
     def initUI(self):
         self.makingNewGraph=False
+        self.statinGraph=False
         self.liveMode=True
         self.localdb=None
 
@@ -55,18 +56,38 @@ class statsGui(UI):
         self.builder.connect_signals(self)
 
         self.ui = self.builder.get_object("ui")
+        self.ui.set_title('Statistics')
 
         self.ui.connect('delete-event', self.on_delete_event)
 
         ######## MENU
         menuBar=gtk.MenuBar()
 
+        fileMenu=gtk.Menu()
         menu_item=gtk.MenuItem('Load')
         menu_item.connect('activate',self.on_loadButton_clicked)
         menu_item.show()
 
-        fileMenu=gtk.Menu()
         fileMenu.append(menu_item)
+
+
+        menu_item=gtk.MenuItem('Load Template')
+        # menu_item.connect('select',self.on_loadTButton_clicked)
+        menu_item.show()
+
+        subMenu=gtk.Menu()
+        menu_item.set_submenu(subMenu)
+        subMenu.show()
+
+        subMenu.connect('show',self.on_loadTButton_clicked)
+        fileMenu.append(menu_item)
+
+        menu_item=gtk.MenuItem('Save Template')
+        menu_item.connect('activate',self.on_saveTButton_clicked)
+        menu_item.show()
+
+        fileMenu.append(menu_item)
+
         root_menu=gtk.MenuItem('File')
         root_menu.show()
         root_menu.set_submenu(fileMenu)
@@ -185,6 +206,9 @@ class statsGui(UI):
         if not self.makingNewGraph:
             return
 
+        if not self.statinGraph:
+            self.statinGraph=True
+
         compRow=self.componentTreeview.get_selection().get_selected_rows()[1][0]
         comp=self.componentTreeview.get_model()[compRow][0]
 
@@ -270,6 +294,9 @@ class statsGui(UI):
 
 
     def on_subOk_clicked(self,widget):
+        if not self.statinGraph:
+            return
+
         if self.newSubGraph:
             self.newGraph[self.subCount]['stats']=self.newSubGraph
         else:
@@ -283,6 +310,7 @@ class statsGui(UI):
 
     def on_subCancel_clicked(self,widget):
         self.makingNewGraph=False
+        self.statinGraph=False
         self.newGraphBox.set_visible(False)
         self.builder.get_object('newButton').set_sensitive(True)
         self.ui.resize(1,1)
@@ -449,6 +477,134 @@ class statsGui(UI):
             if k!='plot':
                 data[k]=v
         self.plots[pid]['plot'].updatePlots(data)
+
+
+    def on_saveTButton_clicked(self,widget):
+        if not self.statinGraph:
+            return
+
+        sharedx=self.sharedButton.get_active()
+
+        newGraph={}
+        for k,v in self.newGraph.items():
+            newGraph[k]={}
+            newGraph[k]['name']=v['name'].get_text()
+            newGraph[k]['x']=v['x'].get_active_text()
+            try:
+                newGraph[k]['stats']=v['stats']
+            except:
+                newGraph[k]['stats']=self.newSubGraph
+
+
+        saveDict={}
+        saveDict['sharedx']=sharedx
+        saveDict['graph']=newGraph
+
+        self.browseSaveLocal(saveDict)
+
+    def browseSaveLocal(self,saveDict):
+        filter=gtk.FileFilter()
+        filter.set_name('template files')
+        filter.add_pattern('*.tmpl')
+
+        dialog = gtk.FileChooserDialog("Open..",
+                               None,
+                               gtk.FILE_CHOOSER_ACTION_SAVE,
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        if not dialog.set_current_folder(os.path.join(get_user_data_dir(),'stats')):
+             dialog.set_current_folder(get_user_data_dir())
+
+        dialog.add_filter(filter)
+
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            #print dialog.get_filename(), 'selected'
+            filename = dialog.get_filename()
+        elif response == gtk.RESPONSE_CANCEL:
+            filename=None
+            print 'Closed, no files selected'
+        dialog.destroy()
+        if filename and '.' not in os.path.basename(filename):
+            filename+='.tmpl'
+
+        self.saveTemplateFile(filename,saveDict)
+
+    def saveTemplateFile(self,filename,saveDict):
+        if not filename:
+            return
+        f=open(filename,'wb')
+        dump(saveDict,f)
+        f.close()
+
+    def on_loadTButton_clicked(self,widget):
+        for sub in widget.get_children():
+            widget.remove(sub)
+
+        directory=os.path.join(get_user_data_dir(),'stats')
+        files=[f[:-5] for f in os.listdir(directory) if '.tmpl' in f]
+        for f in files:
+            l=gtk.MenuItem(f)
+            l.show()
+            l.connect('activate',self.loadFile,f)
+            widget.append(l)
+
+    def loadFile(self,widget,filename):
+        if self.statinGraph:
+            print "can't load templeta while making grph"
+            return
+
+        filename+='.tmpl'
+        directory=os.path.join(get_user_data_dir(),'stats')
+        filename=os.path.join(directory,filename)
+        f=open(filename,'rb')
+        graph=load(f)
+        f.close()
+        self.makeTemplateGraph(graph)
+
+    def makeTemplateGraph(self,graph):
+        sharedx=graph['sharedx']
+        newGraph=graph['graph']
+
+        if self.liveMode:
+            self.getStatKeys()
+
+        self.on_newButton_clicked(self.builder.get_object('newButton'))
+        self.sharedButton.set_active(sharedx)
+        for sub in newGraph.values():
+            self.on_sub_clicked(None)
+            self.newGraph[self.subCount]['name'].set_text(sub['name'])
+            for x,pos in (('customX',0),('lpb',1),('time',2)):
+                if sub['x']==x:
+                    self.newGraph[self.subCount]['x'].set_active(pos)
+            for stat in sub['stats']:
+                comp=None
+                sid=None
+                name=None
+                if stat[0] in self.statKeys:
+                    comp=stat[0]
+                    if stat[1] in self.statKeys[comp]:
+                        sid=stat[1]
+                    else:
+                        sid=self.statKeys[comp].keys()[0]
+                    if stat[2] in self.statKeys[comp][sid]:
+                        name=stat[2]
+                    else:
+                        name=None
+                else:
+                    name=None
+
+                if name:
+                    if not self.statinGraph:
+                        self.statinGraph=True
+                    self.newSubGraph.append((comp,sid,name))
+                    self.lStore.append((name,))
+
+
+
+
 
 
 
