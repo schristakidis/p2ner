@@ -526,40 +526,63 @@ class DistFlowControl(FlowControl):
 
     def saveStats(self):
         temp={}
-        setValue(self,'x',self.count,True)
         temp['x']=self.count
         temp['u']=self.u
         setValue(self,'u',self.u,True)
         temp['umax']=self.umax*8/1024
+        setValue(self,'umax',self.umax*8/1024,True)
         temp['rtt']=self.rtt
         temp['stt']=self.stt
         setValue(self,'stt',self.stt,True)
         setValue(self,'rtt',self.rtt,True)
         temp['minStt']=self.minStt
+        setValue(self,'minStt',self.minStt,True)
         temp['minRtt']=self.minRtt
+        setValue(self,'minRtt',self.minRtt,True)
         temp['errStt']=self.errStt
+        setValue(self,'errStt',self.errStt,True)
         temp['errRtt']=self.errRtt
+        setValue(self,'errRtt',self.errRtt,True)
         temp['ackRate']=self.ackRate*8/1024
         setValue(self,'ackRate',self.ackRate*8/1024,True)
         temp['refStt']=self.refStt
+        setValue(self,'refStt',self.refStt,True)
         temp['qRef']=self.qRef
+        setValue(self,'qRef',self.qRef,True)
         temp['qDelay']=self.qDelay
+        setValue(self,'qDelay',self.qDelay,True)
         temp['errorP']=self.errorsPer
+        setValue(self,'errorP',self.errorsPer,True)
         temp['Tsend']=self.Tsend
+        setValue(self,'Tsend',self.Tsend,True)
         temp['difBw']=self.difBw
+        setValue(self,'difBw',self.difBw,True)
         temp['controlBW']=self.controlBw
+        setValue(self,'controlBW',self.controlBw,True)
         temp['actualU']=self.actualU*8/1024
+        setValue(self,'actualU',self.actualU*8/1024,True)
         temp['lastBW']=self.lastBW*8/1024
+        setValue(self,'lastBW',self.lastBW*8/1024,True)
         temp['ackSent']=self.ackSent*8/1024
+        setValue(self,'ackSent',self.ackSent*8/1024,True)
         temp['idleStatus']=self.idle
+        setValue(self,'idleStatus',self.idle,True)
         temp['calcMin']=self.calculatedmin
+        setValue(self,'calcMin',self.calculatedmin,True)
         temp['idleAck']=self.idleAck
+        setValue(self,'idleAck',self.idleAck,True)
         temp['idleSttStatus']=self.idleSttStatus
+        setValue(self,'idleSttStatus',self.idleSttStatus,True)
         temp['lastIdlePacket']=self.lastIdlePacket
+        setValue(self,'lastIdlePacket',self.lastIdlePacket,True)
         temp['wrongStt']=self.wrongSttperPeer
+        setValue(self,'wrongStt',self.wrongSttperPeer,True)
         temp['wrongThres']=self.wrongThres
+        setValue(self,'wrongThres',self.wrongThres,True)
         temp['secondNorm']=self.secondNorm
+        setValue(self,'secondNorm',self.secondNorm,True)
         temp['secondNormPerPeer']=self.secondNormPerPeer
+        setValue(self,'secondNormPerPeer',self.secondNormPerPeer,True)
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
