@@ -45,6 +45,7 @@ class DistFlowControl(FlowControl):
         self.errorPhase=False
         self.recoveryPhase=False
         self.loopingCall=task.LoopingCall(self.sendBWstats)
+        self.sendEstimatedBWInterval=0.1
         self.stats=[]
         self.count=0
         self.errorsPer=0
@@ -52,43 +53,57 @@ class DistFlowControl(FlowControl):
         self.controlBw=0
         self.actualU=0
         self.lastBW=0
-        self.idle=0
-        self.idleHistorySize=5
-        self.ackRatioHistory=[]
-        self.calculatedmin=0
-        self.idleSttStatus=0
-        self.idleAck=0
-        self.lastIdlePacket=0
-        self.idlePackets=[]
-        self.recHistory=[]
+        self.idleHistorySize=30    #the size in Tsend intervals for storring last Stts
+        self.idleHistorySizeDuringNoErrors=20 # the last Tsend intervals when there are no errors
+        self.recHistory=[]  # holds the lastSTTs for the peers
+
         self.qDelayErr=0.1
-        self.qHistorySize=10
-        self.qDelayHistory=[]
-        self.umaxHistory=[]
-        self.umaxHistorySize=10
-        self.wrongStt=0
-        self.wrongSttperPeer=0
-        self.wrongThres=0.005**2
-        self.secondNorm=0
-        self.secondNormPerPeer=0
-        self.qDelayPerPeer=[]
-        self.forceIdle=False
         self.ackSentHistory=[]
         self.ackSentHistorySize=10
+        self.ackSent=0
+
         self.reportedU=self.u
+        self.sendInterval=0
+        self.delta=0
+        self.errorThres=0
+
+        self.calculatedmin=0
+        self.idleSttStatus=0
+        self.lastIdlePacket=0
+
+        # self.ackRatioHistory=[] # used in old check idle
+        # self.idleAck=0
+        # self.idle=0
+        # self.idlePackets=[]
+
+        #    #used for the check wrongStt algorithm
+        # self.qHistorySize=10
+        # self.qDelayHistory=[]
+        # self.qDelayPerPeer=[]
+        # self.wrongStt=0
+        # self.wrongSttperPeer=0
+        # self.wrongThres=0.005**2
+        # self.secondNormPerPeer=0
+        # self.forceIdle=False
+
 
 
     def start(self):
         reactor.callInThread(bws_thread, self, self.TsendRef)
-        self.loopingCall.start(0.1)
+        self.loopingCall.start(self.sendEstimatedBWInterval)
 
     def checkIdle(self):
         const=True
-        idle=False
         self.idleSttStatus=0
+        self.delta=1.0*1500/self.maxumax
 
+
+        if self.errorPhase or self.recoveryPhase:
+            recHistory=self.recHistory
+        else:
+            recHistory=self.recHistory[-self.idleHistorySizeDuringNoErrors:]
         temp={}
-        for stt,p in self.recHistory:
+        for stt,p in recHistory:
             if p not in temp.keys():
                temp[p]=[]
             temp[p].append(stt)
@@ -98,155 +113,65 @@ class DistFlowControl(FlowControl):
                 break
             lstt=v[0]
             for stt in v[1:]:
-                if stt>1.1*lstt or stt<0.9*lstt:
+                if stt>self.delta+lstt or stt<lstt-self.delta:
                     const=False
                     break
 
-        if const:
+
+        if const and len(self.recHistory)>10 and self.errorsPer<2:
             self.idleSttStatus=1
-            try:
-                first=self.ackRatioHistory[0]
-                last=self.ackRatioHistory[-1]
-                self.idleAck=1.0*(last-first)/last
-            except:
-                self.idleAck=0
-
-            line=False
-            if self.idleAck>0.1:
-                a=1.0*(last-first)/len(self.ackRatioHistory)
-                line=True
-                for x in range(len(self.ackRatioHistory)):
-                    point1=0.9*first+a*x
-                    point2=1.1*first+a*x
-                    if self.ackRatioHistory[x]<point1 or self.ackRatioHistory[x]>point2:
-                        line=False
-
-            if line:
-                idle=True
-            else:
-                isIdle=True
-                for i in self.idlePackets:
-                    if i<=1:
-                        isIdle=False
-                        break
-                if isIdle:
-                    idle=True
-
-            if idle and not self.errorPhase:
-                self.idle+=1
-                if self.idle>2:
-                    for p in temp.keys():
-                        self.peers[p]['calcMin']=min(temp[p])
-                        self.peers[p]['calcMinTime']=time.time()
-                    self.idle=2
-                    if self.forceIdle:
-                        self.forceIdle=False
-            else:
-                self.idle=0
+            for p in temp.keys():
+                self.peers[p]['calcMin']=min(temp[p])
+                self.peers[p]['calcMinTime']=time.time()
         else:
-            self.idle=0
+            self.idleSttStatus=0
 
-    def checkMinStt(self,data):
-        shouldCalculateMin=[]
-        for peer in data['peer_stats']:
-            p=(peer["host"],peer["port"])
-            if not 'calcMin' in self.peers[p].keys():
-                if not 'waitingMin' in self.peers[p].keys():
-                    self.peers[p]['waitingMin']=0
+        return
 
-                if not self.peers[p]['waitingMin']:
-                    shouldCalculateMin.append(p)
-                else:
-                    self.peers[p]['waitingMin']-=1
+        # if const:
+        #     # self.idleSttStatus=1
+        #     try:
+        #         first=self.ackRatioHistory[0]
+        #         last=self.ackRatioHistory[-1]
+        #         self.idleAck=1.0*(last-first)/last
+        #     except:
+        #         self.idleAck=0
 
-        goodPeer=None
-        if shouldCalculateMin:
-            try:
-                goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
-            except:
-                pass
+        #     line=False
+        #     if self.idleAck>0.1:
+        #         a=1.0*(last-first)/len(self.ackRatioHistory)
+        #         line=True
+        #         for x in range(len(self.ackRatioHistory)):
+        #             point1=0.9*first+a*x
+        #             point2=1.1*first+a*x
+        #             if self.ackRatioHistory[x]<point1 or self.ackRatioHistory[x]>point2:
+        #                 line=False
 
-        if goodPeer:
-            for p in shouldCalculateMin:
-                self.peers[p]['waitingMin']=10
-                d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
-                d.addCallback(self.updateMin,goodPeer,p)
+        #     if line:
+        #         idle=True
+        #     else:
+        #         isIdle=True
+        #         for i in self.idlePackets:
+        #             if i<=1:
+        #                 isIdle=False
+        #                 break
+        #         if isIdle:
+        #             idle=True
 
-    def updateMin(self,data,goodPeer,peer):
-        if not data:
-            return
-        print 'update minnnnnnnnnnnnn'
-        print 'goodPeer:',goodPeer
-        print 'peer:',peer
-        print data
-        for line in data:
-            if line['host']==goodPeer[0] and line['port']==goodPeer[1]:
-                goodStt=line['STT']*pow(10,-6)
-            elif line['host']==peer[0] and line['port']==peer[1]:
-                stt=line['STT']*pow(10,-6)
-            else:
-                print 'error in update minnnnnnnnnnnn'
-                return
+        #     if idle and not self.errorPhase:
+        #         self.idle+=1
+        #         if self.idle>2:
+        #             # for p in temp.keys():
+        #             #     self.peers[p]['calcMin']=min(temp[p])
+        #             #     self.peers[p]['calcMinTime']=time.time()
+        #             self.idle=2
+        #             # if self.forceIdle:
+        #             #     self.forceIdle=False
+        #     else:
+        #         self.idle=0
+        # else:
+        #     self.idle=0
 
-        delay=goodStt-self.peers[goodPeer]['calcMin']
-        self.peers[peer]['calcMin']=stt-delay
-        self.peers[peer]['waitingMin']=0
-
-
-
-    def checkWrongStt(self):
-        self.wrongStt=0
-        if not self.qDelayHistory or self.forceIdle:
-            self.wrongSttperPeer=0
-            return
-
-        avgDelay=sum(self.qDelayHistory)/len(self.qDelayHistory)
-        self.secondNorm=sum([(d-avgDelay)**2 for d in self.qDelayHistory])/len(self.qDelayHistory)
-        if self.secondNorm>self.wrongThres:
-            self.wrongStt=1
-
-        ###############################################other solution##################
-        temp={}
-        for d in self.qDelayPerPeer:
-            if not d[0] in temp.keys():
-                temp[d[0]]=[]
-            temp[d[0]].append(d[1])
-
-        if len(temp.keys())<2:
-            self.wrongSttperPeer=0
-            return
-
-        cont=True
-        for dPeer in temp.values():
-            avg=sum(dPeer)/len(dPeer)
-            second=sum([(d-avg)**2 for d in dPeer])/len(dPeer)
-            if second>self.wrongThres:
-                cont=False
-
-        if not cont:
-            self.wrongSttperPeer=0
-            self.secondNormPerPeer=0
-            return
-
-        delays=[sum(d)/len(d) for d in temp.values()]
-        avgDelay=sum(delays)/len(delays)
-        self.secondNormPerPeer=sum([(d-avgDelay)**2 for d in delays])/len(delays)
-        if self.secondNormPerPeer>self.wrongThres:
-            self.wrongSttperPeer+=1
-            if self.wrongSttperPeer>2:
-                self.wrongSttperPeer=2
-                self.shouldForceIdle()
-
-
-    def shouldForceIdle(self):
-        self.forceIdle=True
-        for p in self.peers:
-            try:
-                self.peers[p].pop('calcMin')
-                self.peers[p].pop('calcMinTime')
-            except:
-                pass
-        print 'should force idle'
 
 
 
@@ -261,8 +186,6 @@ class DistFlowControl(FlowControl):
             if p not in self.peers:
                 self.peers[p]={}
 
-            self.recHistory.append((peer['avgSTT']*pow(10,-6),p))
-            self.recHistory=self.recHistory[-self.idleHistorySize:]
 
             self.peers[p]['lastRtt']=peer['avgRTT']*pow(10,-6)
             self.peers[p]['lastStt']=peer['avgSTT']*pow(10,-6)
@@ -281,16 +204,16 @@ class DistFlowControl(FlowControl):
             ackSum+=peer['acked_last']
             errSum+=peer['error_last']
 
-            try:
-                qDperPeer[p]=self.peers[p]['lastStt']-self.peers[p]['calcMin']
-            except:
-                pass
+            # try:
+            #     qDperPeer[p]=self.peers[p]['lastStt']-self.peers[p]['calcMin']
+            # except:
+            #     pass
 
 
-        for p,d in qDperPeer.items():
-            self.qDelayPerPeer.append((p,d))
+        # for p,d in qDperPeer.items():
+        #     self.qDelayPerPeer.append((p,d))
 
-        self.qDelayPerPeer=self.qDelayPerPeer[-self.qHistorySize:]
+        # self.qDelayPerPeer=self.qDelayPerPeer[-self.qHistorySize:]
 
         if not self.peers:
             self.send_bw()
@@ -302,22 +225,30 @@ class DistFlowControl(FlowControl):
             self.ackHistory=self.ackHistory[-self.historySize:]
             self.errorHistory=self.errorHistory[-self.historySize:]
 
-        if len(self.ackRatioHistory)>3:
-            self.checkIdle()
-
-        self.checkMinStt(data)
+        # self.checkMinStt(data)
 
         lastAck=data['last_ack']
         executeAlgo=True
         if lastAck:
+            lastPeer=(lastAck['host'],lastAck['port'])
+            self.recHistory.append((self.peers[lastPeer]['lastStt'],lastPeer))
+            self.recHistory=self.recHistory[-self.idleHistorySize:]
+
+            self.checkIdle()
+
             self.rtt=lastAck['RTT']*pow(10,-6)
             self.stt=lastAck['STT']*pow(10,-6)
-            lastPeer=(lastAck['host'],lastAck['port'])
             self.minRtt=self.peers[lastPeer]['minRtt']
             try:
                 self.minStt=self.peers[lastPeer]['calcMin']
             except:
                 self.minStt=self.peers[lastPeer]['minStt']
+
+            #if lastStt is less than the calculated minimum update values
+            if self.peers[lastPeer]['lastStt']<self.minStt:
+                self.minStt=self.peers[lastPeer]['lastStt']
+                self.peers[lastPeer]['calcMin']=self.minStt
+
             self.errRtt=self.peers[lastPeer]['errorRtt']
             # self.errStt=self.peers[lastPeer]['errorStt']
             self.errStt=self.minStt+self.qDelayErr
@@ -325,7 +256,8 @@ class DistFlowControl(FlowControl):
 
             errors=sum(self.errorHistory)
             acks=sum(self.ackHistory)
-            self.errorsPer=100.0*errors/acks
+            # self.errorsPer=100.0*errors/acks
+            self.errorsPer=errors
 
             self.lastSentTime=lastAck['sent']
             self.lastAckedSent=lastAck['seq']
@@ -338,37 +270,43 @@ class DistFlowControl(FlowControl):
                 self.calculatedmin=0
         else:
             executeAlgo=True
-            """
-            self.minRtt=0
-            self.minStt=0
-            self.errRtt=0
-            self.errStt=0
-            self.stt=0
-            self.rtt=0
-            """
+            # self.minRtt=0
+            # self.minStt=0
+            # self.errRtt=0
+            # self.errStt=0
+            # self.stt=0
+            # self.rtt=0
 
         self.qDelay=self.stt-self.minStt
-        self.qDelayHistory.append(self.qDelay)
-        self.qDelayHistory=self.qDelayHistory[-self.qHistorySize:]
-        self.qRef=2*(self.errStt-self.minStt)/4
+
+        # self.qDelayHistory.append(self.qDelay) #used for wrongStt algo
+        # self.qDelayHistory=self.qDelayHistory[-self.qHistorySize:]
+
+        # self.qRef=2*(self.errStt-self.minStt)/4 # old way to calculate qRef
+
+        # set qref according to the link capacity
+        if self.delta:
+            self.qRef=-self.delta/2
+        else:
+            self.qRef=-0.005
         self.refStt=self.minStt+self.qRef
 
-        self.checkWrongStt()
+        # self.checkWrongStt()
 
         try:
             lastData=data['sent_data']
-            self.totalDataSent=lastData['O_DATA_COUNTER']
+            # self.totalDataSent=lastData['O_DATA_COUNTER']
             dataPacketsSent=lastData['O_PKG_COUNTER']-lastData['O_ACK_COUNTER']
             isIdle=self.u-dataPacketsSent
             self.lastIdlePacket=isIdle
-            self.idlePackets.append(isIdle)
-            self.idlePackets=self.idlePackets[-self.idleHistorySize:]
+            # self.idlePackets.append(isIdle)
+            # self.idlePackets=self.idlePackets[-self.idleHistorySize:]
             self.ackSent=(lastData['O_ACK_DATA_COUNTER']+20*lastData['O_ACK_COUNTER'])/self.TsendRef
             self.ackSentHistory.append(self.ackSent)
             self.ackSentHistory=self.ackSentHistory[-self.ackSentHistorySize:]
             self.ackSent=1.0*sum(self.ackSentHistory)/len(self.ackSentHistory)
         except :
-            self.totalDataSent=0
+            # self.totalDataSent=0
             self.ackSent=0
 
 
@@ -377,8 +315,8 @@ class DistFlowControl(FlowControl):
         except:
             self.ackRate=0
 
-        self.ackRatioHistory.append(self.ackRate)
-        self.ackRatioHistory=self.ackRatioHistory[-self.idleHistorySize:]
+        # self.ackRatioHistory.append(self.ackRate)    #used in old check idle
+        # self.ackRatioHistory=self.ackRatioHistory[-self.idleHistorySize:]
 
         if executeAlgo:
             self.setUmax()
@@ -403,19 +341,27 @@ class DistFlowControl(FlowControl):
             self.send_bw()
             return
 
+        tcpTestbed=False
+
         tumax = sorted(self.bwHistory)
-        try:
-            self.umax = tumax[-3]
-        except:
-            self.umax = tumax[0]
+        if not tcpTestbed:
+            try:
+                self.umax = tumax[-3]
+            except:
+                self.umax = tumax[0]
+        else:
+            #just for testing with tcp testbed
+            self.umax=min([b for b in self.bwHistory if b>0])
+
 
         if self.umax<1:
             self.umax=self.maxumax
 
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
+        self.errorThres=-self.controlBw/1408.0
 
-        if not self.errorPhase and self.errorsPer>5:
+        if not self.errorPhase and self.errorThres>2:# self.errorsPer>2:
             self.errorPhase=True
             self.recoveryPhase=False
 
@@ -423,7 +369,7 @@ class DistFlowControl(FlowControl):
             self.umax=self.umax/2
             self.prevumax=self.maxumax/30
 
-        if self.errorPhase and self.stt<self.refStt and self.errorsPer<=5:
+        if self.errorPhase  and self.errorThres<2:#self.errorsPer<=0:
                 self.errorPhase=False
                 self.recoveryPhase=True
                 self.umax=self.maxumax
@@ -435,8 +381,6 @@ class DistFlowControl(FlowControl):
                 self.recoveryPhase=False
                 self.umax=self.maxumax
 
-        self.umaxHistory.append(self.umax)
-        self.umaxHistory=self.umaxHistory[-self.umaxHistorySize:]
         self.setU()
 
     def setU(self):
@@ -456,27 +400,16 @@ class DistFlowControl(FlowControl):
             self.u=self.actualU*self.TsendRef
         self.u=self.u/1408
         if round(self.u)<=3:
-            self.u=4
+            self.u=3
 
         self.Tsend=self.TsendRef*ceil(self.u)/self.u
         self.u=int(ceil(self.u))
-        #print self.peers
-        #print 'uuuuuuuuuuuu:',self.u
-        #print 'tsenddddd:',self.Tsend
-        #print 'bwwwwwwwwww:',int(self.u*1408/self.Tsend)
-        #print 'reported bw:',self.lastBW
-        #print '---------------------------'
         self.send_bw()
 
     def send_bw(self):
-        # print "SET BW", int(self.u*1408/self.Tsend), int(self.Tsend*pow(10,6))
-        if self.forceIdle:
-            u=4
-        else:
-            if self.u<6:
-                self.u=6
-            u=self.u
+        u=self.u
         self.reportedU=u
+        self.sendInterval=self.Tsend/u
         bora.bws_set(int(u*1408/self.Tsend), int(self.Tsend*pow(10,6)))
         if self.peers:
             self.saveStats()
@@ -565,24 +498,24 @@ class DistFlowControl(FlowControl):
         setValue(self,'lastBW',self.lastBW*8/1024,True)
         temp['ackSent']=self.ackSent*8/1024
         setValue(self,'ackSent',self.ackSent*8/1024,True)
-        temp['idleStatus']=self.idle
-        setValue(self,'idleStatus',self.idle,True)
+        # temp['idleStatus']=self.idle
+        # setValue(self,'idleStatus',self.idle,True)
         temp['calcMin']=self.calculatedmin
         setValue(self,'calcMin',self.calculatedmin,True)
-        temp['idleAck']=self.idleAck
-        setValue(self,'idleAck',self.idleAck,True)
+        # temp['idleAck']=self.idleAck
+        # setValue(self,'idleAck',self.idleAck,True)
         temp['idleSttStatus']=self.idleSttStatus
         setValue(self,'idleSttStatus',self.idleSttStatus,True)
         temp['lastIdlePacket']=self.lastIdlePacket
         setValue(self,'lastIdlePacket',self.lastIdlePacket,True)
-        temp['wrongStt']=self.wrongSttperPeer
-        setValue(self,'wrongStt',self.wrongSttperPeer,True)
-        temp['wrongThres']=self.wrongThres
-        setValue(self,'wrongThres',self.wrongThres,True)
-        temp['secondNorm']=self.secondNorm
-        setValue(self,'secondNorm',self.secondNorm,True)
-        temp['secondNormPerPeer']=self.secondNormPerPeer
-        setValue(self,'secondNormPerPeer',self.secondNormPerPeer,True)
+        # temp['wrongStt']=self.wrongSttperPeer
+        # setValue(self,'wrongStt',self.wrongSttperPeer,True)
+        temp['errorThres']=self.errorThres
+        setValue(self,'errorThres',self.errorThres,True)
+        # temp['secondNormPerPeer']=self.secondNormPerPeer
+        # setValue(self,'secondNormPerPeer',self.secondNormPerPeer,True)
+        temp['delta']=self.delta
+        temp['sendInterval']=self.sendInterval
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
@@ -595,3 +528,101 @@ class DistFlowControl(FlowControl):
 
     def getReportedBW(self):
         return self.reportedU
+
+
+
+    # def checkMinStt(self,data):
+    #     shouldCalculateMin=[]
+    #     for peer in data['peer_stats']:
+    #         p=(peer["host"],peer["port"])
+    #         if not 'calcMin' in self.peers[p].keys():
+    #             if not 'waitingMin' in self.peers[p].keys():
+    #                 self.peers[p]['waitingMin']=0
+
+    #             if not self.peers[p]['waitingMin']:
+    #                 shouldCalculateMin.append(p)
+    #             else:
+    #                 self.peers[p]['waitingMin']-=1
+
+    #     goodPeer=None
+    #     if shouldCalculateMin:
+    #         try:
+    #             goodPeer=max([(v['calcMinTime'],p) for p,v in self.peers.items() if 'calcMin' in v.keys()])[1]
+    #         except:
+    #             pass
+
+    #     if goodPeer:
+    #         for p in shouldCalculateMin:
+    #             self.peers[p]['waitingMin']=10
+    #             d=deferToThread(bora.send_cookie,goodPeer[0],goodPeer[1],p[0],p[1])
+    #             d.addCallback(self.updateMin,goodPeer,p)
+
+    # def updateMin(self,data,goodPeer,peer):
+    #     if not data:
+    #         return
+    #     print 'update minnnnnnnnnnnnn'
+    #     print 'goodPeer:',goodPeer
+    #     print 'peer:',peer
+    #     print data
+    #     for line in data:
+    #         if line['host']==goodPeer[0] and line['port']==goodPeer[1]:
+    #             goodStt=line['STT']*pow(10,-6)
+    #         elif line['host']==peer[0] and line['port']==peer[1]:
+    #             stt=line['STT']*pow(10,-6)
+    #         else:
+    #             print 'error in update minnnnnnnnnnnn'
+    #             return
+
+    #     delay=goodStt-self.peers[goodPeer]['calcMin']
+    #     self.peers[peer]['calcMin']=stt-delay
+    #     self.peers[peer]['waitingMin']=0
+
+
+
+    # def checkWrongStt(self):
+    #     self.wrongStt=0
+    #     if not self.qDelayHistory or self.forceIdle:
+    #         self.wrongSttperPeer=0
+    #         return
+
+    #     temp={}
+    #     for d in self.qDelayPerPeer:
+    #         if not d[0] in temp.keys():
+    #             temp[d[0]]=[]
+    #         temp[d[0]].append(d[1])
+
+    #     if len(temp.keys())<2:
+    #         self.wrongSttperPeer=0
+    #         return
+
+    #     cont=True
+    #     for dPeer in temp.values():
+    #         avg=sum(dPeer)/len(dPeer)
+    #         second=sum([(d-avg)**2 for d in dPeer])/len(dPeer)
+    #         if second>self.wrongThres:
+    #             cont=False
+
+    #     if not cont:
+    #         self.wrongSttperPeer=0
+    #         self.secondNormPerPeer=0
+    #         return
+
+    #     delays=[sum(d)/len(d) for d in temp.values()]
+    #     avgDelay=sum(delays)/len(delays)
+    #     self.secondNormPerPeer=sum([(d-avgDelay)**2 for d in delays])/len(delays)
+    #     if self.secondNormPerPeer>self.wrongThres:
+    #         self.wrongSttperPeer+=1
+    #         if self.wrongSttperPeer>2:
+    #             self.wrongSttperPeer=2
+    #             # self.shouldForceIdle()
+
+
+    # def shouldForceIdle(self):
+    #     self.forceIdle=True
+    #     for p in self.peers:
+    #         try:
+    #             self.peers[p].pop('calcMin')
+    #             self.peers[p].pop('calcMinTime')
+    #         except:
+    #             pass
+    #     print 'should force idle'
