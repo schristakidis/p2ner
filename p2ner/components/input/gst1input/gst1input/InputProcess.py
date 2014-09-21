@@ -12,6 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+#  Sender pipeline:
+#         gst-launch-1.0 filesrc location="/xtra/NCIS.6x03.Scandali.A.Washington.ITA.DVDMux.XviD-NovaRip.avi" ! decodebin name=demux demux. ! queue ! audioconvert ! audioresample ! audio/x-raw,channels=2  ! faac ! queue ! mpegtsmux name=m ! tsparse ! queue ! tcpserversink host=0.0.0.0 port=5000 sync-method=2 recover-policy=keyframe demux. ! queue ! videoscale ! video/x-raw,width=640,height=480 ! x264enc bitrate=500 ! h264parse ! queue ! m.
+#
+#  Receiver pipeline
+#         gst-launch-1.0 tcpclientsrc host=127.0.0.1 port=5000 ! filesink location=/dev/stdout | vlc -
+
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
