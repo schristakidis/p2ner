@@ -288,7 +288,7 @@ class DistFlowControl(FlowControl):
 
         # set qref according to the link capacity
         if self.delta:
-            self.qRef=-self.delta/2
+            self.qRef=-self.delta
         else:
             self.qRef=-0.005
         self.refStt=self.minStt+self.qRef
