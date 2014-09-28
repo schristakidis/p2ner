@@ -71,6 +71,8 @@ class DistFlowControl(FlowControl):
         self.idleSttStatus=0
         self.lastIdlePacket=0
 
+        self.controlBwHistory=[]
+        self.controlBwHistorySize=5
         # self.ackRatioHistory=[] # used in old check idle
         # self.idleAck=0
         # self.idle=0
@@ -359,9 +361,9 @@ class DistFlowControl(FlowControl):
 
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
-        self.errorThres=-self.controlBw/1408.0
+        self.errorThres=sum(self.controlBwHistory)
 
-        if not self.errorPhase and self.errorThres>2:# self.errorsPer>2:
+        if not self.errorPhase and self.errorThres>2*self.controlBwHistorySize:# self.errorsPer>2:
             self.errorPhase=True
             self.recoveryPhase=False
 
@@ -369,7 +371,7 @@ class DistFlowControl(FlowControl):
             self.umax=self.umax/2
             self.prevumax=self.maxumax/30
 
-        if self.errorPhase  and self.errorThres<2:#self.errorsPer<=0:
+        if self.errorPhase  and self.errorThres<2*self.controlBwHistorySize:#self.errorsPer<=0:
                 self.errorPhase=False
                 self.recoveryPhase=True
                 self.umax=self.maxumax
@@ -395,6 +397,8 @@ class DistFlowControl(FlowControl):
             yn=0
         yref=self.qRef*self.actualU
         self.controlBw=(1-self.k)*(yref-yn)
+        self.controlBwHistory.append(-self.controlBw/1408.0)
+        self.controlBwHistory=self.controlBwHistory[-self.controlBwHistorySize:]
         self.u=self.controlBw + self.actualU*self.TsendRef
         if self.errorPhase:
             self.u=self.actualU*self.TsendRef
@@ -515,7 +519,9 @@ class DistFlowControl(FlowControl):
         # temp['secondNormPerPeer']=self.secondNormPerPeer
         # setValue(self,'secondNormPerPeer',self.secondNormPerPeer,True)
         temp['delta']=self.delta
+        setValue(self,'delta',self.delta,True)
         temp['sendInterval']=self.sendInterval
+        setValue(self,'sendInterval',self.sendInterval,True)
         self.count+=1
         self.stats.append(temp)
         if len(self.stats)>20:
