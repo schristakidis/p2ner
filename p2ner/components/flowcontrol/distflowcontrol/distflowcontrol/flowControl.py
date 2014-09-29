@@ -363,7 +363,7 @@ class DistFlowControl(FlowControl):
         self.maxumax=self.umax
         self.errorThres=sum(self.controlBwHistory)
 
-        if not self.errorPhase and self.errorThres>2*self.controlBwHistorySize:# self.errorsPer>2:
+        if not self.errorPhase and (self.errorThres>2*self.controlBwHistorySize or self.errorsPer>4):
             self.errorPhase=True
             self.recoveryPhase=False
 
@@ -371,7 +371,7 @@ class DistFlowControl(FlowControl):
             self.umax=self.umax/2
             self.prevumax=self.maxumax/30
 
-        if self.errorPhase  and self.errorThres<2*self.controlBwHistorySize:#self.errorsPer<=0:
+        if self.errorPhase  and self.errorThres<2*self.controlBwHistorySize and self.errorsPer<2:
                 self.errorPhase=False
                 self.recoveryPhase=True
                 self.umax=self.maxumax
