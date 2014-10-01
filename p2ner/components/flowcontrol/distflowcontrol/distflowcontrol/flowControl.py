@@ -73,6 +73,10 @@ class DistFlowControl(FlowControl):
 
         self.controlBwHistory=[]
         self.controlBwHistorySize=5
+
+
+        self.reportedCap=None
+
         # self.ackRatioHistory=[] # used in old check idle
         # self.idleAck=0
         # self.idle=0
@@ -358,6 +362,10 @@ class DistFlowControl(FlowControl):
 
         if self.umax<1:
             self.umax=self.maxumax
+        else:
+            if len(posBwHistory)>3:
+                self.reportedCap=self.umax*8/1024
+
 
         self.lastBW = self.bwHistory[-1]
         self.maxumax=self.umax
@@ -534,6 +542,10 @@ class DistFlowControl(FlowControl):
 
     def getReportedBW(self):
         return self.reportedU
+
+    def getReportedCapacity(self):
+        return self.reportedCap
+
 
 
 

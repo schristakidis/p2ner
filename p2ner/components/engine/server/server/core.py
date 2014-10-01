@@ -26,6 +26,7 @@ from time import localtime
 
 defaultStream = ("StreamClient", [], {})
 
+
 class Server(Engine):
 
     def registerMessages(self):
@@ -39,6 +40,7 @@ class Server(Engine):
 
     def initEngine(self, *args, **kwargs):
         self.sanityCheck(["control", "controlPipe"])
+        self.enableTraffic(cPipe=True)
         self.registerMessages()
         self.overlays = {}
         self.knownPeers = []
@@ -46,6 +48,7 @@ class Server(Engine):
         self.bandwidthServer=loadComponent('plugin','TCPBWServer')()
         self.bandwidthServer.startListening()
         self.controlPipe.call('listen')
+        self.trafficPipe.call('listen')
         self.chatServer=loadComponent('plugin','ChatServer')(_parent=self)
         self.drawPlots=False
         if 'plot' in kwargs:

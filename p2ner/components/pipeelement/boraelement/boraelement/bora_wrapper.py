@@ -126,6 +126,7 @@ class BoraElement(PipeElement):
             if peer.natType==3 and getattr(peer,'nat'+to):
                 to='nat'+to
 
+        # print 'sending block to:',ip,getattr(peer,to)
         reactor.callLater(0, bora.send_block, scheduler.stream.id, block, ip, getattr(peer, to))
         return 0
 
@@ -220,3 +221,6 @@ class BoraElement(PipeElement):
 
     def getReportedBw(self):
         return self.flowControl.getReportedBW()
+
+    def getReportedCap(self):
+        return self.flowControl.getReportedCapacity()
