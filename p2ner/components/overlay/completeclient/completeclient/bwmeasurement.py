@@ -15,21 +15,18 @@
 # -*- coding: utf-8 -*-
 
 import random
-from twisted.internet import reactor, task
+from twisted.internet import reactor, task,defer
 from p2ner.abstract.plugin import Plugin
 from p2ner.core.namespace import Namespace
 from p2ner.base.Peer import Peer
 
 
 
+
 class FlowBwMeasurement(Plugin):
 
-    def initPlugin(self, func,stream,sid,output, **kwargs):
-        self.server=Peer(stream.server[0],dataPort=16001)
-        self.func=func
-        self.sid=sid
-        self.output=output
-        self.originalStream=stream
+    def initPlugin(self,server,**kwargs):
+        self.server=Peer(server[0],dataPort=16001)
         self.stream = Namespace(self)
         self.stream.id = random.randint(1,32000)
         self.root.trafficPipe.registerProducer(self)
@@ -44,8 +41,13 @@ class FlowBwMeasurement(Plugin):
         self.lastblock = 0
         for i in range(bufferSize):
             self.shift(False)
+
+    def start(self):
+        self.d=defer.Deferred()
         self.loop.start(0.1)
         self.log.log(15,"measuring BW")
+        return self.d
+
 
     def produceBlock(self):
         return
@@ -69,5 +71,5 @@ class FlowBwMeasurement(Plugin):
         for i in range(self.firstblock,self.lastblock+1):
             self.trafficPipe.call("popblockdata",self,i)
         self.trafficPipe.unregisterProducer(self)
-        self.func(self.originalStream,self.sid,self.output)
+        self.d.callback(cap)
 

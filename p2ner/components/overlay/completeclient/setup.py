@@ -16,8 +16,8 @@
 
 from setuptools import setup
 
-__component_name__ = "FlowBwMeasurement"
-__author__ = "Sakis Christakiidis"
+__component_name__ = "CompleteClient"
+__author__ = 'Sakis Christakidis'
 __author_email__ = "schristakidis@ece.upatras.gr"
 __version__ = "0.1"
 __url__ = "http://nam.ece.upatras.gr/p2ner/"
@@ -32,7 +32,7 @@ __license__ = """Licensed under the Apache License, Version 2.0 (the "License");
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License."""
-__description__ = "P2ner custom bw measurement component"
+__description__ = "P2ner client - distributed overlay component for complete architecture"
 __long_description__ = """"""
 __pkg_data__ = {} #__component_name__.lower(): ["template/*", "data/*"]}
 
@@ -46,11 +46,13 @@ setup(
     license=__license__,
     long_description=__long_description__ if __long_description__ else __description__,
 
-    packages=[__component_name__.lower()],
+    packages=[__component_name__.lower(), __component_name__.lower() + ".messages"],
     package_data = __pkg_data__,
 
-    entry_points="""
-    [p2ner.components.plugin]
+  entry_points="""
+    [p2ner.components.overlay]
     %s = %s:%s
-    """ % ((__component_name__, __component_name__.lower(), __component_name__))
-)
+    [p2ner.interface.overlay]
+    %s = %s:%s
+    """ % ((__component_name__, __component_name__.lower(), __component_name__, __component_name__, __component_name__.lower(), "INTERFACE"))
+   )

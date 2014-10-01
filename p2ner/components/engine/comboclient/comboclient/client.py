@@ -192,14 +192,7 @@ class Client(Engine):
         reactor.callLater(0.5, RequestStreamMessage.send, id, server, self.controlPipe,m.checkResponse)
 
 
-    def newSubStream(self, stream,id,output=None):
-        cap=self.trafficPipe.callSimple('getReportedCap')
-        if not cap:
-            bwM=loadComponent("plugin","FlowBwMeasurement")(self._newSubStream,stream,id,output,_parent=self)
-        else:
-            self._newStream(stream,id,output)
-
-    def _newSubStream(self,stream,id,output):
+    def newSubStream(self,stream,id,output):
         self.waitingReply.remove(id)
         if stream!=-1:
             s, a, k = ('StreamClient',[],{})
