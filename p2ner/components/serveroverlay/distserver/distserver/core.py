@@ -17,13 +17,13 @@
 from twisted.internet import reactor
 from p2ner.abstract.overlay import Overlay
 from p2ner.base.Stream import Stream
-from messages.requeststream import RequestStreamMessage,AskInitNeighsMessage
+from messages.requeststream import RequestStreamMessage,AskInitNeighsMessage,AskServerForStatus
 from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage, StartRemoteMessage
-from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage,SuggestNewPeerMessage,SuggestMessage
+from messages.messageobjects import PeerListMessage, PeerRemoveMessage, StreamMessage,PeerListProducerMessage,PeerRemoveProducerMessage,SuggestNewPeerMessage,SuggestMessage,ReturnPeerStatus
 from messages.startstopclient import ClientStoppedMessage
 from p2ner.base.ControlMessage import ControlMessage
 from p2ner.core.components import loadComponent
-from random import choice
+from random import choice,shuffle
 
 class DistServer(Overlay):
 
@@ -37,32 +37,36 @@ class DistServer(Overlay):
         self.messagess.append(ClientStoppedMessage())
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(AskInitNeighsMessage())
+        self.messages.append(AskServerForStatus())
 
     def initOverlay(self, producer, stream):
         self.log=self.logger.getLoggerChild(('s'+str(stream.id)),self.interface)
         self.log.info('initing overlay')
         self.overlay = self
-        self.sanityCheck(["controlPipe", "overlay"])
         self.registerMessages()
-        self.maxPeers = stream.overlay['baseNumNeigh']/2
+        self.baseNeighPeers = stream.overlay['baseNumNeigh']/2
+        self.superNeighPeers = stream.overlay['superNumNeigh']/2
+        self.interNeighPeers = stream.overlay['interNumNeigh']
         self.producer = producer
         self.stream = stream
-        #self.producerNeighbours = []
         self.neighbourhoods = {}
+        self.peers=[]
+        self.superPeers=[]
+        self.basePeers=[]
+        self.superThres=1000
 
-        if self.drawPlots:
-            self.vizInterface = loadComponent('plugin', 'VizNetInterface')(_parent=self)
-            self.vizPlot= loadComponent('plugin', 'OverlayViz')()
-            self.vizPlot.start(self.vizInterface)
+
+    def returnPeerStatus(self,peer,bw):
+        status=bw>self.superThres
+        print peer,' is a Super Peer ',status
+        ReturnPeerStatus.send(self.stream.id,status,peer,self.controlPipe)
+
 
     def getNeighbours(self, peer=None):
         if not peer:
-            #print "KEYYAZ:", self.neighbourhoods.keys()
             return self.neighbourhoods.keys()
         if peer in self.neighbourhoods:
-            # print "PEEYAZ:", self.neighbourhoods[peer]
             return self.neighbourhoods[peer]
-        print "UAZ"
         return None
 
     def sendStream(self, peer):
@@ -70,32 +74,31 @@ class DistServer(Overlay):
         StreamMessage.send(self.stream, peer, self.controlPipe)
 
 
-    def addNeighbour(self,peer):
+    def addNeighbour(self,peer,superPeer,interOverlay):
         newPeerNeighs = []
-        if len(self.neighbourhoods) > 0:
-            if len(self.neighbourhoods) < self.maxPeers:
-                newPeerNeighs = self.neighbourhoods.keys()
-            else:
-                newPeerNeighs = self.findNeighbours(self.maxPeers)
-            for p in newPeerNeighs:
-                self.log.debug('adding %s to the neighborhood of %s',peer,p)
-                try:
-                    self.neighbourhoods[p].append(peer)
-                except:
-                    self.log.error('no peer in neighbourhoods')
-                self.log.debug('sending peerlist message to %s containing %s',p,peer)
-                #PeerListMessage.send(self.stream.id, [peer], p, self.controlPipe)
-            self.neighbourhoods[peer] = newPeerNeighs
-            self.log.debug('sending peerlist message to %s containg %s',peer,str(newPeerNeighs))
-            PeerListMessage.send(self.stream.id, newPeerNeighs, peer, self.controlPipe)
-        self.neighbourhoods[peer] = newPeerNeighs
-        n=''.join(str(newPeerNeighs))
-        self.log.debug('the neighbors of %s are %s',peer,n)
-        #self.capConnections()
-        #self.updateProducerNeighbourhood()
-        self.log.debug('sending peerList message to producer %s:%s',self.producer,peer)
-        #PeerListProducerMessage.send(self.stream.id, [peer], self.producer, self.controlPipe)
-        PeerListProducerMessage.send(self.stream.id, [self.producer],peer, self.controlPipe)
+        if superPeer:
+            if peer in self.superPeers:
+                raise ValueError('super peer already in list')
+            if len(self.superPeers)>0:
+                if len(self.superPeers)<self.superNeighPeers:
+                    newPeerNeighs=self.superPeers[:]
+                else:
+                    shuffle(self.superPeers)
+                    newPeerNeighs=self.superPeers[:self.superNeighPeers]
+
+                self.log.debug('sending peerlist message to %s containg %s',peer,str(newPeerNeighs))
+                print 'sending peerlist message to %s containg %s'%(peer,str(newPeerNeighs))
+                PeerListMessage.send(self.stream.id, superPeer,interOverlay, newPeerNeighs, peer, self.controlPipe)
+
+            self.superPeers.append(peer)
+
+
+        if peer not in self.peers:
+            self.log.debug('sending %s as producer to %s',self.producer,peer)
+            print 'sending %s as producer to %s'%(self.producer,peer)
+            PeerListProducerMessage.send(self.stream.id, [self.producer],peer, self.controlPipe)
+            self.peers.append(peer)
+
 
     def removeNeighbour(self, peer):
         if peer in self.neighbourhoods:
@@ -123,19 +126,6 @@ class DistServer(Overlay):
         list = self.neighbourhoods.keys()
         list.sort(key = lambda a: len(self.neighbourhoods[a]))
         return list[:number]
-
-    def capConnections(self):
-        overConnected = [p for p in self.neighbourhoods if len(self.neighbourhoods[p])>self.maxPeers]
-        for p in overConnected:
-            delta = len(self.neighbourhoods[p])-self.maxPeers
-            overNeighs = [n for n in self.neighbourhoods[p] if len(self.neighbourhoods[n])>self.maxPeers]
-            for i in range(min(delta, len(overNeighs))):
-                self.log.debug('sending peerRemove message for %s to  %s',p,overNeighs[i])
-                PeerRemoveMessage.send( self.stream.id, [p], overNeighs[i], self.controlPipe)
-                self.neighbourhoods[overNeighs[i]].remove(p)
-                self.log.debug('sending peerRemove message for %s to  %s',overNeighs[i],p)
-                PeerRemoveMessage( self.stream.id, [overNeighs[i]], p,self.controlPipe)
-                self.neighbourhoods[p].remove(overNeighs[i])
 
 
     def stop(self):

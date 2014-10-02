@@ -131,6 +131,85 @@ SateliteMessage=Struct('satelitemessage',
         Optional(OverlayMessage)
         )
 
+BwMessage=Struct('bwmessage',
+                 UBInt16('streamid'),
+                 UBInt32('bw'),
+                 )
+
+OverlayStatusMessage=Struct('overlaystatusmessage',
+                     UBInt16('streamid'),
+                     Flag('superPeer')
+                     )
+
+SidOverlayMessage=Struct("SidOverlayMessage",
+                         UBInt16("streamid"),
+                         Flag("superOverlay"),
+                         Flag("interOverlay")
+                         )
+
+PeerListOverlayMessage = Struct("peerlistoverlaymessage",
+        UBInt16("streamid"),
+        Flag("superOverlay"),
+        Flag("interOverlay"),
+        OptionalGreedyRange(PeerAdapter(PeerStruct)),
+        )
+
+SubOverlayMessage=Struct("suboverlaymessage",
+                       UBInt16("streamid"),
+                       Flag("superOverlay"),
+                       Flag("interOverlay"),
+                       UBInt16("port"),
+                       UBInt16('bw'),
+                       Optional(PeerAdapter(PeerStruct)),
+                       )
+
+SubSwapSIDMessage = Struct("subswapsidmessage",
+        UBInt16("streamid"),
+        Flag("superOverlay"),
+        Flag("interOverlay"),
+        UBInt16("swapid"),
+        )
+
+
+SubSwapPeerListMessage = Struct("subswappeerlistmessage",
+        UBInt16("streamid"),
+        Flag("superOverlay"),
+        Flag("interOverlay"),
+        UBInt16("swapid"),
+        OptionalGreedyRange(SwapPeerAdapter(SwapPeerStruct)),
+        )
+
+
+SubSPeerListMessage = Struct("subspeerlistmessage",
+        UBInt16("streamid"),
+        Flag("superOverlay"),
+        Flag("interOverlay"),
+        UBInt16("swapid"),
+        OptionalGreedyRange(PeerAdapter(PeerStruct)),
+        )
+
+
+SubSateliteMessage=Struct('subsatelitemessage',
+        UBInt16('streamid'),
+        Flag("superOverlay"),
+        Flag("interOverlay"),
+        UBInt16('swapid'),
+        UBInt8('action'),
+        PeerAdapter(PeerStruct),
+        Optional(OverlayMessage)
+        )
+
+
+SubLockMessage=Struct("sublockmessage",
+                   UBInt16('streamid'),
+                   Flag("superOverlay"),
+                   Flag("interOverlay"),
+                   UBInt16('swapid'),
+                   Flag('lock'),
+                   )
+
+
+
 class RawMessage(object):
 
     @staticmethod
@@ -160,7 +239,17 @@ MSG_TYPES = {
              "overlaymessage": OverlayMessage,
              "lockmessage": LockMessage,
              "swappeerlistmessage":SwapPeerListMessage,
-             "satelitemessage":SateliteMessage
+             "satelitemessage":SateliteMessage,
+             "bwmessage":BwMessage,
+             "overlaystatusmessage":OverlayStatusMessage,
+             "sidoverlaymessage":SidOverlayMessage,
+             "peerlistoverlaymessage":PeerListOverlayMessage,
+             "suboverlaymessage":SubOverlayMessage,
+             "subswapsidmessage":SubSwapSIDMessage,
+             "subswappeerlistmessage":SubSwapPeerListMessage,
+             "subspeerlistmessage":SubSPeerListMessage,
+             'subsatelitemessage':SubSateliteMessage,
+             "sublockmessage":SubLockMessage,
              }
 
 

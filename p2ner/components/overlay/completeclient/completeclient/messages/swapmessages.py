@@ -19,132 +19,132 @@ from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
 
 class AskSwapMessage(ControlMessage):
-    type='swapsidmessage'
-    code=MSG.ASK_SWAP
+    type='subswapsidmessage'
+    code=MSG.ASK_SWAP_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAskSwap(peer,message.swapid)
+        self.subOverlay.recAskSwap(peer,message.swapid)
 
     @classmethod
-    def send(cls,sid,swapid,peer,out,err_func=None,suc_func=None,args=None):
-        return out.send(cls,Container(streamid=sid,swapid=swapid),peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=args)
+    def send(cls,sid,sOver,iOver,swapid,peer,out,err_func=None,suc_func=None,args=None):
+        return out.send(cls,Container(streamid=sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid),peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=args)
 
 class RejectSwapMessage(ControlMessage):
-    type='swapsidmessage'
-    code=MSG.REJECT_SWAP
+    type='subswapsidmessage'
+    code=MSG.REJECT_SWAP_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recRejectSwap(peer,message.swapid)
+        self.subOverlay.recRejectSwap(peer,message.swapid)
 
     @classmethod
-    def send(cls,sid,swapid,peer,out):
-        return out.send(cls,Container(streamid=sid,swapid=swapid),peer).addErrback(trap_sent)
+    def send(cls,sid,sOver,iOver,swapid,peer,out):
+        return out.send(cls,Container(streamid=sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid),peer).addErrback(trap_sent)
 
 class AcceptSwapMessage(ControlMessage):
-    type='swappeerlistmessage'
-    code=MSG.ACCEPT_SWAP
+    type='subswappeerlistmessage'
+    code=MSG.ACCEPT_SWAP_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAcceptSwap(peer,message.peer,message.swapid)
+        self.subOverlay.recAcceptSwap(peer,message.peer,message.swapid)
 
     @classmethod
-    def send(cls, sid, swapid,peerlist, peer, out,suc_func=None,err_func=None,args=None):
-        return out.send(cls, Container(streamid=sid,swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
+    def send(cls, sid,sOver,iOver, swapid,peerlist, peer, out,suc_func=None,err_func=None,args=None):
+        return out.send(cls, Container(streamid=sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class InitSwapTableMessage(AcceptSwapMessage):
-    type='swappeerlistmessage'
-    code=MSG.INIT_SWAP_TABLE
+    type='subswappeerlistmessage'
+    code=MSG.INIT_SWAP_TABLE_SUB
     ack=True
 
     def action(self,message,peer):
-        self['overlay'].recInitSwapTable(peer,message.peer,message.swapid)
+        self.subOverlay.recInitSwapTable(peer,message.peer,message.swapid)
 
 class AskLockMessage(ControlMessage):
-    type='speerlistmessage'
-    code=MSG.ASK_LOCK
+    type='subspeerlistmessage'
+    code=MSG.ASK_LOCK_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAskLock(peer,message.peer[0],message.swapid)
+        self.subOverlay.recAskLock(peer,message.peer[0],message.swapid)
 
     @classmethod
-    def send(cls, sid,swapid, peerlist, peer, out,suc_func=None,err_func=None,args=None):
-        return out.send(cls, Container(streamid=sid, swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
+    def send(cls, sid,sOver,iOver,swapid, peerlist, peer, out,suc_func=None,err_func=None,args=None):
+        return out.send(cls, Container(streamid=sid, superOverlay=sOver, interOverlay=iOver, swapid=swapid, peer=peerlist), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class AnswerLockMessage(ControlMessage):
-    type='lockmessage'
-    code=MSG.ANS_LOCK
+    type='sublockmessage'
+    code=MSG.ANS_LOCK_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAnsLock(peer,message.lock,message.swapid)
+        self.subOverlay.recAnsLock(peer,message.lock,message.swapid)
 
     @classmethod
-    def send(cls, sid,swapid, lock, peer, out,suc_func=None,err_func=None):
-        return out.send(cls, Container(streamid=sid,swapid=swapid, lock=lock), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
+    def send(cls, sid,sOver,iOver,swapid, lock, peer, out,suc_func=None,err_func=None):
+        return out.send(cls, Container(streamid=sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid, lock=lock), peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class SwapPeerListMessage(ControlMessage):
-    type = "swappeerlistmessage"
-    code = MSG.SEND_UPDATED_SWAP_TABLE
+    type = "subswappeerlistmessage"
+    code = MSG.SEND_UPDATED_SWAP_TABLE_SUB
     ack = True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recUpdatedSwapTable(peer,message.peer,message.swapid)
+        self.subOverlay.recUpdatedSwapTable(peer,message.peer,message.swapid)
 
     @classmethod
-    def send(cls, sid,swapid, peerlist, peer, out,err_func=None,suc_func=None):
-        msg = Container(streamid = sid,swapid=swapid, peer = peerlist)
+    def send(cls, sid,sOver,iOver,swapid, peerlist, peer, out,err_func=None,suc_func=None):
+        msg = Container(streamid = sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid, peer = peerlist)
         return out.send(cls, msg, peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class FinalSwapPeerListMessage(SwapPeerListMessage):
-    type = "swappeerlistmessage"
-    code = MSG.SEND_FINAL_SWAP_TABLE
+    type = "subswappeerlistmessage"
+    code = MSG.SEND_FINAL_SWAP_TABLE_SUB
     ack = True
 
 
     def action(self,message,peer):
-        self['overlay'].recFinalSwapTable(peer,message.peer,message.swapid)
+        self.subOverlay.recFinalSwapTable(peer,message.peer,message.swapid)
 
 class SateliteMessage(ControlMessage):
-    type='satelitemessage'
-    code=MSG.UPDATE_SATELITE
+    type='subsatelitemessage'
+    code=MSG.UPDATE_SATELITE_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
@@ -162,41 +162,41 @@ class SateliteMessage(ControlMessage):
         self.notify(peer,message.action,message.peer,message.swapid)
 
     def notify(self,peer,action,p,swapid):
-        self['overlay'].recUpdateSatelite(peer,action,p,swapid)
+        self.subOverlay.recUpdateSatelite(peer,action,p,swapid)
 
     @classmethod
-    def send(cls, sid, swapid, action, partner,inform, peer, out,err_func=None,suc_func=None):
+    def send(cls, sid,sOver,iOver, swapid, action, partner,inform, peer, out,err_func=None,suc_func=None):
         if inform:
-            m=Container(streamid = sid,swapid=swapid,port=inform['port'],bw=inform['bw'],peer=inform['peer'])
+            m=Container(streamid = sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid,port=inform['port'],bw=inform['bw'],peer=inform['peer'])
         else:
             m=None
-        msg = Container(streamid = sid,swapid=swapid, action=action,peer = partner,overlaymessage=m)
+        msg = Container(streamid = sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid, action=action,peer = partner,overlaymessage=m)
         return out.send(cls, msg, peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=swapid)
 
 class CleanSateliteMessage(SateliteMessage):
-    type='satelitemessage'
-    code=MSG.CLEAN_SATELITE
+    type='subsatelitemessage'
+    code=MSG.CLEAN_SATELITE_SUB
     ack=True
 
     def notify(self,peer,action,p,swapid):
-        self['overlay'].recUpdateSatelite(peer,action,p,swapid,ack=False)
+        self.subOverlay.recUpdateSatelite(peer,action,p,swapid,ack=False)
 
 class AckUpdateMessage(ControlMessage):
-    type='swapsidmessage'
-    code=MSG.ACK_UPDATE
+    type='subswapsidmessage'
+    code=MSG.ACK_UPDATE_SUB
     ack=True
 
     def trigger(self,message):
-        if self.stream.id!=message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self,message,peer):
-        self['overlay'].recAckUpdate(peer,message.swapid)
+        self.subOverlay.recAckUpdate(peer,message.swapid)
 
     @classmethod
-    def send(cls,sid,swapid,peer,out,err_func=None,suc_func=None,args=None):
-        return out.send(cls,Container(streamid=sid,swapid=swapid),peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=args)
+    def send(cls,sid,sOver,iOver,swapid,peer,out,err_func=None,suc_func=None,args=None):
+        return out.send(cls,Container(streamid=sid,superOverlay=sOver,interOverlay=iOver,swapid=swapid),peer).addErrback(probe_all,err_func=err_func,suc_func=suc_func,args=args)
 
 class PingSwapMessage(ControlMessage):
     type='basemessage'

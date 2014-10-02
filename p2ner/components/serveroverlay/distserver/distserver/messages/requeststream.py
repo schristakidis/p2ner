@@ -22,7 +22,7 @@ class RequestStreamMessage(ControlMessage):
     type = "sidmessage"
     code = MSG.REQUEST_STREAM
     ack = True
-    
+
     def trigger(self, message):
         return self.stream.id == message.streamid
 
@@ -32,13 +32,24 @@ class RequestStreamMessage(ControlMessage):
 
 
 class AskInitNeighsMessage(ControlMessage):
-    type = "sidmessage"
-    code = MSG.ASK_INIT_NEIGHS
+    type = "sidoverlaymessage"
+    code = MSG.ASK_INIT_NEIGHS2
     ack = True
-    
+
     def trigger(self, message):
         return self.stream.id == message.streamid
 
     def action(self, message, peer):
         #self.log.debug('received request stream message from %s',peer)
-        self.overlay.addNeighbour(peer)
+        self.overlay.addNeighbour(peer,message.superOverlay,message.interOverlay)
+
+class AskServerForStatus(ControlMessage):
+    type = "bwmessage"
+    code = MSG.ASK_OVERLAY_STATUS
+    ack = True
+
+    def trigger(self, message):
+        return self.stream.id == message.streamid
+
+    def action(self, message, peer):
+        self.overlay.returnPeerStatus(peer,message.bw)

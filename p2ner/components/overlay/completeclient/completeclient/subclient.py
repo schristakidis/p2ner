@@ -16,7 +16,7 @@
 
 import sys
 from p2ner.abstract.overlay import Overlay
-from messages.peerlistmessage import *
+from messages.submessages import *
 from messages.peerremovemessage import ClientStoppedMessage
 from twisted.internet import task,reactor,defer
 from random import choice,uniform
@@ -40,13 +40,11 @@ CONTINUE=0
 INSERT=1
 REMOVE=2
 
-class DistributedClient(Overlay):
+class SubOverlay(Overlay):
 
     def registerMessages(self):
         self.messages = []
         self.messages.append(PeerListMessage())
-        self.messages.append(ClientStoppedMessage())
-        self.messages.append(PeerListPMessage())
         self.messages.append(AddNeighbourMessage())
         self.messages.append(AskSwapMessage())
         self.messages.append(RejectSwapMessage())
@@ -68,12 +66,16 @@ class DistributedClient(Overlay):
         self.messages.append(ValidateNeighboursMessage())
         self.messages.append(ReplyValidateNeighboursMessage())
 
-    def initOverlay(self):
-        self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
-        self.log.info('initing overlay')
-        print 'initing overlay'
+    def initOverlay(self,numOfNeighs,swapFreq,superOverlay=True,interOverlay=False,**kwagrs):
+        self.overlayType=10*int(superOverlay)+int(interOverlay)
+        self.log=self.logger.getLoggerChild((str(self.overlayType)+'o'+str(self.stream.id)),self.interface)
+        self.log.info('initing overlay'+str(self.overlayType))
+        print 'initing overlay'+str(self.overlayType)
         self.sanityCheck(["stream", "control", "controlPipe"])
 
+        self.superOverlay=superOverlay
+        self.interOverlay=interOverlay
+        self.subOverlay=self
         self.shouldStop=False
         self.stopDefer=None
         self.registerMessages()
@@ -86,9 +88,9 @@ class DistributedClient(Overlay):
         self.passiveInitiator=False
         self.duringSwap=False
         self.pauseSwap=False
-        self.numNeigh=self.stream.overlay['numNeigh']
+        self.numNeigh=numOfNeighs
         self.loopingCall = task.LoopingCall(self.startSwap)
-        self.loopingCall.start(self.stream.overlay['swapFreq'])
+        self.loopingCall.start(swapFreq)
         self.statsLoopingCall=task.LoopingCall(self.collectStats)
         self.statsLoopingCall.start(2)
         self.pingCall=task.LoopingCall(self.sendPing)
@@ -100,11 +102,17 @@ class DistributedClient(Overlay):
         self.tempLastSwap=0
 
         self.swapState={}
-        AskInitNeighs.send(self.stream.id,self.server,self.controlPipe)
+        AskInitNeighs.send(self.stream.id,self.superOverlay,self.interOverlay,self.server,self.controlPipe)
 
     def getNeighbours(self):
         return self.neighbours[:]
 
+
+    ##################################################
+    #ADDING NEIGH
+    ##################################################
+
+    #Initiator peer gets initial neighbor list. If he is not during swap he starts the adding producer
     def checkSendAddNeighbour(self,peer,originalPeer):
         peer.learnedFrom=originalPeer
         self.duringSwapNeighbours[peer]={}
@@ -115,17 +123,19 @@ class DistributedClient(Overlay):
         else:
             self.log.debug('during swap in check send add neighbour')
 
+    #Initiator peer sends an add neighbour message to potential peer and sets an interrupt in case of failure
     def sendAddNeighbour(self,peer):
         if not self.isNeighbour(peer):
             inpeer,port=self.root.checkNatPeer()
-            bw=int(self.trafficPipe.callSimple('getBW')/1024)
+            bw=min(65535,int(self.trafficPipe.callSimple('getReportedCap')))
             self.log.debug('sending addneighbour message to %s',peer)
             self.duringSwapNeighbours[peer]['CHECK']=reactor.callLater(5,self.checkAddNeigh,peer)
-            AddNeighbourMessage.send(self.stream.id,port,bw,inpeer,peer,self.root.controlPipe)
+            AddNeighbourMessage.send(self.stream.id,self.superOverlay,self.interOverlay,port,bw,inpeer,peer,self.root.controlPipe)
         else:
             self.log.error('%s is yet in the overlay in send add neighbour',peer)
             self.duringSwapNeighbours.pop(peer)
 
+    #Passive peer gets the initial message and if he is not under swap he continues. Otherwise he deferes the procedure until swap is over
     def checkAcceptNeighbour(self,peer):
         self.log.debug('in check accept neighbour for %s',peer)
         if not self.isNeighbour(peer):
@@ -138,20 +148,20 @@ class DistributedClient(Overlay):
         else:
             self.log.error('%s is yet in the overlay in check accept neighbour',peer)
 
+    #Passive peer accepts the invitation, adds initiator as neighbour and sends a confirmation message
     def acceptNeighbour(self,peer):
-        if self.duringSwap:
-            self.log.debug('during swap in accept Neighbour for %s',peer)
-        elif not self.isNeighbour(peer):
+        if not self.isNeighbour(peer):
             self.neighbours.append(peer)
             self.log.info('adding %s to neighborhood',peer)
             print 'adding ',peer,' to neighborhood'
-            ConfirmNeighbourMessage.send(self.stream.id,peer,self.controlPipe)
+            ConfirmNeighbourMessage.send(self.stream.id,self.superOverlay,self.interOverlay, peer,self.controlPipe)
         else:
             self.log.error('In accept neighbour %s is already a neighbour',peer)
         print 'during swap:',self.duringSwapNeighbours
         print 'peer:',peer
         self.duringSwapNeighbours.pop(peer)
 
+    #Initiator peer get the confirmation and finally and the passive peer as neighbour
     def addNeighbour(self, peer):
         if self.duringSwap:
             self.log.error('during swap in addNeighbour')
@@ -169,12 +179,24 @@ class DistributedClient(Overlay):
         except:
             self.log.error('new peer %s is not in during swap neighs %s',peer,self.duringSwapNeighbours)
 
+    #if the interupt occurs means that the passive never answered so remove him from potential neighbours
+    def checkAddNeigh(self,peer):
+        self.log.error('in check add neigh for %s',peer)
+        try:
+            self.duringSwapNeighbours.pop(peer)
+        except:
+            self.log.error('cannot remove neigh from during swap neighbours')
+
+    #when swap finishes answer any remaining neighbouring requests
     def addDuringSwapNeighbours(self):
         for peer,v in self.duringSwapNeighbours.items():
             if v['INIT'] and not self.shouldStop:
                 self.sendAddNeighbour(peer)
             else:
                 self.acceptNeighbour(peer)
+
+    ########################### END INSERT ##################################
+
 
     def removeDuringSwapNeighbours(self):
         for p in self.removeDuringSwap:
@@ -186,22 +208,7 @@ class DistributedClient(Overlay):
 
         self.removeDuringSwap=[]
 
-    def checkAddNeigh(self,peer):
-        self.log.error('in check add neigh for %s',peer)
-        try:
-            self.duringSwapNeighbours.pop(peer)
-        except:
-            self.log.error('cannot remove neigh from during swap neighbours')
 
-    def addProducer(self,peer):
-        self.producer=peer
-        self.log.info('adding %s as producer',peer)
-        print 'adding ',peer,' as producer'
-
-    def failedProducer(self,peer):
-        self.log.error('failed to add %s as producer',peer)
-        print 'failed to add ',peer,' as producer'
-        self.parent.streamComponent.stop()
 
     def removeNeighbour(self, peer):
         try:
@@ -300,7 +307,7 @@ class DistributedClient(Overlay):
         print 'sending askswap to:',peer,swapid
         self.log.warning('%s',self.getNeighbours())
         self.log.debug('sending ask swap message to %s %s'%(peer,swapid))
-        AskSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe)
+        AskSwapMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,peer,self.controlPipe)
 
 
     ###RECEIVED REJECT SWAP
@@ -352,7 +359,7 @@ class DistributedClient(Overlay):
         self.swapState[swapid][STATE]=WAIT_LOCKS_UTABLE
         self.swapState[swapid][MSGS]={}
         self.swapState[swapid][MSGS][self.passiveInitPeer]=reactor.callLater(4,self.checkStatus,swapid,self.passiveInitPeer)
-        InitSwapTableMessage.send(self.stream.id,swapid,neighs,self.passiveInitPeer,self.controlPipe)
+        InitSwapTableMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,neighs,self.passiveInitPeer,self.controlPipe)
         self.sendLocks(swapid)
 
     def sendLocks(self,swapid):
@@ -375,7 +382,7 @@ class DistributedClient(Overlay):
             p.waitLock=True
             self.log.debug('sending lock message for %s to %s'%(swapid,p))
             self.swapState[swapid][MSGS][p]=reactor.callLater(3,self.checkStatus,swapid,p)
-            AskLockMessage.send(self.stream.id,swapid,[pnode],p,self.controlPipe)
+            AskLockMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,[pnode],p,self.controlPipe)
         if not availableNeighs:
             self.log.debug('there are no locks to send')
             self.checkLockFinished(swapid)
@@ -665,7 +672,7 @@ class DistributedClient(Overlay):
         for p in rem:
             p.isNeighbour=False
 
-        FinalSwapPeerListMessage.send(self.stream.id,swapid,self.newPartnerTable+rem,self.passiveInitPeer,self.controlPipe)
+        FinalSwapPeerListMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,self.newPartnerTable+rem,self.passiveInitPeer,self.controlPipe)
         self.partnerPeer=self.passiveInitPeer
         self.updateSatelites(swapid)
 
@@ -689,13 +696,13 @@ class DistributedClient(Overlay):
 
         self.swapState[swapid][STATE]=UPDATE_SATELITES
         inpeer,port=self.root.checkNatPeer()
-        bw=int(self.trafficPipe.callSimple('getBW')/1024)
+        bw=min(65535,int(self.trafficPipe.callSimple('getReportedCap')))
 
         for p in con:
             p.swapAction=CONTINUE
             inform=None
 
-            SateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+            SateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
             self.swapState[swapid][MSGS][p]=reactor.callLater(2,self.checkStatus,swapid,p)
             self.log.debug('sending update satelite to %s with action %s',p,p.swapAction)
             print 'sending update satelite to ',p,' with action ',p.swapAction
@@ -708,7 +715,7 @@ class DistributedClient(Overlay):
             inform['peer']=inpeer
             p.swapAction=INSERT
 
-            SateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+            SateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
             self.swapState[swapid][MSGS][p]=reactor.callLater(2,self.checkStatus,swapid,p)
             self.log.debug('sending update satelite to %s with action %s',p,p.swapAction)
             print 'sending update satelite to ',p,' with action ',p.swapAction
@@ -717,7 +724,7 @@ class DistributedClient(Overlay):
             p.swapAction=REMOVE
             inform=None
 
-            SateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+            SateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
             self.swapState[swapid][MSGS][p]=reactor.callLater(2,self.checkStatus,swapid,p)
             self.log.debug('sending update satelite to %s with action %s',p,p.swapAction)
             print 'sending update satelite to ',p,' with action ',p.swapAction
@@ -746,13 +753,13 @@ class DistributedClient(Overlay):
             return
 
         inpeer,port=self.root.checkNatPeer()
-        bw=int(self.trafficPipe.callSimple('getBW')/1024)
+        bw=min(65535,int(self.trafficPipe.callSimple('getReportedCap')))
 
         for p in available:
             p.participateSwap=False
             p.swapAction=CONTINUE
             inform=None
-            CleanSateliteMessage.send(self.stream.id,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+            CleanSateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
             self.log.debug('sending clean update satelite to %s',p)
             print 'sending clean update satelite to ',p,' with action ',p.swapAction
 
@@ -809,13 +816,13 @@ class DistributedClient(Overlay):
         print 'received ask swap from ',peer
         if peer not in self.getNeighbours():
             self.log.error('he is not my neighbor so rejecting the swap') ####need to chnage and take action
-            RejectSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe)
+            RejectSwapMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,peer,self.controlPipe)
             return
         if swapid in self.swapState:
             self.log.error('got a request for an already existing swapid \nState:%s\npeer:%s,swapid:%s'%(self.swapState,peer,swapid))
             return
         if self.satelite or self.initiator or self.passiveInitiator or self.shouldStop or len(self.duringSwapNeighbours) or self.pauseSwap:
-            RejectSwapMessage.send(self.stream.id,swapid,peer,self.controlPipe)
+            RejectSwapMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,peer,self.controlPipe)
             self.log.debug('and rejected it %d,%d,%d,%d',self.satelite,self.initiator,self.passiveInitiator,len(self.duringSwapNeighbours))
         else:
             counter(self,'swapInitiators')
@@ -835,7 +842,7 @@ class DistributedClient(Overlay):
             self.swapState[swapid][STATE]=WAIT_INIT_TABLE
             self.swapState[swapid][MSGS]={}
             self.swapState[swapid][MSGS][peer] =reactor.callLater(2,self.checkStatus,swapid,peer)
-            AcceptSwapMessage.send(self.stream.id,swapid,neighs,peer,self.controlPipe)
+            AcceptSwapMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,neighs,peer,self.controlPipe)
 
 
     ###RECEIVED INITIAL SWAP ROUTING TABLE
@@ -866,7 +873,7 @@ class DistributedClient(Overlay):
         self.log.debug('%s',self.partnerTable[:])
         self.swapState[swapid][STATE]=WAIT_FINAL_TABLE
         self.swapState[swapid][MSGS][self.initPeer]=reactor.callLater(5,self.checkStatus,swapid,self.initPeer)
-        SwapPeerListMessage.send(self.stream.id, swapid, self.partnerTable, self.initPeer, self.controlPipe)
+        SwapPeerListMessage.send(self.stream.id,self.superOverlay,self.interOverlay, swapid, self.partnerTable, self.initPeer, self.controlPipe)
 
 
     ###RECEIVED FINAL SWAP TABLE
@@ -904,11 +911,11 @@ class DistributedClient(Overlay):
         self.log.debug('received ask lock for %s from %s'%(swapid,peer))
         print 'received ans lock from ',peer
         if self.initiator or self.passiveInitiator or self.shouldStop:
-            AnswerLockMessage.send(self.stream.id,swapid,False,peer,self.controlPipe)
+            AnswerLockMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,False,peer,self.controlPipe)
             self.log.debug('and rejected it')
             print 'and rejected it'
         elif peer in self.getNeighbours() or partner not in self.getNeighbours():
-            AnswerLockMessage.send(self.stream.id,swapid,False,peer,self.controlPipe)
+            AnswerLockMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,False,peer,self.controlPipe)
             self.log.error('received ask lock for a wrong set of peers for %d',swapid)
             self.log.error('peer:%s partner:%s neighbours:%s',peer,partner,self.getNeighbours())
         else:
@@ -928,7 +935,7 @@ class DistributedClient(Overlay):
             self.tempSatelites+=1
             self.tempLastSatelite=time()
 
-            AnswerLockMessage.send(self.stream.id,swapid,True,peer,self.controlPipe)
+            AnswerLockMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,True,peer,self.controlPipe)
             self.log.debug('and accepted it %s'%swapid)
 
 
@@ -972,7 +979,7 @@ class DistributedClient(Overlay):
 
         if ack:
             self.log.debug('sending ack update message to %s',peer)
-            AckUpdateMessage.send(self.stream.id,swapid,peer,self.controlPipe)
+            AckUpdateMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,peer,self.controlPipe)
 
         self.log.info('satelite %d',self.satelite)
         self.log.info('table %s',self.getNeighbours())

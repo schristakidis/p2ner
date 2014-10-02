@@ -25,13 +25,32 @@ class StreamMessage(BaseControlMessage):
 
     @classmethod
     def send(cls, stream, peer, out):
-        #cls.log.debug('sending stream message to %s',peer)
         return out.send(cls, Container(stream=stream), peer).addErrback(trap_sent)
-        
+
+class ReturnPeerStatus(BaseControlMessage):
+    type = "overlaystatusmessage"
+    code = MSG.GET_OVERLAY_STATUS
+    ack = True
+
+    @classmethod
+    def send(cls, sid, superPeer, peer, out):
+        return out.send(cls, Container(streamid=sid, superPeer=superPeer), peer).addErrback(trap_sent)
+
 
 class PeerListMessage(BaseControlMessage):
+    type = "peerlistoverlaymessage"
+    code = MSG.SEND_IP_LIST2
+    ack = True
+
+    @classmethod
+    def send(cls, sid,  soverlay, ioverlay, peerlist, peer, out):
+        msg = Container(streamid = sid, superOverlay=soverlay, interOverlay=ioverlay , peer = peerlist)
+        return out.send(cls, msg, peer).addErrback(trap_sent)
+
+
+class PeerListProducerMessage(BaseControlMessage):
     type = "peerlistmessage"
-    code = MSG.SEND_IP_LIST
+    code = MSG.SEND_IP_LIST_PRODUCER
     ack = True
 
     @classmethod
@@ -39,13 +58,6 @@ class PeerListMessage(BaseControlMessage):
         #cls.log.debug('sending peerList message to %s',peer)
         msg = Container(streamid = sid, peer = peerlist)
         return out.send(cls, msg, peer).addErrback(trap_sent)
-
-
-class PeerListProducerMessage(PeerListMessage):
-    type = "peerlistmessage"
-    code = MSG.SEND_IP_LIST_PRODUCER
-    ack = True
-
 
 class PeerRemoveMessage(BaseControlMessage):
     type = "peerlistmessage"
@@ -62,12 +74,12 @@ class PeerRemoveProducerMessage(PeerRemoveMessage):
     type = "peerlistmessage"
     code = MSG.REMOVE_NEIGHBOURS_PRODUCER
     ack = True
-    
+
 class SuggestNewPeerMessage(ControlMessage):
     type = "peerlistmessage"
     code = MSG.SUGGEST_NEW_PEER
     ack = True
-    
+
     def trigger(self, message):
         if self.stream.id != message.streamid:
             return False
@@ -81,7 +93,7 @@ class SuggestMessage(BaseControlMessage):
     type = "peerlistmessage"
     code = MSG.SUGGEST
     ack = True
-        
+
     @classmethod
     def send(cls, sid, peerlist, peer, out):
-        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)  
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)

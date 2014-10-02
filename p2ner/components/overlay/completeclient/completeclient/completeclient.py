@@ -16,11 +16,11 @@
 
 import sys
 from p2ner.abstract.overlay import Overlay
-from messages.peerlistmessage import *
+from messages.producermessage import *
 from messages.peerremovemessage import ClientStoppedMessage
+from messages.messageobjects import *
 from twisted.internet import task,reactor,defer
 from random import choice,uniform
-from messages.swapmessages import *
 from time import time,localtime
 import networkx as nx
 from p2ner.base.Peer import Peer
@@ -29,6 +29,7 @@ from hashlib import md5
 from state import *
 from swapException import SwapError
 from bwmeasurement import FlowBwMeasurement
+from subclient import SubOverlay
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -41,33 +42,15 @@ CONTINUE=0
 INSERT=1
 REMOVE=2
 
+
 class CompleteClient(Overlay):
 
     def registerMessages(self):
         self.messages = []
-        self.messages.append(PeerListMessage())
         self.messages.append(ClientStoppedMessage())
         self.messages.append(PeerListPMessage())
-        self.messages.append(AddNeighbourMessage())
-        self.messages.append(AskSwapMessage())
-        self.messages.append(RejectSwapMessage())
-        self.messages.append(AcceptSwapMessage())
-        self.messages.append(InitSwapTableMessage())
-        self.messages.append(AskLockMessage())
-        self.messages.append(AnswerLockMessage())
-        self.messages.append(SwapPeerListMessage())
-        self.messages.append(FinalSwapPeerListMessage())
-        self.messages.append(SateliteMessage())
         self.messages.append(PingMessage())
-        self.messages.append(GetNeighsMessage())
-        self.messages.append(SuggestNewPeerMessage())
-        self.messages.append(SuggestMessage())
-        self.messages.append(ConfirmNeighbourMessage())
-        self.messages.append(PingSwapMessage())
-        self.messages.append(AckUpdateMessage())
-        self.messages.append(CleanSateliteMessage())
-        self.messages.append(ValidateNeighboursMessage())
-        self.messages.append(ReplyValidateNeighboursMessage())
+        self.messages.append(GetPeerStatusMessage())
 
     def initOverlay(self):
         self.log=self.logger.getLoggerChild(('o'+str(self.stream.id)),self.interface)
@@ -75,46 +58,47 @@ class CompleteClient(Overlay):
         print 'initing overlay'
         self.sanityCheck(["stream", "control", "controlPipe"])
 
+        self.subOverlays={}
         self.shouldStop=False
         self.stopDefer=None
         self.registerMessages()
         self.neighbours = []
-        self.duringSwapNeighbours={}
-        self.removeDuringSwap=[]
-        self.partnerTable=[]
-        self.satelite=0
-        self.initiator=False
-        self.passiveInitiator=False
-        self.duringSwap=False
-        self.pauseSwap=False
-        self.numNeigh=self.stream.overlay['baseNumNeigh']
-        self.loopingCall = task.LoopingCall(self.startSwap)
-        self.loopingCall.start(self.stream.overlay['swapFreq'])
+        self.baseNumNeigh=self.stream.overlay['baseNumNeigh']
+        self.superNumNeigh=self.stream.overlay['superNumNeigh']
+        self.interNumNeigh=self.stream.overlay['interNumNeigh']
+        self.swapFreq=self.stream.overlay['swapFreq']
         self.statsLoopingCall=task.LoopingCall(self.collectStats)
-        self.statsLoopingCall.start(2)
-        self.pingCall=task.LoopingCall(self.sendPing)
-        self.pingCall.start(1)
-
-        self.tempSatelites=0
-        self.tempSwaps=0
-        self.tempLastSatelite=0
-        self.tempLastSwap=0
-
-        self.swapState={}
+        # self.statsLoopingCall.start(2)
+        # self.pingCall=task.LoopingCall(self.sendPing)
+        # self.pingCall.start(1)
 
         self.capacity=self.trafficPipe.callSimple('getReportedCap')
         if self.capacity:
-            self.askInitNeighbours()
+            self.resolveStatus()
         else:
             d=FlowBwMeasurement(self.stream.server,_parent=self).start()
-            d.addCallback(self.askInitNeighbours)
+            d.addCallback(self.resolveStatus)
 
-
-
-    def askInitNeighbours(self,cap=None):
+    def resolveStatus(self,cap=None):
         if cap:
             self.capacity=cap
-        AskInitNeighs.send(self.stream.id,self.server,self.controlPipe)
+        AskServerForStatus.send(self.stream.id,self.capacity,self.server, self.resolveStatusFailure,self.controlPipe)
+
+    def resolveStatusFailure(self,err):
+        self.log.error('failed to get status from server')
+        self.stream.stop()
+
+    def getPeerStatus(self,superPeer):
+        self.superPeer=superPeer
+        if superPeer:
+            print "I am a super PEERRRRRRRRRRRRRRRRRRRRRRRRRRR"
+            self.subOverlays['super']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=True,interOverlay=False,_parent=self)
+            self.subOverlays['base']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=False,interOverlay=False,_parent=self)
+        else:
+            print "just a normal peer"
+
+        # self.askInitNeighbours()
+
 
     def getNeighbours(self):
         return self.neighbours[:]
