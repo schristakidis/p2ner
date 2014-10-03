@@ -20,21 +20,21 @@ from messages.peerremovemessage import ClientStoppedMessage
 from twisted.internet import reactor
 
 class CentralClient(Overlay):
-    
+
     def registerMessages(self):
         self.messages = []
         self.messages.append(AddProducerMessage())
         self.messages.append(ClientStoppedMessage())
-    
+
     def initOverlay(self):
         self.log.info('initing producer overlay')
         self.sanityCheck(["stream", "control", "controlPipe"])
         self.registerMessages()
         self.neighbours = []
-        
+
     def getNeighbours(self):
         return self.neighbours[:]
-    
+
     def addNeighbour(self, peer):
         if not self.isNeighbour(peer):
             if self.netChecker.nat and peer.ip==self.netChecker.externalIp:
@@ -46,7 +46,7 @@ class CentralClient(Overlay):
         else:
             self.log.error("%s  yet in overlay" ,peer)
             raise ValueError("%s peer yet in overlay" % str(peer))
-    
+
     def removeNeighbour(self, peer):
         try:
             self.neighbours.remove(peer)
@@ -54,13 +54,13 @@ class CentralClient(Overlay):
             print 'removing from producer neighborhood ',peer
         except:
             self.log.error('%s is not a neighbor',peer)
-                    
+
     def isNeighbour(self, peer):
         return peer in self.neighbours
-    
+
     def stop(self):
         self.log.info('stopping overlay')
-        
+
 
 
 if __name__ == "__main__":

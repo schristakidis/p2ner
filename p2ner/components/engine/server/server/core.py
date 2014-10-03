@@ -83,7 +83,10 @@ class Server(Engine):
         return id
 
     def newStream(self, producer, stream):
-        overlay = ("DistServer", [producer, stream], {})
+        if stream.overlay['component']=="CompleteClient":
+            overlay = ("DistServer", [producer, stream], {})
+        else:
+            overlay = ("CentralServer", [producer, stream], {})
         s, a, k = overlay
         self.log.debug('trying to load overlay %s',s)
         ov = loadComponent("serveroverlay", s)

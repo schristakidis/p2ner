@@ -141,13 +141,13 @@ OverlayStatusMessage=Struct('overlaystatusmessage',
                      Flag('superPeer')
                      )
 
-SidOverlayMessage=Struct("SidOverlayMessage",
+SubSidMessage=Struct("SubSidMessage",
                          UBInt16("streamid"),
                          Flag("superOverlay"),
                          Flag("interOverlay")
                          )
 
-PeerListOverlayMessage = Struct("peerlistoverlaymessage",
+SubPeerListMessage = Struct("subpeerlistmessage",
         UBInt16("streamid"),
         Flag("superOverlay"),
         Flag("interOverlay"),
@@ -242,8 +242,8 @@ MSG_TYPES = {
              "satelitemessage":SateliteMessage,
              "bwmessage":BwMessage,
              "overlaystatusmessage":OverlayStatusMessage,
-             "sidoverlaymessage":SidOverlayMessage,
-             "peerlistoverlaymessage":PeerListOverlayMessage,
+             "subsidmessage":SubSidMessage,
+             "subpeerlistmessage":SubPeerListMessage,
              "suboverlaymessage":SubOverlayMessage,
              "subswapsidmessage":SubSwapSIDMessage,
              "subswappeerlistmessage":SubSwapPeerListMessage,

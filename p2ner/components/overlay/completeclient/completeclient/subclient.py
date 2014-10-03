@@ -17,6 +17,7 @@
 import sys
 from p2ner.abstract.overlay import Overlay
 from messages.submessages import *
+from messages.validationmessages import *
 from messages.peerremovemessage import ClientStoppedMessage
 from twisted.internet import task,reactor,defer
 from random import choice,uniform
@@ -44,6 +45,7 @@ class SubOverlay(Overlay):
 
     def registerMessages(self):
         self.messages = []
+        self.messages.append(ClientStoppedMessage())
         self.messages.append(PeerListMessage())
         self.messages.append(AddNeighbourMessage())
         self.messages.append(AskSwapMessage())
@@ -56,11 +58,10 @@ class SubOverlay(Overlay):
         self.messages.append(FinalSwapPeerListMessage())
         self.messages.append(SateliteMessage())
         self.messages.append(PingMessage())
-        self.messages.append(GetNeighsMessage())
+        self.messages.append(PingSwapMessage())
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(SuggestMessage())
         self.messages.append(ConfirmNeighbourMessage())
-        self.messages.append(PingSwapMessage())
         self.messages.append(AckUpdateMessage())
         self.messages.append(CleanSateliteMessage())
         self.messages.append(ValidateNeighboursMessage())
@@ -73,12 +74,14 @@ class SubOverlay(Overlay):
         print 'initing overlay'+str(self.overlayType)
         self.sanityCheck(["stream", "control", "controlPipe"])
 
+        self.registerMessages()
+
         self.superOverlay=superOverlay
         self.interOverlay=interOverlay
         self.subOverlay=self
+
         self.shouldStop=False
         self.stopDefer=None
-        self.registerMessages()
         self.neighbours = []
         self.duringSwapNeighbours={}
         self.removeDuringSwap=[]
@@ -89,13 +92,14 @@ class SubOverlay(Overlay):
         self.duringSwap=False
         self.pauseSwap=False
         self.numNeigh=numOfNeighs
+
         self.loopingCall = task.LoopingCall(self.startSwap)
         self.loopingCall.start(swapFreq)
-        self.statsLoopingCall=task.LoopingCall(self.collectStats)
-        self.statsLoopingCall.start(2)
-        self.pingCall=task.LoopingCall(self.sendPing)
-        self.pingCall.start(1)
 
+        self.pingLoopingCall=task.LoopingCall(self.sendPing)
+        self.pingLoopingCall.start(1)
+
+        #needed for vizir stats
         self.tempSatelites=0
         self.tempSwaps=0
         self.tempLastSatelite=0
@@ -157,8 +161,6 @@ class SubOverlay(Overlay):
             ConfirmNeighbourMessage.send(self.stream.id,self.superOverlay,self.interOverlay, peer,self.controlPipe)
         else:
             self.log.error('In accept neighbour %s is already a neighbour',peer)
-        print 'during swap:',self.duringSwapNeighbours
-        print 'peer:',peer
         self.duringSwapNeighbours.pop(peer)
 
     #Initiator peer get the confirmation and finally and the passive peer as neighbour
@@ -211,23 +213,29 @@ class SubOverlay(Overlay):
 
 
     def removeNeighbour(self, peer):
+        if self.shouldStop:
+            return
+
+        if self.duringSwap:
+            self.removeDuringSwap.append(peer)
+
         try:
-            if self.duringSwap:
-                self.removeDuringSwap.append(peer)
             self.neighbours.remove(peer)
-            self.log.info('removing %s from neighborhood',peer)
-            print 'removing form neighbourhood ',peer
-            if uniform(0,10)<5:
-                self.log.info('should find a new neighbor')
-                print 'should find a new neighbor'
-                for p in self.neighbours:
-                    p.askedReplace=False
-                self.findNewNeighbor()
-            else:
-                self.log.info('no further action needed')
-                print 'no further action needed'
         except:
             self.log.error('In remove neighbour %s is not a neighbor',peer)
+            return
+
+        self.log.info('removing %s from neighborhood',peer)
+        print 'removing form neighbourhood ',peer
+        if uniform(0,10)<5:
+            self.log.info('should find a new neighbor')
+            print 'should find a new neighbor'
+            for p in self.neighbours:
+                p.askedReplace=False
+            self.findNewNeighbor()
+        else:
+            self.log.info('no further action needed')
+            print 'no further action needed'
 
     def isNeighbour(self, peer):
         return peer in self.neighbours
@@ -251,23 +259,20 @@ class SubOverlay(Overlay):
             return
         self.log.info('stopping overlay')
         self.log.debug('sending clientStopped message to %s',self.server)
+
+        #stop tasks
         try:
             self.loopingCall.stop()
         except:
             pass
         try:
-            self.statsLoopingCall.stop()
+            self.pingLoopingCall.stop()
         except:
             pass
 
-        ClientStoppedMessage.send(self.stream.id, self.server, self.controlPipe)
-        try:
-            ClientStoppedMessage.send(self.stream.id, self.producer, self.controlPipe)
-        except:
-            pass
         for n in self.getNeighbours():
             self.log.debug('sending clientStopped message to %s',n)
-            ClientStoppedMessage.send(self.stream.id, n, self.controlPipe)
+            ClientStoppedMessage.send(self.stream.id, self.superOverlay, self.interOverlay, n, self.controlPipe)
         self.log.error('stopping')
         self.stopDefer.callback(True)
 
@@ -1047,13 +1052,12 @@ class SubOverlay(Overlay):
             self.log.error('Unknown STATUSSSSSSSS %s'%status)
 
 
+    ############## ENERGY FUNCTIONS ###############################
     def getEnergy(self):
         en=0
         for p in self.neighbours:
             if len(p.lastRtt):
                 en +=sum(p.lastRtt)/len(p.lastRtt)
-        # if len(self.neighbours):
-            # en=en/len(self.neighbours)
         return en
 
     def getCustomEnergy(self,table):
@@ -1061,8 +1065,6 @@ class SubOverlay(Overlay):
         for p in table:
             if len(p.lastRtt):
                 en +=sum(p.lastRtt)/len(p.lastRtt)
-        # if len(table):
-            # en=en/len(table)
         return en
 
     def getCustomPassiveEnergy(self,table):
@@ -1071,18 +1073,17 @@ class SubOverlay(Overlay):
             en +=p.swapRtt
         return en
 
-    def returnNeighs(self,peer):
-        ReturnNeighsMessage.send(self.stream.id,self.neighbours,peer,self.controlPipe)
 
+    ################ REPLACE REMOVED NEIGHBOUR ALGORITHM ##################################
     def findNewNeighbor(self):
         neighs=[p for p in self.neighbours if not p.askedReplace]
         if len(neighs):
             askNeigh=choice(neighs)
-            SuggestNewPeerMessage.send(self.stream.id,self.getNeighbours(),askNeigh,self.controlPipe,err_func=self.sendFindNewFailed)
+            SuggestNewPeerMessage.send(self.stream.id,self.superOverlay,self.interOverlay,self.getNeighbours(),askNeigh,self.controlPipe,err_func=self.sendFindNewFailed)
         else:
             self.log.debug("there isn't an appropiate neighbour for asking for a new peer\n Contacting Server")
             print "there isn't an appropiate neighbour for asking for a new peer\n Contacting Server"
-            SuggestNewPeerMessage.send(self.stream.id,self.getNeighbours(),Peer(self.stream.server[0],self.stream.server[1]),self.controlPipe)
+            SuggestNewPeerMessage.send(self.stream.id,self.superOverlay,self.interOverlay,self.getNeighbours(),Peer(self.stream.server[0],self.stream.server[1]),self.controlPipe)
             pass
 
     def sendFindNewFailed(self,peer):
@@ -1093,7 +1094,7 @@ class SubOverlay(Overlay):
 
     def suggestNewPeer(self,peer,neighs):
         avNeighs=[p for p in self.neighbours if p!=peer and p not in neighs]
-        SuggestMessage.send(self.stream.id,avNeighs,peer,self.controlPipe)
+        SuggestMessage.send(self.stream.id,self.superOverlay,self.interOverlay,avNeighs,peer,self.controlPipe)
 
     def availableNewPeers(self,peer,avNeighs):
         avNeighs=[p for p in avNeighs if p not in self.neighbours]
@@ -1112,6 +1113,9 @@ class SubOverlay(Overlay):
 
 
 
+
+
+    ################## SWAP HELPER FUNCTIONS #################################
     def checkDuplicates(self):
         neighs=self.getNeighbours()
         if len(neighs)!=len(set(neighs)):
@@ -1120,30 +1124,6 @@ class SubOverlay(Overlay):
             print neighs
             #reactor.stop()
 
-    def collectStats(self):
-        setValue(self,'energy',1000*self.getEnergy())
-        setValue(self,'neighbours',len(self.getNeighbours()))
-
-    def getVizirStats(self):
-        ret=(self.tempSwaps,time()-self.tempLastSwap,self.tempSatelites,time()-self.tempLastSatelite)
-        self.tempSwaps=0
-        self.tempSatelites=0
-        return ret
-
-    def toggleSwap(self,stop):
-        self.log.debug('in toggle swap.Pause is %s',stop)
-        self.pauseSwap=stop
-        if self.pauseSwap:
-            reactor.callLater(4,self.validateNeighbours)
-
-    def sendPing(self):
-        try:
-            running=self.scheduler.running
-        except:
-            return
-        if not running:
-            for p in self.getNeighbours():
-                PingSwapMessage.send(p,self.controlPipe)
 
     def validateSwapMessage(self,peer,swapid,state):
         self._validateAllMessage(peer,swapid,state)
@@ -1248,6 +1228,10 @@ class SubOverlay(Overlay):
         action.cancel()
         return len(self.swapState[swapid][MSGS])
 
+
+
+
+    ##################### VIZIR HELPER FUNCTIONS ###################################
     def validateNeighbours(self):
         if self.duringSwap or self.satelite or len(self.duringSwapNeighbours) or len(self.removeDuringSwap):
             self.log.error('not in a clean state')
@@ -1258,12 +1242,12 @@ class SubOverlay(Overlay):
         for p in self.getNeighbours():
             self.log.debug('send validate message to %s',p)
             p.checked=False
-            ValidateNeighboursMessage.send(self.stream.id,p,self.controlPipe)
+            ValidateNeighboursMessage.send(self.stream.id,self.superOverlay, self.interOverlay, p,self.controlPipe)
         reactor.callLater(2,self.checkFinishValidation)
 
     def ansValidateNeighs(self,peer):
         ans=peer in self.getNeighbours()
-        ReplyValidateNeighboursMessage.send(self.stream.id,ans,peer,self.controlPipe)
+        ReplyValidateNeighboursMessage.send(self.stream.id,self.superOverlay, self.interOverlay, ans,peer,self.controlPipe)
         if not ans:
             self.log.error('%s is not my neighbor',peer)
 
@@ -1282,10 +1266,28 @@ class SubOverlay(Overlay):
             if not p.checked:
                 self.log.error('problem in validating %s',p)
 
+    def returnNeighs(self,peer):
+        ReturnNeighsMessage.send(self.stream.id,self.neighbours,peer,self.controlPipe)
 
-    def getStats(self):
-        ret=[]
-        ret.append((self.stream.id,'energy',self.getEnergy()))
-        ret.append((self.stream.id,'neighbours',len(self.getNeighbours())))
+
+    def getVizirStats(self):
+        ret=(self.tempSwaps,time()-self.tempLastSwap,self.tempSatelites,time()-self.tempLastSatelite)
+        self.tempSwaps=0
+        self.tempSatelites=0
         return ret
 
+    def toggleSwap(self,stop):
+        self.log.debug('in toggle swap.Pause is %s',stop)
+        self.pauseSwap=stop
+        if self.pauseSwap:
+            reactor.callLater(4,self.validateNeighbours)
+
+    ################ PING MESSAGES FOR UNGRACEFUL DEPARTURES ######################3
+    def sendPing(self):
+        try:
+            running=self.scheduler.running
+        except:
+            return
+        if not running:
+            for p in self.getNeighbours():
+                PingSwapMessage.send(p,self.controlPipe)

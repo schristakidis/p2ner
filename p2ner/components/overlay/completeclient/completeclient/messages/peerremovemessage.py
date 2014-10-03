@@ -13,26 +13,35 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from p2ner.base.ControlMessage import ControlMessage, trap_sent
+from p2ner.base.ControlMessage import BaseControlMessage,ControlMessage, trap_sent
 from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
 
 class ClientStoppedMessage(ControlMessage):
-    type = "sidmessage"
-    code = MSG.CLIENT_STOPPED
+    type = "subsidmessage"
+    code = MSG.CLIENT_STOPPED_SUB
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid:
+        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
             return False
         return True
 
     def action(self, message, peer):
         self.log.debug('received client stopped message from %s',peer)
-        self.overlay.removeNeighbour(peer)
-            
+        self.subOverlay.removeNeighbour(peer)
+
+    @classmethod
+    def send(cls, sid,sOver,iOver, peer, out):
+        return out.send(cls, Container(streamid=sid , superOverlay=sOver, interOverlay=iOver), peer).addErrback(trap_sent)
+
+
+class InformClientStoppedMessage(BaseControlMessage):
+    type = "sidmessage"
+    code = MSG.CLIENT_STOPPED
+    ack = True
+
+
     @classmethod
     def send(cls, sid, peer, out):
         return out.send(cls, Container(streamid=sid), peer).addErrback(trap_sent)
-
-    

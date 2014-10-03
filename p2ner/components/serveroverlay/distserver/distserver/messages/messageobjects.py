@@ -38,8 +38,8 @@ class ReturnPeerStatus(BaseControlMessage):
 
 
 class PeerListMessage(BaseControlMessage):
-    type = "peerlistoverlaymessage"
-    code = MSG.SEND_IP_LIST2
+    type = "subpeerlistmessage"
+    code = MSG.SEND_IP_LIST_SUB
     ack = True
 
     @classmethod
@@ -59,25 +59,9 @@ class PeerListProducerMessage(BaseControlMessage):
         msg = Container(streamid = sid, peer = peerlist)
         return out.send(cls, msg, peer).addErrback(trap_sent)
 
-class PeerRemoveMessage(BaseControlMessage):
-    type = "peerlistmessage"
-    code = MSG.REMOVE_NEIGHBOURS
-    ack = True
-
-    @classmethod
-    def send(cls, sid, peerlist, peer, out):
-        #cls.log.debug('sending peerRemove message to %s',peer)
-        msg = Container(streamid = sid, peer = peerlist)
-        return out.send(cls, msg, peer).addErrback(trap_sent)
-
-class PeerRemoveProducerMessage(PeerRemoveMessage):
-    type = "peerlistmessage"
-    code = MSG.REMOVE_NEIGHBOURS_PRODUCER
-    ack = True
-
 class SuggestNewPeerMessage(ControlMessage):
-    type = "peerlistmessage"
-    code = MSG.SUGGEST_NEW_PEER
+    type = "subpeerlistmessage"
+    code = MSG.SUGGEST_NEW_PEER_SUB
     ack = True
 
     def trigger(self, message):
@@ -87,13 +71,13 @@ class SuggestNewPeerMessage(ControlMessage):
 
     def action(self, message, peer):
         self.log.debug('received suggest new peer message from %s',peer)
-        self.overlay.suggestNewPeer(peer,message.peer)
+        self.overlay.suggestNewPeer(peer,message.superOverlay,message.interOverlay,message.peer)
 
 class SuggestMessage(BaseControlMessage):
-    type = "peerlistmessage"
-    code = MSG.SUGGEST
+    type = "subpeerlistmessage"
+    code = MSG.SUGGEST_SUB
     ack = True
 
     @classmethod
-    def send(cls, sid, peerlist, peer, out):
-        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)
+    def send(cls, sid, sover, iover, peerlist, peer, out):
+        return out.send(cls, Container(streamid=sid, superOverlay=sover, interOverlay=iover, peer=peerlist), peer).addErrback(trap_sent)

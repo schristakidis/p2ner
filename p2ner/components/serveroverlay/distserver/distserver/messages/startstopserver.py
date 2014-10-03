@@ -23,7 +23,7 @@ class ServerStartedMessage(ControlMessage):
     type = "sidmessage"
     code = MSG.SERVER_STARTED
     ack = True
-    
+
     def trigger(self, message):
         return message.streamid == self.stream.id
 
@@ -33,10 +33,12 @@ class ServerStartedMessage(ControlMessage):
                 #print "DISPATCHING SERVER MESSAGE TO:", self.overlay.getNeighbours()
                 self.log.debug('received serverStarted message from %s',peer)
                 self.log.debug('sending serverStarted message to %s',str(self.overlay.getNeighbours()))
-                ServerStartedMessage.send(message, self.overlay.getNeighbours(), self.controlPipe)
+                for p in self.overlay.getNeighbours():
+                    print 'eeeeeeeeeeeeeeeeeeeeeee:',p
+                    ServerStartedMessage.send(message, p, self.controlPipe)
                 self.log.debug('sending serverStarted message to producer %s',peer)
                 ServerStartedMessage.send(message, self.overlay.producer, self.controlPipe)
-        
+
 
     @classmethod
     def send(cls, message, peer, out):
@@ -46,7 +48,7 @@ class ServerStoppedMessage(ServerStartedMessage):
     type = "sidbasemessage"
     code = MSG.SERVER_STOPPED
     ack = True
-    
+
     def action(self, message, peer):
         if self.overlay.producer is peer:
             self.overlay.stream.live=False
@@ -54,18 +56,18 @@ class ServerStoppedMessage(ServerStartedMessage):
                 reactor.callLater(0.5,self.root.unregisterStream,self.stream.id)
             else:
                 reactor.callLater(0.5,self.overlay.stop)
-            self.log.debug('received serverStopped message from %s',peer)   
+            self.log.debug('received serverStopped message from %s',peer)
             #print "DISPATCHING SERVER STOP MESSAGE TO:", self.overlay.getNeighbours()
             self.log.debug('sending serverStopped message to %s',str(self.overlay.getNeighbours()))
             ServerStoppedMessage.send(message, self.overlay.getNeighbours(), self.controlPipe)
             #ServerStartedMessage.send(message, self.overlay.producer, self.controlPipe)
 
-    
+
 class StartRemoteMessage(ControlMessage):
     type='sidmessage'
     code=MSG.START_REMOTE
     ack=True
-      
+
     def trigger(self, message):
         return message.streamid == self.stream.id
 
@@ -80,7 +82,7 @@ class StartRemoteMessage(ControlMessage):
             ServerStartedMessage.send(message, self.overlay.producer, self.controlPipe)
         else:
             self.log.warning('recieved start remote message for an allready live stream')
-        
+
 
 
 if __name__ == "__main__":

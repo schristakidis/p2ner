@@ -15,4 +15,4 @@
 
 
 from interface import interface as INTERFACE
-from completeclient import CompleteClient
+from overlaymanager import OverlayManager as CompleteClient

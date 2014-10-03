@@ -14,32 +14,29 @@
 #   limitations under the License.
 
 
-from p2ner.base.ControlMessage import ControlMessage, trap_sent,probe_ack,BaseControlMessage
+from p2ner.base.ControlMessage import ControlMessage, trap_sent,probe_all,BaseControlMessage
 from p2ner.base.Consts import MessageCodes as MSG
 from construct import Container
 
-class AskServerForStatus(BaseControlMessage):
-    type = "bwmessage"
-    code = MSG.ASK_OVERLAY_STATUS
-    ack = True
 
-    @classmethod
-    def send(cls, sid, bw, peer,  err_func,out):
-        d=out.send(cls, Container(streamid = sid, bw=bw), peer)
-        d.addErrback(probe_ack,err_func)
-        return d
+class GetNeighsMessage(ControlMessage):
+    type='basemessage'
+    code=MSG.GET_NEIGHS
+    ack=True
 
-
-class GetPeerStatusMessage(ControlMessage):
-    type = "overlaystatusmessage"
-    code = MSG.GET_OVERLAY_STATUS
-    ack = True
-
-    def trigger(self, message):
-        if self.stream.id != message.streamid:
+    def trigger(self,message):
+        if message.message!=self.stream.id:
             return False
         return True
 
-    def action(self, message, peer):
-        self.overlay.getPeerStatus(message.superPeer)
+    def action(self,message,peer):
+        self.overlay.returnNeighs(peer)
 
+class ReturnNeighsMessage(BaseControlMessage):
+    type='swappeerlistmessage'
+    code=MSG.RETURN_NEIGHS
+    ack=True
+
+    @classmethod
+    def send(cls, sid, peerlist, peer, out):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)

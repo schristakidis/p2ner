@@ -32,8 +32,8 @@ class RequestStreamMessage(ControlMessage):
 
 
 class AskInitNeighsMessage(ControlMessage):
-    type = "sidoverlaymessage"
-    code = MSG.ASK_INIT_NEIGHS2
+    type = "subsidmessage"
+    code = MSG.ASK_INIT_NEIGHS_SUB
     ack = True
 
     def trigger(self, message):

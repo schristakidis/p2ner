@@ -14,4 +14,4 @@
 #   limitations under the License.
 
 
-from core import DistServer
+from distserver import DistServer
