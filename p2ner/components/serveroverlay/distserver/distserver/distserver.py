@@ -54,7 +54,7 @@ class DistServer(Overlay):
 
 
     def returnPeerStatus(self,peer,bw):
-        status=bw>self.superThres
+        status=bw<self.superThres
         print peer,' is a Super Peer ',status
         ReturnPeerStatus.send(self.stream.id,status,peer,self.controlPipe)
 
@@ -106,9 +106,6 @@ class DistServer(Overlay):
                 if peer not in self.baseInterPeers:
                     addProducer=True
             else:
-                if peer in self.baseInterPeers:
-                    raise ValueError('base peer already in list')
-
                 if len(self.superPeers)<self.interNeighPeers:
                     newPeerNeighs=self.superPeers[:]
                 else:
@@ -119,7 +116,8 @@ class DistServer(Overlay):
                 print 'sending peerlist message to %s containg %s'%(peer,str(newPeerNeighs))
                 PeerListMessage.send(self.stream.id, superPeer,interOverlay, newPeerNeighs, peer, self.controlPipe)
 
-                self.baseInterPeers.append(peer)
+                if peer not in self.baseInterPeers:
+                    self.baseInterPeers.append(peer)
                 if peer not in self.basePeers:
                     addProducer=True
 

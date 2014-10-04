@@ -42,8 +42,12 @@ class PeerListMessage(ControlMessage):
 
     def action(self, message, peer):
         self.log.debug('received peerList message from %s for %s',peer,str(message.peer))
-        for p in message.peer:
-            self.subOverlay.checkSendAddNeighbour(p,peer)
+        if message.peer:
+            for p in message.peer:
+                self.subOverlay.checkSendAddNeighbour(p,peer)
+        else:
+            self.subOverlay.checkSendAddNeighbour(None,peer)
+
 
     @classmethod
     def send(cls, sid, peerlist, peer, out):

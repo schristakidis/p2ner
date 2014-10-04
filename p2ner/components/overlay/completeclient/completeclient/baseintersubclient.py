@@ -29,7 +29,7 @@ from p2ner.core.statsFunctions import counter,setValue
 from hashlib import md5
 from state import *
 from swapException import SwapError
-from subclient import SubClient
+from subclient import SubOverlay as SubClient
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -42,7 +42,7 @@ CONTINUE=0
 INSERT=1
 REMOVE=2
 
-class SubOverlay(SubClient):
+class BaseInterOverlay(SubClient):
 
     def registerMessages(self):
         self.messages = []
@@ -62,10 +62,21 @@ class SubOverlay(SubClient):
     def startSwap(self):
         return
 
+    def askInitialNeighbours(self):
+        self.askInitLoopingCall=task.LoopingCall(self._askInitialNeighbours)
+        self.askInitLoopingCall.start(2)
+        self.loopingCalls.append(self.askInitLoopingCall)
+
+    def _askInitialNeighbours(self):
+        AskInitNeighs.send(self.stream.id,self.superOverlay,self.interOverlay,self.server,self.controlPipe)
+
     def checkSendAddNeighbour(self,peer,originalPeer):
         if not peer:
-            reactor.callLater(2,self.askInitialNeighbours)
+            self.log.warning("empty initial neighbours list. Will ask again")
             return
+        else:
+            if self.askInitLoopingCall.running():
+                self.askInitLoopingCall.stop()
         super(SubClient,self).checkSendAddNeighbour(peer,originalPeer)
 
     def removeNeighbour(self, peer):

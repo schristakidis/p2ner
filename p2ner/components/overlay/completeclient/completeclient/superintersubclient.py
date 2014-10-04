@@ -29,7 +29,7 @@ from p2ner.core.statsFunctions import counter,setValue
 from hashlib import md5
 from state import *
 from swapException import SwapError
-from subclient import SubClient
+from subclient import SubOverlay as SubClient
 
 ASK_SWAP=0
 ACCEPT_SWAP=1
@@ -42,7 +42,7 @@ CONTINUE=0
 INSERT=1
 REMOVE=2
 
-class SubOverlay(SubClient):
+class SuperInterOverlay(SubClient):
 
     def registerMessages(self):
         self.messages = []
@@ -66,7 +66,7 @@ class SubOverlay(SubClient):
         return
 
     def getSuperNeighbours(self):
-        return []
+        return self.parent.subOverlays['super'].getNeighbours()
 
     def removeNeighbour(self, peer):
         if self.duringSwap:
@@ -86,7 +86,7 @@ class SubOverlay(SubClient):
         return choice(self.getSuperNeighbours())
 
     def checkValidNumNeighsForSwap(self):
-        return True
+        return len(self.getSuperNeighbours())
 
     def getInitialSwapTable(self):
         return self.getNeighbours()

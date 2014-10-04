@@ -24,7 +24,8 @@ from twisted.internet import task,reactor,defer
 from random import choice,uniform
 from bwmeasurement import FlowBwMeasurement
 from subclient import SubOverlay
-
+from superintersubclient import SuperInterOverlay
+from baseintersubclient import BaseInterOverlay
 
 class OverlayManager(Overlay):
 
@@ -71,10 +72,12 @@ class OverlayManager(Overlay):
         self.superPeer=superPeer
         if superPeer:
             print "I am a super PEERRRRRRRRRRRRRRRRRRRRRRRRRRR"
-            self.subOverlays['super']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=True,interOverlay=False,_parent=self)
+            self.subOverlays['super']=SubOverlay(self.swapFreq,superOverlay=True,interOverlay=False,_parent=self)
+            self.subOverlays['superInter']=SuperInterOverlay(self.swapFreq,superOverlay=True,interOverlay=True,_parent=self)
         else:
-            self.subOverlays['base']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=False,interOverlay=False,_parent=self)
             print "just a normal peer"
+            self.subOverlays['base']=SubOverlay(self.swapFreq,superOverlay=False,interOverlay=False,_parent=self)
+            self.subOverlays['baseInter']=BaseInterOverlay(self.swapFreq,superOverlay=False,interOverlay=True,_parent=self)
 
 
     def getNeighbours(self):

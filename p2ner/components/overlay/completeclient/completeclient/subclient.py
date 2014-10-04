@@ -67,7 +67,7 @@ class SubOverlay(Overlay):
         self.messages.append(ValidateNeighboursMessage())
         self.messages.append(ReplyValidateNeighboursMessage())
 
-    def initOverlay(self,numOfNeighs,swapFreq,superOverlay=True,interOverlay=False,**kwagrs):
+    def initOverlay(self,swapFreq,superOverlay=True,interOverlay=False,**kwagrs):
         self.overlayType=10*int(superOverlay)+int(interOverlay)
         self.log=self.logger.getLoggerChild((str(self.overlayType)+'o'+str(self.stream.id)),self.interface)
         self.log.info('initing overlay'+str(self.overlayType))
@@ -91,7 +91,6 @@ class SubOverlay(Overlay):
         self.passiveInitiator=False
         self.duringSwap=False
         self.pauseSwap=False
-        self.numNeigh=numOfNeighs
 
         self.swapFreq=swapFreq
         self.loopingCall = task.LoopingCall(self.startSwap)
@@ -99,6 +98,9 @@ class SubOverlay(Overlay):
         self.pingLoopingCall=task.LoopingCall(self.sendPing)
         self.pingLoopingCall.start(1)
 
+        self.loopingCalls=[]
+        self.loopingCalls.append(self.loopingCall)
+        self.loopingCalls.append(self.pingLoopingCall)
         #needed for vizir stats
         self.tempSatelites=0
         self.tempSwaps=0
@@ -279,14 +281,11 @@ class SubOverlay(Overlay):
         self.log.info('stopping overlay')
 
         #stop tasks
-        try:
-            self.loopingCall.stop()
-        except:
-            pass
-        try:
-            self.pingLoopingCall.stop()
-        except:
-            pass
+        for lcall in self.loopingCalls:
+            try:
+                lcall.stop()
+            except:
+                pass
 
         for n in self.getNeighbours():
             self.log.debug('sending clientStopped message to %s',n)
