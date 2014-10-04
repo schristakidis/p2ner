@@ -93,8 +93,8 @@ class SubOverlay(Overlay):
         self.pauseSwap=False
         self.numNeigh=numOfNeighs
 
+        self.swapFreq=swapFreq
         self.loopingCall = task.LoopingCall(self.startSwap)
-        self.loopingCall.start(swapFreq)
 
         self.pingLoopingCall=task.LoopingCall(self.sendPing)
         self.pingLoopingCall.start(1)
@@ -106,10 +106,28 @@ class SubOverlay(Overlay):
         self.tempLastSwap=0
 
         self.swapState={}
+        self.enableSwap()
+        self.askInitialNeighbours()
+
+
+    def enableSwap(self):
+        self.loopingCall.start(self.swapFreq)
+
+    def askInitialNeighbours(self):
         AskInitNeighs.send(self.stream.id,self.superOverlay,self.interOverlay,self.server,self.controlPipe)
 
     def getNeighbours(self):
         return self.neighbours[:]
+
+
+    def checkTriggerMessage(self,mSuperOverlay,mInterOverlay):
+        if not mInterOverlay:
+            return self.superOverlay==mSupperOverlay and self.interOverlay==mInterOverlay
+        else:
+            return self.superOverlay!=mSupperOverlay and self.interOverlay==mInterOverlay
+
+    def checkTriggerInitiatorsMessage(self,mSuperOverlay,mInterOverlay):
+        return self.superOverlay==mSupperOverlay and mInterOverlay==self.interOverlay
 
 
     ##################################################
@@ -213,9 +231,6 @@ class SubOverlay(Overlay):
 
 
     def removeNeighbour(self, peer):
-        if self.shouldStop:
-            return
-
         if self.duringSwap:
             self.removeDuringSwap.append(peer)
 
@@ -227,6 +242,10 @@ class SubOverlay(Overlay):
 
         self.log.info('removing %s from neighborhood',peer)
         print 'removing form neighbourhood ',peer
+
+        if self.shouldStop:
+            return
+
         if uniform(0,10)<5:
             self.log.info('should find a new neighbor')
             print 'should find a new neighbor'
@@ -258,7 +277,6 @@ class SubOverlay(Overlay):
             print 'passive initiator:',self.passiveInitiator
             return
         self.log.info('stopping overlay')
-        self.log.debug('sending clientStopped message to %s',self.server)
 
         #stop tasks
         try:
@@ -278,10 +296,16 @@ class SubOverlay(Overlay):
 
     ###ACTIVE INITIATOR ##########################3
 
+    def choosePassiveInitiatorPeer(self):
+        return choice(self.neighbours)
+
+    def checkValidNumNeighsForSwap(self):
+        return len(self.neighbours)>1
+
     ### ASK SWAP
     def startSwap(self):
         self.log.debug('starting swap')
-        if self.satelite or self.initiator or self.passiveInitiator or len(self.neighbours)<=1 or self.shouldStop or len(self.duringSwapNeighbours) or self.pauseSwap:
+        if self.satelite or self.initiator or self.passiveInitiator or not self.checkValidNumNeighsForSwap() or self.shouldStop or len(self.duringSwapNeighbours) or self.pauseSwap:
             self.log.debug('no available conditions for swap %d,%d,%d,%d,%d',self.satelite,self.initiator,self.passiveInitiator,len(self.duringSwapNeighbours),len(self.neighbours))
             return
 
@@ -297,7 +321,7 @@ class SubOverlay(Overlay):
 
         self.initiator=True
         self.duringSwap=True
-        peer=choice(self.neighbours)
+        peer=self.choosePassiveInitiatorPeer()
 
         self.swapState[swapid]={}
         self.swapState[swapid][ROLE]=INITIATOR
@@ -357,10 +381,14 @@ class SubOverlay(Overlay):
         self.sendTable(swapid)
 
 
+    def getInitialSwapTable(self):
+        neighs=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
+        return neighs
+
+
     def sendTable(self,swapid):
         self.log.debug('sending initial routing table to passive initiator %s',self.passiveInitPeer)
-        neighs=[n for n in self.getNeighbours()]
-        neighs.remove(self.passiveInitPeer)
+        neighs=getInitialSwapTable()
         self.swapState[swapid][STATE]=WAIT_LOCKS_UTABLE
         self.swapState[swapid][MSGS]={}
         self.swapState[swapid][MSGS][self.passiveInitPeer]=reactor.callLater(4,self.checkStatus,swapid,self.passiveInitPeer)
@@ -446,6 +474,15 @@ class SubOverlay(Overlay):
         self.checkLockFinished(swapid)
 
     ###PERFORM SWAP
+
+    def checkExecuteSwapTwice(self,initiatorTable,passiveTable):
+        initActiveLength=len(initiatorTable)
+        initPassiveLenght=len(passiveTable)
+        initLength=initActiveLength+initPassiveLenght
+
+        return initLength%2!=0
+
+
     def performSwap(self,swapid):
         self.swapState[swapid][STATE]=PERFORM_SWAP
         initialHoodEnergy=self.getCustomEnergy(self.getNeighbours())+self.getCustomPassiveEnergy(self.partnerTable)
@@ -457,15 +494,9 @@ class SubOverlay(Overlay):
         for p in availablePeers:
             p.participateSwap=True
 
-        initActiveLength=len(partnerSet)
-        initPassiveLenght=len(self.partnerTable)
-        initLength=initActiveLength+initPassiveLenght
+        execTwice=self.checkExecuteSwapTwice(partnerSet,self.partnerTable)
 
-        execTwise=False
-        if initLength%2!=0:
-            execTwise=True
-
-        if not execTwise:
+        if not execTwice:
             (newTable,newPartnerTable,energy)=self._performSwap(initialHoodEnergy,0)
             self.newTable=newTable
             self.newPartnerTable=newPartnerTable
@@ -504,23 +535,27 @@ class SubOverlay(Overlay):
 
         self.sendFinalTable(swapid)
 
-    def _performSwap(self,initEnergy,byass=0):
-        partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
-        availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
-
-
-        initActiveLength=len(partnerSet)
-        initPassiveLenght=len(self.partnerTable)
+    def calculateFinalTablesSizes(self,initiatorTable,passiveTable,bias):
+        initActiveLength=len(initiatorTable)
+        initPassiveLenght=len(passiveTable)
         initLength=initActiveLength+initPassiveLenght
 
         self.log.warning('initiatorSet:%s passiveSet:%s allSet:%s',initActiveLength,initPassiveLenght,initLength)
 
-        if not byass:
+        if not bias:
             finalPassiveSet=int(initLength)/2
             finalActiveSet=initLength-finalPassiveSet
         else:
             finalActiveSet=int(initLength)/2
             finalPassiveSet=initLength-finalActiveSet
+
+        return finalActiveSet,finalPassiveSet
+
+    def _performSwap(self,initEnergy,bias=0):
+        partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
+        availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
+
+        finalActiveSet, finalPassiveSet=self.calculateFinalTablesSizes(partnerSet,self.partnerTable,bias)
 
         self.log.warning('finailinitiatorSet:%s finalpassiveSet:%s ',finalActiveSet,finalPassiveSet)
 
@@ -529,7 +564,6 @@ class SubOverlay(Overlay):
 
         swapActiveLenght=finalActiveSet-len(activeUnavailablePeers)
         swapPassiveLenght=finalPassiveSet-len(passiveUnavailablePeers)
-        # swapLenght=initLength-len(activeUnavailablePeers)-len(passiveUnavailablePeers)
         swapLenght=swapActiveLenght+swapPassiveLenght
 
         self.log.warning('finalAtctiveSwapSet:%s finalPassiveSwapSet:%s ',swapActiveLenght,swapPassiveLenght)
@@ -547,7 +581,7 @@ class SubOverlay(Overlay):
             finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
             return (newTable,newPartnerTable,finalHoodEnergy)
         elif swapActiveLenght==0 and swapPassiveLenght!=0:
-            newTable=activeUnavailablePeers+[self.passiveInitPeer]
+            newTable=self.constructFinalInitiatorTable(activeUnavailablePeers)
             newPartnerTable=passiveUnavailablePeers+availablePeers
             self.log.warning('all available peers goes to passive')
 
@@ -561,7 +595,8 @@ class SubOverlay(Overlay):
             finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
             return (newTable,newPartnerTable,finalHoodEnergy)
         elif swapActiveLenght!=0 and swapPassiveLenght==0:
-            newTable=activeUnavailablePeers+availablePeers+[self.passiveInitPeer]
+            self.log.warning('all available peers goes to passive')
+            newTable=self.constructFinalInitiatorTable(activeUnavailablePeers+availablePeers)
             newPartnerTable=passiveUnavailablePeers
             self.log.warning('all available peers goes to active')
 
@@ -648,7 +683,7 @@ class SubOverlay(Overlay):
         self.log.warning('new %s',newActiveTable)
         self.log.warning('passive unavailable %s',passiveUnavailablePeers)
         self.log.warning('new passive %s',newPassiveTable)
-        newTable=newActiveTable+activeUnavailablePeers+[self.passiveInitPeer]
+        newTable=constructFinalInitiatorTable(newActiveTable+activeUnavailablePeers)
         self.log.warning('passive init %s',self.passiveInitPeer)
         self.log.warning('new final %s',newTable)
         newPartnerTable=newPassiveTable+passiveUnavailablePeers
@@ -657,7 +692,7 @@ class SubOverlay(Overlay):
         finalHoodEnergy=self.getCustomEnergy(newTable)+self.getCustomPassiveEnergy(newPartnerTable)
         # if int(1000*initEnergy)<int(1000*finalHoodEnergy):
         #     self.log.error("%s %s"%(initEnergy,finalHoodEnergy))
-        #     self.log.error('%s\n'%byass)
+        #     self.log.error('%s\n'%bias)
         #     n=[-1,-2]+range(count)+[-3,-4]
         #     for i in n:
         #         for j in n:
@@ -666,6 +701,9 @@ class SubOverlay(Overlay):
         #     self.log.error('%s\n'%temp)
         #     self.log.error('%s\n'%flowDict)
         return (newTable,newPartnerTable,finalHoodEnergy)
+
+    def constructFinalInitiatorTable(self,table):
+        return table+[self.passiveInitPeer]
 
     ###SENDING FINAL TABLE TO PASSIVE
     def sendFinalTable(self,swapid):
@@ -816,10 +854,18 @@ class SubOverlay(Overlay):
     ###PASSIVE INITIATOR##############################
 
     ###RECEIVED ASK SWAP
+    def checkValidInitiator(self,peer):
+        return peer in self.getNeighbours()
+
+    def getInitialPassiveTable(self,peer):
+        neighs=[n for n in self.getNeighbours() if n!=peer]
+        return neighs
+
+
     def recAskSwap(self,peer,swapid):
         self.log.debug('received ask swap from %s',peer)
         print 'received ask swap from ',peer
-        if peer not in self.getNeighbours():
+        if not self.checkValidInitiator(peer):
             self.log.error('he is not my neighbor so rejecting the swap') ####need to chnage and take action
             RejectSwapMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,peer,self.controlPipe)
             return
@@ -839,8 +885,7 @@ class SubOverlay(Overlay):
             self.passiveInitiator=True
             self.initPeer=peer
             self.duringSwap=True
-            neighs=[n for n in self.getNeighbours()]
-            neighs.remove(peer)
+            neigh=self.getInitialPassiveTable(peer)
             self.swapState[swapid]={}
             self.swapState[swapid][ROLE]=PASSIVE
             self.swapState[swapid][PARTNER]=peer
@@ -898,12 +943,14 @@ class SubOverlay(Overlay):
         self.newTable=[p for p in table if p.isNeighbour]
         self.log.info('%s',self.newTable)
         self.initPeer.participateSwap=False
-        self.newTable.append(self.initPeer)
+        self.newTable=self.constructFinalPassiveTable(self.newTable)
         self.partnerPeer=self.initPeer
         for p in table:
             p.participateSwap=p.partnerParticipateSwap
         self.updateSatelites(swapid)
 
+    def constructFinalPassiveTable(self,table):
+        return table+[self.initPeer]
 
     ###SATELITES ########################################
 

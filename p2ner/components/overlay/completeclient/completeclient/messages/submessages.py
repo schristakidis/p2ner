@@ -36,7 +36,7 @@ class PeerListMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerInitiatorsMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -58,7 +58,7 @@ class AddNeighbourMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -87,7 +87,7 @@ class ConfirmNeighbourMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -108,7 +108,7 @@ class SuggestNewPeerMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -127,7 +127,7 @@ class SuggestMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 

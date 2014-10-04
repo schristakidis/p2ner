@@ -72,8 +72,8 @@ class OverlayManager(Overlay):
         if superPeer:
             print "I am a super PEERRRRRRRRRRRRRRRRRRRRRRRRRRR"
             self.subOverlays['super']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=True,interOverlay=False,_parent=self)
-            self.subOverlays['base']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=False,interOverlay=False,_parent=self)
         else:
+            self.subOverlays['base']=SubOverlay(self.superNumNeigh,self.swapFreq,superOverlay=False,interOverlay=False,_parent=self)
             print "just a normal peer"
 
 

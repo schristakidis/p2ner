@@ -24,7 +24,7 @@ class AskSwapMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerInitiatorsMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -41,7 +41,7 @@ class RejectSwapMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerInitiatorsMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -58,7 +58,7 @@ class AcceptSwapMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerInitiatorsMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -83,7 +83,7 @@ class AskLockMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -100,7 +100,7 @@ class AnswerLockMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -117,7 +117,7 @@ class SwapPeerListMessage(ControlMessage):
     ack = True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerInitiatorsMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -144,7 +144,7 @@ class SateliteMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
@@ -187,7 +187,7 @@ class AckUpdateMessage(ControlMessage):
     ack=True
 
     def trigger(self,message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 

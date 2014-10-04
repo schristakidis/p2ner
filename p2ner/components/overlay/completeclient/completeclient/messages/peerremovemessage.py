@@ -23,7 +23,7 @@ class ClientStoppedMessage(ControlMessage):
     ack = True
 
     def trigger(self, message):
-        if self.stream.id != message.streamid or self.superOverlay!=message.superOverlay or self.interOverlay!=message.interOverlay:
+        if self.stream.id != message.streamid or not self.subOverlay.checkTriggerMessage(message.superOverlay,message.interOverlay):
             return False
         return True
 
