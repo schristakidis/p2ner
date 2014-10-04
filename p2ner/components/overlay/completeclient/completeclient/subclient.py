@@ -122,12 +122,12 @@ class SubOverlay(Overlay):
 
     def checkTriggerMessage(self,mSuperOverlay,mInterOverlay):
         if not mInterOverlay:
-            return self.superOverlay==mSupperOverlay and self.interOverlay==mInterOverlay
+            return self.superOverlay==mSuperOverlay and self.interOverlay==mInterOverlay
         else:
-            return self.superOverlay!=mSupperOverlay and self.interOverlay==mInterOverlay
+            return self.superOverlay!=mSuperOverlay and self.interOverlay==mInterOverlay
 
     def checkTriggerInitiatorsMessage(self,mSuperOverlay,mInterOverlay):
-        return self.superOverlay==mSupperOverlay and mInterOverlay==self.interOverlay
+        return self.superOverlay==mSuperOverlay and mInterOverlay==self.interOverlay
 
 
     ##################################################
@@ -388,7 +388,7 @@ class SubOverlay(Overlay):
 
     def sendTable(self,swapid):
         self.log.debug('sending initial routing table to passive initiator %s',self.passiveInitPeer)
-        neighs=getInitialSwapTable()
+        neighs=self.getInitialSwapTable()
         self.swapState[swapid][STATE]=WAIT_LOCKS_UTABLE
         self.swapState[swapid][MSGS]={}
         self.swapState[swapid][MSGS][self.passiveInitPeer]=reactor.callLater(4,self.checkStatus,swapid,self.passiveInitPeer)
@@ -683,7 +683,7 @@ class SubOverlay(Overlay):
         self.log.warning('new %s',newActiveTable)
         self.log.warning('passive unavailable %s',passiveUnavailablePeers)
         self.log.warning('new passive %s',newPassiveTable)
-        newTable=constructFinalInitiatorTable(newActiveTable+activeUnavailablePeers)
+        newTable=self.constructFinalInitiatorTable(newActiveTable+activeUnavailablePeers)
         self.log.warning('passive init %s',self.passiveInitPeer)
         self.log.warning('new final %s',newTable)
         newPartnerTable=newPassiveTable+passiveUnavailablePeers
@@ -885,7 +885,7 @@ class SubOverlay(Overlay):
             self.passiveInitiator=True
             self.initPeer=peer
             self.duringSwap=True
-            neigh=self.getInitialPassiveTable(peer)
+            neighs=self.getInitialPassiveTable(peer)
             self.swapState[swapid]={}
             self.swapState[swapid][ROLE]=PASSIVE
             self.swapState[swapid][PARTNER]=peer
