@@ -130,6 +130,9 @@ class SuperInterOverlay(SubClient):
     def constructFinalPassiveTable(self,table):
         return table
 
+    def clearInitPeerParticipateSwap(self):
+        return
+
 
     def suggestNewPeer(self,peer,neighs):
         avNeighs=[p for p in self.getSuperNeighbours() if p!=peer and p not in neighs]

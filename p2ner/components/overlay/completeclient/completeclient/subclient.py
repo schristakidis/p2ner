@@ -944,12 +944,15 @@ class SubOverlay(Overlay):
         self.log.info('%s',table)
         self.newTable=[p for p in table if p.isNeighbour]
         self.log.info('%s',self.newTable)
-        self.initPeer.participateSwap=False
+        self.clearInitPeerParticipateSwap()
         self.newTable=self.constructFinalPassiveTable(self.newTable)
         self.partnerPeer=self.initPeer
         for p in table:
             p.participateSwap=p.partnerParticipateSwap
         self.updateSatelites(swapid)
+
+    def clearInitPeerParticipateSwap(self):
+        self.initPeer.participateSwap=False
 
     def constructFinalPassiveTable(self,table):
         return table+[self.initPeer]
