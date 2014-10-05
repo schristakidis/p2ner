@@ -75,9 +75,9 @@ class BaseInterOverlay(SubClient):
             self.log.warning("empty initial neighbours list. Will ask again")
             return
         else:
-            if self.askInitLoopingCall.running():
+            if self.askInitLoopingCall.running:
                 self.askInitLoopingCall.stop()
-        super(SubClient,self).checkSendAddNeighbour(peer,originalPeer)
+        super(BaseInterOverlay,self).checkSendAddNeighbour(peer,originalPeer)
 
     def removeNeighbour(self, peer):
         if self.duringSwap:

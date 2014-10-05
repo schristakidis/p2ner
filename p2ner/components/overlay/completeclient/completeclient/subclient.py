@@ -482,10 +482,13 @@ class SubOverlay(Overlay):
         return initLength%2!=0
 
 
+    def setPassiveParticipateSwap(self):
+        self.passiveInitPeer.participateSwap=False
+
     def performSwap(self,swapid):
         self.swapState[swapid][STATE]=PERFORM_SWAP
         initialHoodEnergy=self.getCustomEnergy(self.getNeighbours())+self.getCustomPassiveEnergy(self.partnerTable)
-        self.passiveInitPeer.participateSwap=False
+        self.setPassiveParticipateSwap()
 
         partnerSet=[p for p in self.getNeighbours() if p!=self.passiveInitPeer]
         availablePeers=[p for p in partnerSet+self.partnerTable if p.participateSwap or p.partnerParticipateSwap]
@@ -1261,6 +1264,8 @@ class SubOverlay(Overlay):
                 raise SwapError('in update message. Peer is already my neighbor',peer,swapid,state,self.swapState)
 
 
+    # probably need to take more actions like resetting all swap flags
+    # !!!!!!!!!!!!!!!!!!!
     def cleanSwapState(self,swapid):
         try:
             temp=self.swapState.pop(swapid)

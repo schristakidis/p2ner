@@ -94,6 +94,9 @@ class SuperInterOverlay(SubClient):
     def constructFinalInitiatorTable(self,table):
         return table
 
+    def setPassiveParticipateSwap(self):
+        return
+
     def checkExecuteSwapTwice(self,initiatorTable,passiveTable):
         initActiveLength=len(initiatorTable)
         initPassiveLenght=len(passiveTable)
