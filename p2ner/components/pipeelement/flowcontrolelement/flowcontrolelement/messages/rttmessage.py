@@ -23,15 +23,15 @@ class RTTMessage(ControlMessage):
     type = "rttmessage"
     code = MSG.RTT
     ack = False
-    
+
     def initMessage(self, *args, **kwargs):
-        self.interface.registerStat('sendBw')
-        self.interface.registerStat('rtt')
-        self.interface.registerStat('drtt')
-        self.interface.registerStat('recBw')
-        self.interface.registerStat('blockSize')
+        # self.interface.registerStat('sendBw')
+        # self.interface.registerStat('rtt')
+        # self.interface.registerStat('drtt')
+        # self.interface.registerStat('recBw')
+        # self.interface.registerStat('blockSize')
         self.serialCount=-1
-        
+
     def trigger(self, message):
         return True
 
@@ -39,11 +39,11 @@ class RTTMessage(ControlMessage):
         if message.blockId<self.serialCount:
             print 'received out of sunc rtt message ',message.blockId,self.serialCount
             self.serialCount=message.blockId
-            
+
         peer.rtt1=time.time()-message.rtt
         peer.rtt2=time.time()-message.lrtt
         #print peer.rtt1,peer.rtt2,peer.rtt2-peer.rtt1
-        
+
         """
         if peer.rtt2>1.2*peer.rtt1:
             peer.decreaseBw=True
@@ -57,18 +57,18 @@ class RTTMessage(ControlMessage):
                 peer.bw=2*message.sendrate
             #print 'INCREASING BW from ',message.sendrate,' to ',peer.bw,' for ',peer
          """
-        
-        self.interface.setStat('sendBw',peer.bw,time.time())  
-        self.interface.setStat('rtt',peer.rtt1,time.time())  
-        self.interface.setStat('drtt',peer.rtt2-peer.rtt1,time.time())  
-        self.interface.setStat('recBw',message.rate,time.time())  
-        self.interface.setStat('blockSize',message.size,time.time())  
-        
+
+        self.interface.setStat('sendBw',peer.bw,time.time())
+        self.interface.setStat('rtt',peer.rtt1,time.time())
+        self.interface.setStat('drtt',peer.rtt2-peer.rtt1,time.time())
+        self.interface.setStat('recBw',message.rate,time.time())
+        self.interface.setStat('blockSize',message.size,time.time())
+
         #peer.bw=peer.bw*1000
-        
-         
-            
-        """    
+
+
+
+        """
         peer.rtt=time.time()-message.rtt-1400/peer.bw
         if peer.rtt<0:
             peer.rtt=0.001
@@ -76,7 +76,7 @@ class RTTMessage(ControlMessage):
         peer.meanRtt=peer.meanRtt[-10:]
         #if time.time()-message.rtt>1.2*peer.rtt:
         #    print 'dddddddddddddddddddddd ',time.time()-message.rtt,peer.rtt,peer.meanRtt
-        
+
         print 'rttt::::::',peer.rtt
         print time.time(),message.rtt,1400/peer.bw,peer.bw
         if message.rate<0.70*message.sendrate:
@@ -98,11 +98,11 @@ class RTTMessage(ControlMessage):
                 peer.bw=1.1*message.sendrate
             else:
                 peer.bw=2*message.sendrate
-            print 'INCREASING BW from ',message.sendrate,' to ',peer.bw,' for ',peer 
-        
-     
-        peer.bw=peer.bw*1000    
-        
+            print 'INCREASING BW from ',message.sendrate,' to ',peer.bw,' for ',peer
+
+
+        peer.bw=peer.bw*1000
+
         meanRtt=0
         for r in peer.meanRtt:
             meanRtt +=r

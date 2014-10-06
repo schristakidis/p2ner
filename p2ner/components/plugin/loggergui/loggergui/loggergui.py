@@ -18,6 +18,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from twisted.internet import task,reactor
+from twisted.internet import task,reactor
 from pkg_resources import resource_string
 from p2ner.abstract.ui import UI
 
@@ -94,23 +95,29 @@ class LoggerGui(UI):
 
         self.tview.show()
 
+
         self.tfilter=self.tmodel.filter_new()
         self.tfilter.set_visible_func(self.filterFunc)
 
         self.tview.set_model(self.tfilter)
 
+        self.pauseButton=self.builder.get_object('pauseButton')
+
         levelsBox=self.builder.get_object('levelsBox')
         levelsCombobox = gtk.combo_box_new_text()
+        self.levelsCombobox=levelsCombobox
+
+        streamsBox=self.builder.get_object('streamsBox')
+        self.streamsCombobox = gtk.combo_box_new_text()
+
         levelsBox.pack_start(levelsCombobox,True,True,0)
         levelsCombobox.show()
 
         for level in levels.keys():
             levelsCombobox.append_text(level)
-        levelsCombobox.connect('changed',self.setLevel)
         levelsCombobox.set_active(1)
+        levelsCombobox.connect('changed',self.setLevel)
 
-        streamsBox=self.builder.get_object('streamsBox')
-        self.streamsCombobox = gtk.combo_box_new_text()
         streamsBox.pack_start(self.streamsCombobox,True,True,0)
         self.streamsCombobox.show()
 
@@ -120,6 +127,8 @@ class LoggerGui(UI):
         self.streamsCombobox.set_active(0)
         self.streamsCombobox.connect('changed',self.setStream)
 
+        self.levelsCombobox.set_sensitive(False)
+        self.streamsCombobox.set_sensitive(False)
         self.createMenu()
 
 
@@ -185,18 +194,49 @@ class LoggerGui(UI):
         active = combobox.get_active()
         self.level=model[active][0]
         self.filters['level']=model[active][0]
-        self.tfilter.refilter()
+        self.customRefilter()
+
+    def customRefilter(self):
+        self.levelsCombobox.set_sensitive(False)
+        self.streamsCombobox.set_sensitive(False)
+        self.pauseButton.set_sensitive(False)
+        iter=self.tmodel.get_iter_first()
+        count=0
+        while iter:
+            reactor.callLater(0.1*(count/100),self.tmodel.row_changed,self.tmodel.get_path(iter),iter)
+            iter=self.tmodel.iter_next(iter)
+            count+=1
+        reactor.callLater(0.1*(count/100),self.levelsCombobox.set_sensitive,True)
+        reactor.callLater(0.1*(count/100),self.streamsCombobox.set_sensitive,True)
+        reactor.callLater(0.1*(count/100),self.pauseButton.set_sensitive,True)
+
 
     def setStream(self,combobox):
         model = combobox.get_model()
         active = combobox.get_active()
         self.filters['log']=model[active][0]
-        self.tfilter.refilter()
+        self.customRefilter()
 
     def getLogEntries(self):
         self.interface.getLogRecords(self.updateView)
 
     def updateView(self,records):
+        if not records:
+            return
+        try:
+            self.loopingCall.stop()
+        except:
+            pass
+        subRecords=[records[x:x+100] for x in range(0,len(records),100)]
+        count=0
+        for r in subRecords:
+            reactor.callLater(count*0.1,self._updateView,r)
+            count+=1
+        reactor.callLater(count*0.1,self.loopingCall.start,self.frequency)
+
+
+
+    def _updateView(self,records):
         if not records:
             return
         for r in records:
@@ -206,17 +246,21 @@ class LoggerGui(UI):
             self.tmodel.append((r['ip'],r['port'],r['level'],r['log'],r['time'],r['epoch'],r['msecs'],r['module'],r['func'],r['lineno'],r['msg'],clr,'white','white'))
             if r['log'] not in self.loggers:
                 self.addLogger(r['log'])
-            if len(self.tfilter):
-                self.tview.scroll_to_cell(self.tfilter[-1].path)
+        if len(self.tfilter):
+            self.tview.scroll_to_cell(self.tfilter[-1].path)
         return
 
 
     def on_pauseButton_clicked(self,widget):
         label=widget.get_label()
         if label=='Pause':
+            self.levelsCombobox.set_sensitive(True)
+            self.streamsCombobox.set_sensitive(True)
             widget.set_label('Start')
             self.loopingCall.stop()
         else:
+            self.levelsCombobox.set_sensitive(False)
+            self.streamsCombobox.set_sensitive(False)
             widget.set_label('Pause')
             self.loopingCall.start(self.frequency)
 
