@@ -19,7 +19,7 @@ from p2ner.abstract.overlay import Overlay
 from messages.requeststream import RequestStreamMessage,AskInitNeighsMessage,AskServerForStatus
 from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage, StartRemoteMessage
 from messages.messageobjects import PeerListMessage, StreamMessage,PeerListProducerMessage,SuggestNewPeerMessage,SuggestMessage,ReturnPeerStatus
-from messages.startstopclient import ClientStoppedMessage
+from messages.startstopclient import ClientStoppedMessage,ClientDied
 from p2ner.core.components import loadComponent
 from random import choice,shuffle
 
@@ -36,6 +36,7 @@ class DistServer(Overlay):
         self.messages.append(SuggestNewPeerMessage())
         self.messages.append(AskInitNeighsMessage())
         self.messages.append(AskServerForStatus())
+        self.messages.append(ClientDied())
 
     def initOverlay(self, producer, stream):
         self.log=self.logger.getLoggerChild(('s'+str(stream.id)),self.interface)

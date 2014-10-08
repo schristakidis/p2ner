@@ -16,7 +16,7 @@
 
 from p2ner.abstract.overlay import Overlay
 from messages.peerlistmessage import AddProducerMessage
-from messages.peerremovemessage import ClientStoppedMessage
+from messages.peerremovemessage import ClientStoppedMessage,ClientDied
 from twisted.internet import reactor
 
 class CentralClient(Overlay):
@@ -25,6 +25,7 @@ class CentralClient(Overlay):
         self.messages = []
         self.messages.append(AddProducerMessage())
         self.messages.append(ClientStoppedMessage())
+        self.messages.append(ClientDied())
 
     def initOverlay(self):
         self.log.info('initing producer overlay')

@@ -21,7 +21,7 @@ class ClientStoppedMessage(ControlMessage):
     type = "sidmessage"
     code = MSG.CLIENT_STOPPED
     ack = True
-    
+
     def trigger(self, message):
         return message.streamid == self.stream.id
 
@@ -39,3 +39,26 @@ class ClientStoppedMessage(ControlMessage):
                 print self.knownPeers
                 self.log.debug('remove %s from known peers',peer)
                 self.knownPeers.remove(peer)
+
+class ClientDied(ControlMessage):
+    type = "peerlistmessage"
+    code = MSG.CLIENT_DIED
+    ack = True
+
+    def trigger(self, message):
+        return message.streamid == self.stream.id
+
+    def action(self, message, peer):
+        for p in message.peer:
+            self.log.debug('received clientDied message for %s from %s',p,peer)
+            self.overlay.removeNeighbour(p)
+            found=False
+            for ov in self.overlays.values():
+                if ov.isNeighbour(p):
+                    found=True
+                    break
+            if not found and p in self.knownPeers:
+                print 'removing ',p,' from known peers'
+                print self.knownPeers
+                self.log.debug('remove %s from known peers',p)
+                self.knownPeers.remove(p)

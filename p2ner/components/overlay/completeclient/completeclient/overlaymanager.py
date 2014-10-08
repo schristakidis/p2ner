@@ -18,7 +18,7 @@ import sys
 from p2ner.abstract.overlay import Overlay
 from messages.producermessage import *
 from messages.bootstrapmessages import *
-from messages.peerremovemessage import InformClientStoppedMessage
+from messages.peerremovemessage import InformClientStoppedMessage,ClientDied
 from messages.vizirmessages import *
 from twisted.internet import task,reactor,defer
 from random import choice,uniform
@@ -26,6 +26,7 @@ from bwmeasurement import FlowBwMeasurement
 from subclient import SubOverlay
 from superintersubclient import SuperInterOverlay
 from baseintersubclient import BaseInterOverlay
+from time import time
 
 class OverlayManager(Overlay):
 
@@ -51,6 +52,9 @@ class OverlayManager(Overlay):
         self.superNumNeigh=self.stream.overlay['superNumNeigh']
         self.interNumNeigh=self.stream.overlay['interNumNeigh']
         self.swapFreq=self.stream.overlay['swapFreq']
+
+        self.loopingCall=task.LoopingCall(self.checkAlive)
+        self.loopingCall.start(1)
 
         self.capacity=self.trafficPipe.callSimple('getReportedCap')
         if self.capacity:
@@ -164,3 +168,11 @@ class OverlayManager(Overlay):
 
     def removeNeighbour(self):
         pass
+
+    def checkAlive(self):
+        for ov in self.subOverlays.values():
+            for p in ov.getNeighbours():
+                if time()-p.lastMessageTime>2:
+                    ov.neighbourDead(p)
+                    ClientDied.send(self.stream.id,[p],self.server,self.controlPipe)
+                    ClientDied.send(self.stream.id,[p],self.producer,self.controlPipe)

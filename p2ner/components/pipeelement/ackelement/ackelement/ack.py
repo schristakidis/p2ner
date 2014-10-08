@@ -69,6 +69,7 @@ class AckElement(PipeElement):
 
 
     def receive(self, header, message, peer, recTime):
+        peer.lastMessageTime=time()
         if header.code == MSG.ACK:
             if header.seq in self.cache:
                 """

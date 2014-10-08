@@ -1345,3 +1345,10 @@ class SubOverlay(Overlay):
         if not running:
             for p in self.getNeighbours():
                 PingSwapMessage.send(p,self.controlPipe)
+
+
+    ############# NEIGHBOUR DIED ################
+    def neighbourDead(self,peer):
+        self.log.error("%s DIED"%peer)
+        self.removeNeighbour(peer)
+

@@ -45,3 +45,14 @@ class InformClientStoppedMessage(BaseControlMessage):
     @classmethod
     def send(cls, sid, peer, out):
         return out.send(cls, Container(streamid=sid), peer).addErrback(trap_sent)
+
+
+class ClientDied(BaseControlMessage):
+    type = "peerlistmessage"
+    code = MSG.CLIENT_DIED
+    ack = True
+
+
+    @classmethod
+    def send(cls, sid, peerlist, peer, out):
+        return out.send(cls, Container(streamid=sid, peer=peerlist), peer).addErrback(trap_sent)

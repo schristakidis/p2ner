@@ -31,4 +31,15 @@ class ClientStoppedMessage(ControlMessage):
         self.log.debug('received client stopped message from %s',peer)
         self.overlay.removeNeighbour(peer)
 
-    
+class ClientDied(ControlMessage):
+    type = "peerlistmessage"
+    code = MSG.CLIENT_DIED
+    ack = True
+
+    def trigger(self, message):
+        return message.streamid == self.stream.id
+
+    def action(self, message, peer):
+        for p in message.peer:
+            self.log.debug('received clientDied message for %s from %s',p,peer)
+            self.overlay.removeNeighbour(p)
