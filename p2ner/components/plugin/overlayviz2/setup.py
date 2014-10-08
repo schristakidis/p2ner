@@ -16,8 +16,7 @@
 
 from setuptools import setup
 
-__component_name__ = "OverlayVizOld"
-__component_name2__ = "OverlayViz"
+__component_name__ = "OverlayViz"
 __author__ = "Sakis Christakiidis"
 __author_email__ = "schristakidis@ece.upatras.gr"
 __version__ = "0.1"
@@ -47,18 +46,18 @@ setup(
     license=__license__,
     long_description=__long_description__ if __long_description__ else __description__,
 
-    packages=[__component_name2__.lower(), __component_name2__.lower() + ".messages"],
+    packages=[__component_name__.lower(), __component_name__.lower() + ".messages"],
     package_data = __pkg_data__,
 
     entry_points=
                   """
                   [p2ner.components.plugin]
                   %s=%s:%s
-                  VizNetInterfaceOld=%s:VizNetInterface
-                  VizXMLInterfaceOld=%s:VizXMLInterface
-                  """%((__component_name__, __component_name2__.lower(), __component_name2__,__component_name2__.lower(),__component_name2__.lower()))
+                  VizNetInterface=%s:VizNetInterface
+                  VizXMLInterface=%s:VizXMLInterface
+                  """%((__component_name__, __component_name__.lower(), __component_name__,__component_name__.lower(),__component_name__.lower()))
 )
 
 
-
+                                             
 

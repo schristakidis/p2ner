@@ -27,6 +27,8 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         self.logger=DatabaseLog(_parent=self,server=True)
         print 'should register to ',kwargs['vizirIP'],kwargs['vizirPort']
         url="http://"+kwargs['vizirIP']+':'+str(kwargs['vizirPort'])+"/XMLRPC"
+        self.vip=kwargs['vizirIP']
+        self.vport=kwargs['vizirPort']
         self.proxy=Proxy(url)
 
 
@@ -35,7 +37,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         p=findNextTCPPort(9090)
         print p
         reactor.listenTCP(p, server.Site(self))
-        self.register(getIP()[0], p)
+        self.register(getIP(self.vip,self.vport)[0], p)
 
 
     def register(self,ip,port):

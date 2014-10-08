@@ -27,6 +27,7 @@ from subclient import SubOverlay
 from superintersubclient import SuperInterOverlay
 from baseintersubclient import BaseInterOverlay
 from time import time
+from cPickle import dumps
 
 class OverlayManager(Overlay):
 
@@ -155,12 +156,6 @@ class OverlayManager(Overlay):
             ov.toggleSwap(stop)
 
 
-    def getVizirStats(self):
-        ret=(self.tempSwaps,time()-self.tempLastSwap,self.tempSatelites,time()-self.tempLastSatelite)
-        self.tempSwaps=0
-        self.tempSatelites=0
-        return ret
-
 
     #because an overlay is supposed to have these methods
     def addNeighbour(self):
@@ -176,3 +171,35 @@ class OverlayManager(Overlay):
                     ov.neighbourDead(p)
                     ClientDied.send(self.stream.id,[p],self.server,self.controlPipe)
                     ClientDied.send(self.stream.id,[p],self.producer,self.controlPipe)
+
+    ######### VIZIR FUNCTIONS################
+    def getVizirNeighbours(self):
+        ret={}
+        if self.superPeer:
+            ret['0']=0
+            ret['1']={}
+            ret['1']['neighs']=[dumps(p) for p in self.subOverlays['super'].getNeighbours()]
+            ret['1']['stats']=self.subOverlays['super'].getVizirStats()
+            ret['1']['energy']=self.subOverlays['super'].getEnergy()
+
+            ret['2']={}
+            ret['2']['neighs']=[dumps(p) for p in self.subOverlays['superInter'].getNeighbours()]
+            ret['2']['stats']=self.subOverlays['superInter'].getVizirStats()
+            ret['2']['energy']=self.subOverlays['superInter'].getEnergy()
+        else:
+            ret['1']=0
+            ret['0']={}
+            ret['0']['neighs']=[dumps(p) for p in self.subOverlays['base'].getNeighbours()]
+            ret['0']['stats']=self.subOverlays['base'].getVizirStats()
+            ret['0']['energy']=self.subOverlays['base'].getEnergy()
+
+            ret['2']={}
+            ret['2']['neighs']=[dumps(p) for p in self.subOverlays['baseInter'].getNeighbours()]
+            ret['2']['stats']=self.subOverlays['baseInter'].getVizirStats()
+            ret['2']['energy']=self.subOverlays['baseInter'].getEnergy()
+
+        return ret
+
+
+
+

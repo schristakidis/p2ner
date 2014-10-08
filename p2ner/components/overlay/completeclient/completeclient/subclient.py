@@ -1333,6 +1333,8 @@ class SubOverlay(Overlay):
         for p in self.getNeighbours():
             if not p.checked:
                 self.log.error('problem in validating %s',p)
+            else:
+                self.log.error('all good')
 
     def returnNeighs(self,peer):
         ReturnNeighsMessage.send(self.stream.id,self.neighbours,peer,self.controlPipe)

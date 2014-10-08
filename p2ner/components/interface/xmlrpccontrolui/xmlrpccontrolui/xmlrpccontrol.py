@@ -317,11 +317,7 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
 
     def xmlrpc_getNeighbours(self,id):
         strm=self.root.getStream(id)
-        neighs=strm['overlay'].getNeighbours()
-        ret=[dumps(p) for p in neighs]
-        en=strm['overlay'].getEnergy()
-        stats=strm['overlay'].getVizirStats()
-        return (ret,en,stats)
+        return strm['overlay'].getVizirNeighbours()
 
     def xmlrpc_stopSwapping(self,stop,id):
         strm=self.root.getStream(id)

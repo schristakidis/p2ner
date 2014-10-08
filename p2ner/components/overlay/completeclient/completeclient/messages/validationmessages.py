@@ -33,7 +33,7 @@ class ValidateNeighboursMessage(ControlMessage):
 
     @classmethod
     def send(cls, sid,sover,iover, peer, out):
-        d=out.send(cls, Container(streamid = sid, superOVerlay=sover, interOverlay=iover), peer)
+        d=out.send(cls, Container(streamid = sid, superOverlay=sover, interOverlay=iover), peer)
         d.addErrback(trap_sent)
         return d
 

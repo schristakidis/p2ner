@@ -54,8 +54,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')()
-        self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
-        self.plotter=loadComponent('plugin','VizirPlotter')(_parent=self)
+        # self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
+        # self.plotter=loadComponent('plugin','VizirPlotter')(_parent=self)
         self.constructGui()
 
 
@@ -80,7 +80,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         setUploadBW.connect("clicked", self.setUploadBW)
         startProducer.connect("clicked", self.startProducing)
         showOverlay.connect("clicked", self.showOverlay)
-        showLog.connect('clicked',self.logger.start)
+        # showLog.connect('clicked',self.logger.start)
         swapButton.connect('clicked',self.swapToggle)
         statsButton.connect('clicked',self.getStats)
         self.win.set_title("VizEW - Control Center")
