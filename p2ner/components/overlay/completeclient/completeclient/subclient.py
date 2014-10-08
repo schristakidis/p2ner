@@ -347,6 +347,7 @@ class SubOverlay(Overlay):
             print e.message
             print e.peer
             print e.swapSnapshot
+            self.log.error(e.message)
             self.cleanSwapState(swapid)
             return
 
@@ -362,6 +363,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             self.cleanSwapState(swapid)
@@ -426,6 +428,7 @@ class SubOverlay(Overlay):
             self.validateSateliteMessage(peer,swapid,WAIT_LOCKS_UTABLE)
         except SwapError as e:
             print 'errorrrr'
+            self.log.error(e.message)
             print e.message
             print e.peer
             print e.swapSnapshot
@@ -463,6 +466,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             return
@@ -781,6 +785,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             self.cleanSwapState(swapid)
@@ -791,22 +796,23 @@ class SubOverlay(Overlay):
         self.checkFinishSwap(swapid)
 
     def cleanSatelites(self,swapid):
-        available=[p for p in self.newTable if p.participateSwap]
-        self.log.warning('in clean satelites')
-        if not available:
-            self.finishSwap(swapid)
-            return
+        # available=[p for p in self.newTable if p.participateSwap]
+        # available=[p for p in self.partnerTable if p.participateSwap]
+        # self.log.warning('in clean satelites')
+        # if not available:
+        #     self.finishSwap(swapid)
+        #     return
 
-        inpeer,port=self.root.checkNatPeer()
-        bw=min(65535,int(self.trafficPipe.callSimple('getReportedCap')))
+        # inpeer,port=self.root.checkNatPeer()
+        # bw=min(65535,int(self.trafficPipe.callSimple('getReportedCap')))
 
-        for p in available:
-            p.participateSwap=False
-            p.swapAction=CONTINUE
-            inform=None
-            CleanSateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
-            self.log.debug('sending clean update satelite to %s',p)
-            print 'sending clean update satelite to ',p,' with action ',p.swapAction
+        # for p in available:
+        #     p.participateSwap=False
+        #     p.swapAction=CONTINUE
+        #     inform=None
+        #     CleanSateliteMessage.send(self.stream.id,self.superOverlay,self.interOverlay,swapid,p.swapAction,self.partnerPeer,inform,p,self.controlPipe)
+        #     self.log.debug('sending clean update satelite to %s',p)
+        #     print 'sending clean update satelite to ',p,' with action ',p.swapAction
 
 
         self.cleanSwapState(swapid)
@@ -814,7 +820,6 @@ class SubOverlay(Overlay):
         self.initiator=False
         self.passiveInitiator=False
         self.duringSwap=False
-        self.swapState.pop(swapid)
         self.addDuringSwapNeighbours()
         if self.shouldStop:
             self._stop()
@@ -904,6 +909,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             self.cleanSwapState(swapid)
@@ -935,6 +941,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             return
@@ -1005,6 +1012,7 @@ class SubOverlay(Overlay):
         except SwapError as e:
             print 'errorrrr'
             print e.message
+            self.log.error(e.message)
             print e.peer
             print e.swapSnapshot
             #should do clean up work
@@ -1270,12 +1278,18 @@ class SubOverlay(Overlay):
     # probably need to take more actions like resetting all swap flags
     # !!!!!!!!!!!!!!!!!!!
     def cleanSwapState(self,swapid):
+        temp=None
         try:
             temp=self.swapState.pop(swapid)
-            for v in temp[MSGS].values():
-                v.cancel()
         except:
             self.log.error('swapid:%d not in swap state:%s in cleanSwapState',swapid,self.swapState)
+
+        if temp:
+            try:
+                for v in temp[MSGS].values():
+                    v.cancel()
+            except:
+                self.log.error('problem in canceling actions in cleanSwapState')
 
     def actionCompleted(self,swapid,peer):
         action=self.swapState[swapid][MSGS].pop(peer)
