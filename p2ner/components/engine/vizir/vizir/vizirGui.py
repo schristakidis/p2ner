@@ -54,7 +54,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
 
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')()
-        # self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
+        self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
         # self.plotter=loadComponent('plugin','VizirPlotter')(_parent=self)
         self.constructGui()
 
@@ -80,7 +80,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         setUploadBW.connect("clicked", self.setUploadBW)
         startProducer.connect("clicked", self.startProducing)
         showOverlay.connect("clicked", self.showOverlay)
-        # showLog.connect('clicked',self.logger.start)
+        showLog.connect('clicked',self.logger.start)
         swapButton.connect('clicked',self.swapToggle)
         statsButton.connect('clicked',self.getStats)
         self.win.set_title("VizEW - Control Center")
@@ -94,7 +94,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.win.show_all()
 
     def on_win_destroy(self,*args):
-        self.plotter.destroy()
+        # self.plotter.destroy()
         reactor.stop()
 
     def formatview(self):
@@ -548,6 +548,22 @@ class vizirGui(UI,xmlrpc.XMLRPC):
     def getStats(self,widget):
         self.plotter.toggle()
         return
+
+    def removePeer(self,ip,port):
+        print 'should remove peer'
+        print ip,port
+        it=None
+        iterator = self.treemodel.get_iter_first()
+        while iterator:
+            if self.treemodel.get_value(iterator, 0)==ip and self.treemodel.get_value(iterator,1)==port:
+                it=iterator
+                break
+            else:
+                iterator = self.treemodel.iter_next(iterator)
+
+        if it:
+            self.treemodel.remove(it)
+
 
 def startVizirGui():
     from twisted.internet import reactor

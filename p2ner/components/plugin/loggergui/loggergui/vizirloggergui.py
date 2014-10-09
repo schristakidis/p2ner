@@ -50,6 +50,9 @@ class VizirLoggerGui(LoggerGui):
             self.ui.show()
             self.showing=True
 
+    def getLogEntries(self):
+        self.loopingCall.stop()
+
     def createSidePane(self):
         self.sidePane=self.builder.get_object('sidePane')
         self.builder.get_object('pauseButton').set_sensitive(False)
@@ -88,6 +91,9 @@ class VizirLoggerGui(LoggerGui):
 
         refreshButton=self.builder.get_object('refreshButton')
         refreshButton.connect('clicked',self.on_refreshButton_clicked)
+
+        self.levelsCombobox.set_sensitive(True)
+        self.streamsCombobox.set_sensitive(True)
 
     def on_refreshButton_clicked(self,widget):
         peers=self.root.getPeers()
@@ -144,6 +150,18 @@ class VizirLoggerGui(LoggerGui):
         self.tfilter.set_visible_func(self.filterFunc)
         self.tview.set_model(self.tfilter)
         return records
+
+    def customRefilter(self):
+        self.levelsCombobox.set_sensitive(False)
+        self.streamsCombobox.set_sensitive(False)
+        iter=self.tmodel.get_iter_first()
+        count=0
+        while iter:
+            reactor.callLater(0.1*(count/100),self.tmodel.row_changed,self.tmodel.get_path(iter),iter)
+            iter=self.tmodel.iter_next(iter)
+            count+=1
+        reactor.callLater(0.1*(count/100),self.levelsCombobox.set_sensitive,True)
+        reactor.callLater(0.1*(count/100),self.streamsCombobox.set_sensitive,True)
 
     def on_buttonpress(self, widget, event, model):
         try:

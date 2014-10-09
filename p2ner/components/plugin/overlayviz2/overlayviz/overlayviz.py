@@ -15,7 +15,6 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
-import pylab
 from twisted.internet import task
 import gtk
 from pkg_resources import resource_string
@@ -79,17 +78,28 @@ class OverlayViz(object):
 
             if final[ov]:
                 self.overlays[ov].makeGraph(final[ov])
+            else:
+                self.overlays[ov].makeEmptyGraph()
 
+    def pause(self,pause):
+        if pause:
+            if self.loopingCall.running:
+                self.loopingCall.stop()
+        else:
+            if not self.loopingCall.running:
+                self.loopingCall.start(5)
+        for ov in self.overlays.values():
+            ov.pause(pause)
 
-
-
+    def destroy(self):
+        for ov in self.overlays.values():
+            ov.destroy()
 
 
 class SubOverlayViz(object):
     def __init__(self,parent,name):
         self.parent=parent
 
-        self.fig=None
         self.builder = gtk.Builder()
         self.builder.add_from_string(resource_string(__name__, 'graphGui.glade'))
         self.builder.connect_signals(self)
@@ -193,6 +203,12 @@ class SubOverlayViz(object):
         self.stats=stats
 
 
+    def makeEmptyGraph(self):
+        self.g=nx.Graph()
+
+        self.drawPlot()
+        self.updateLegend()
+
     def makeGraph(self,final):
         self.g=nx.Graph()
         for k,p in final.items():
@@ -211,7 +227,7 @@ class SubOverlayViz(object):
     def drawPlot(self):
         a=nx.to_agraph(self.g)
         self.g=nx.from_agraph(a)
-        self.fig=pylab.figure()
+        fig=plt.figure()
         nx.draw_graphviz(self.g,prog='neato')
         plt.savefig("path.png")
 
@@ -227,8 +243,6 @@ class SubOverlayViz(object):
         lastSatelite=0
 
         for p,c in self.stats.items():
-            print p
-            print c
             swap=c[0]
             lastSwap=int(c[1])
             satelite=c[2]
@@ -242,16 +256,20 @@ class SubOverlayViz(object):
         self.window.resize(1,1)
 
     def on_pauseButton_clicked(self,widget):
-        return
-        print  widget.get_stock_id()
         if widget.get_stock_id()=='gtk-media-pause':
-            if self.loopingCall.running:
-                self.loopingCall.stop()
-                widget.set_stock_id('gtk-media-play')
+            pause=True
         else:
-            if not self.loopingCall.running:
-                self.loopingCall.start(5)
-                widget.set_stock_id('gtk-media-pause')
+            pause=False
+        self.parent.pause(pause)
+
+    def pause(self,pause):
+        widget=self.builder.get_object('pauseButton')
+        if pause:
+            widget.set_stock_id('gtk-media-play')
+        else:
+            widget.set_stock_id('gtk-media-pause')
+
+
 
     def addText(self,text):
         text +='\n'

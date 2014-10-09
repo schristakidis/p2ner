@@ -34,7 +34,16 @@ class VizXMLInterface(Interface):
             self.neighs[(ip,port)]['response']=False
             for ov in range(3):
                 self.neighs[(ip,port)][ov]={}
-            p.getNeighbours(self.id,ip,port,self.gotNeighs)
+            p.getNeighbours(self.id,ip,port,self.gotNeighs,self.failed)
+
+    def failed(self,err,ip,port):
+        del self.neighs[(ip,port)]
+        self.parent.removePeer(ip,port)
+        for p in self.neighs.values():
+            if not p['response']:
+                return
+        self.constructNeighs()
+
 
     def gotNeighs(self,neighs,ip,port):
         if self.neighs[(ip,port)]['response']:

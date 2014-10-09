@@ -29,7 +29,7 @@ class DatabaseLog(Interface):
             os.mkdir(os.path.join(userdatadir, "log"))
         dbname= os.path.join(get_user_data_dir(), "log",'vizir.db')
 
-        self.dbpool=adbapi.ConnectionPool('sqlite3',dbname)
+        self.dbpool=adbapi.ConnectionPool('sqlite3',dbname,check_same_thread=False)
         self.id=0
         self.lastId=0
         d=self.deleteDB()
