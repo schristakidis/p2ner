@@ -199,8 +199,3 @@ class DBStats(Stats):
 
     def dumpStatValues(self,v):
         return dumps(v.values()[0])
-
-    def getStartTime(self):
-        if not self.startTime:
-            return 0
-        return self.startTime/100.0

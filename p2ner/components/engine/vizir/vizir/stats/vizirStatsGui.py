@@ -121,7 +121,7 @@ class vizirStatsGui(statsGui.statsGui):
         self.pid+=1
 
     def getStats(self,stats,func):
-        self.statsController.getStats(self.parent,stats,func)
+        print 'not yet implemented for vizir system stats'
 
     def plotDestroyed(self,plot):
         if plot not in self.plots:

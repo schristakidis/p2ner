@@ -119,8 +119,6 @@ class PClient(Interface):
             self.sGui.ui_show()
 
     def getStatValue(self,stat,maxV,func):
-        if not self.statStartTime:
-            self.getStatStartTime()
         self.interface.getStatValue(stat,maxV,self,func)
 
     def getStatStartTime(self):

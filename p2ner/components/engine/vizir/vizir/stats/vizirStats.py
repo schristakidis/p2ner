@@ -25,6 +25,7 @@ from collections import deque
 from vizirStatsDB import DB as database
 from p2ner.abstract.plugin import Plugin
 from cPickle import loads
+import time
 
 class vizirStats(Plugin):
     def initPlugin(self, *args, **kwargs):
@@ -40,14 +41,12 @@ class vizirStats(Plugin):
         self.systemStats=[]
         self.systemPeers=[]
         self.lpb = -1
-        self.startTime=None
         self.db=database(dir)
         self.subscribers={}
         self.loop = task.LoopingCall(self.updateDatabase)
         self.loop.start(2.0)
         self.waitingStats={}
         self.waitingStatsCount=0
-        self.startTime=0
 
     def getSystemPeers(self):
         try:
@@ -102,6 +101,7 @@ class vizirStats(Plugin):
         records=[]
         ip=peer.getIP()
         port=peer.getPort()
+
         for v in value:
             r=[ip,port,stat[0],stat[1],stat[2]]+v
             records.append(r)
@@ -198,10 +198,6 @@ class vizirStats(Plugin):
 
 
     def constructSystemStats(self,stats,func,x):
-        if not self.startTime:
-            self.startTime=min([p.statStartTime for p in self.getSystemPeers()])
-
-
         if x=='time':
             i=2
         else:
@@ -209,12 +205,10 @@ class vizirStats(Plugin):
 
         dup={}
         allStats={}
-        helpStats={}
         if x=='lpb':
             for s,peer in stats.items():
                 dup[s]={}
                 allStats[s]={}
-                helpStats[s]={}
                 for p,val in peer.items():
                     dup[s][p]=[]
                     for v in val:
@@ -223,62 +217,22 @@ class vizirStats(Plugin):
                             if v[i] not in allStats[s].keys():
                                 allStats[s][v[i]]=[]
                             allStats[s][v[i]].append(v[0])
-                            helpStats[s][v[i]]=v[i]
 
         if x=='time':
             for s,peer in stats.items():
-                dup[s]={}
                 allStats[s]={}
-                helpStats[s]={}
+                t = None
                 for p,val in peer.items():
-                    first=None
-                    dup[s][p]=[]
-                    for v in val:
-                        v[i]=p.statStartTime-self.startTime+v[i]
-                        v[i]=round(int(v[i]))
-                        if v[i] not in dup[s][p]:
-                            dup[s][p].append(v[i])
-                            if v[i] not in allStats[s].keys():
-                                allStats[s][v[i]]=[]
-                            allStats[s][v[i]].append(v[0])
-                            helpStats[s][v[i]]=v[i]
-                        if not first:
-                            first=v[i]
-
-                        if v[i]-1 > first and (v[i]-1) not in dup[s][p]:
-                            dup[s][p].append(v[i])
-                            if v[i]-1 not in allStats[s].keys():
-                                allStats[s][v[i]-1 ]=[]
-                            allStats[s][v[i]-1].append(v[0])
-                            helpStats[s][v[i]-1]=v[i]-1
+                    v=val[-1]
+                    if not t:
+                        t=v[i]
+                        allStats[s][t]=[]
+                    allStats[s][t].append(v[0])
 
 
 
 
 
-
-        # if x=='time':
-        #     for s,peer in stats.items():
-        #         maxLen=max([len(v) for v in peer.values()])
-        #         allStats[s]={}
-        #         helpStats[s]={}
-        #         for p,val in peer.items():
-        #             curLen=len(val)
-        #             for pos in range(curLen):
-        #                 if maxLen-curLen+pos not in allStats[s].keys():
-        #                     allStats[s][maxLen-curLen+pos]=[]
-        #                 allStats[s][maxLen-curLen+pos].append(val[pos][0])
-        #                 if maxLen-curLen+pos not in helpStats[s].keys():
-        #                     helpStats[s][maxLen-curLen+pos]=val[pos][i]
-        #                 else:
-        #                     helpStats[s][maxLen-curLen+pos]=max(helpStats[s][maxLen-curLen+pos],val[pos][i])
-
-
-
-
-
-        print allStats
-        print helpStats
         ret={}
         for s in allStats.keys():
             s10=(s[0],s[1],s[2]+'10')
@@ -287,9 +241,8 @@ class vizirStats(Plugin):
             sav=(s[0],s[1],s[2]+'av')
             for suf in (s10,s50,s90,sav):
                 ret[suf]=[]
-            for j in sorted(allStats[s].keys()):
-                v=sorted(allStats[s][j])
-                i=helpStats[s][j]
+            for i in sorted(allStats[s].keys()):
+                v=sorted(allStats[s][i])
                 ret[s10].append([v[int(0.1*len(v))],i,i,i])
                 ret[s50].append([v[int(0.5*len(v))],i,i,i])
                 ret[s90].append([v[int(0.9*len(v))],i,i,i])

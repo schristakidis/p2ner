@@ -239,6 +239,3 @@ class Interface(Interface):
         d=self.proxy.callRemote("getVizirStatValue",stat,maxV)
         d.addCallback(func,peer,stat)
 
-    def getStatStartTime(self,func):
-        d=self.proxy.callRemote("getVizirStatStartTime")
-        d.addCallback(func)

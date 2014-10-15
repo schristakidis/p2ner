@@ -411,11 +411,4 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
                 d=s.getVizirStatValue(stat,maxV)
         return d
 
-    def xmlrpc_getVizirStatStartTime(self):
-        ret=0
-        for s in self.root.__stats__:
-            if 'db' in s:
-                ret=s.getStartTime()
-        print 'timeeeeeeeeeeEE:',ret
-        return ret
 
