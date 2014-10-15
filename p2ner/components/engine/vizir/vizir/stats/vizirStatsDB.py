@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #   Copyright 2012 Loris Corazza, Sakis Christakidis
 #
@@ -20,8 +21,8 @@ import os
 import time
 
 class DB(object):
-    def __init__(self, dir,port):
-        name='stats'+str(port)+'.db'
+    def __init__(self, dir):
+        name='vizirStats.db'
         dbname= os.path.join(dir,name)
         self.dbpool=adbapi.ConnectionPool('sqlite3',dbname, check_same_thread=False)
         d=self.deleteDB()
@@ -31,18 +32,26 @@ class DB(object):
         expr='SELECT DISTINCT comp,sid,name FROM stat'
         return self.dbpool.runQuery((expr))
 
+    def getPeers(self):
+        expr='SELECT DISTINCT ip,port FROM stat'
+        return self.dbpool.runQuery((expr))
+
+    def getMaxValue(self,ip,port,comp,sid,name):
+        expr='SELECT MAX(time) FROM stat WHERE ip IS "'+ip+'" AND port IS '+str(port)+' AND comp IS "'+comp+'" AND sid IS '+str(sid)+' AND name IS "'+name+'"'
+        return self.dbpool.runQuery((expr))
+
     def deleteDB(self):
         return self.dbpool.runOperation('DROP TABLE IF EXISTS stat')
 
     def createDB(self,d):
-        return self.dbpool.runOperation('CREATE TABLE stat(id INTEGER PRIMARY KEY AUTOINCREMENT, comp TEXT, sid INTEGER, name TEXT, value REAL, x REAL, time REAL, lpb INTEGER) ')
+        return self.dbpool.runOperation('CREATE TABLE stat(id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, port INTEGER, comp TEXT, sid INTEGER, name TEXT, value REAL, x REAL, time REAL, lpb INTEGER) ')
 
     def update(self,stats):
         d=self.dbpool.runInteraction(self._commitRecord,stats)
 
     def _commitRecord(self,txn,args):
         for arg in args:
-            txn.execute('INSERT INTO stat(comp, sid, name, value, x, time, lpb) VALUES(?,?,?,?,?,?,?)',arg)
+            txn.execute('INSERT INTO stat(ip, port, comp, sid, name, value, x, time, lpb) VALUES(?,?,?,?,?,?,?,?,?)',arg)
 
     def getRecords(self,expr):
         d=self._getRecords(expr)
@@ -56,10 +65,10 @@ class DB(object):
     def updateId(self,stats):
         ret={}
         for s in stats:
-            key=(s[1],s[2],s[3])
+            key=(s[3],s[4],s[5])
             if (key) not in ret:
                 ret[key]=[]
-            ret[key].append([s[4],s[5],s[6],s[7]])
+            ret[key].append([s[6],s[7],s[8],s[9]])
         return ret
 
     def stop(self):

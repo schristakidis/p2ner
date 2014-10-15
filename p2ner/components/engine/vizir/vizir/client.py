@@ -21,14 +21,19 @@ from p2ner.abstract.interface import Interface
 from gtkgui.interface.xml.xmlinterface import Interface
 from proxyinterface import ProxyInterface
 from twisted.internet import reactor
+from cPickle import loads
+from stats.clientStatsGui import clientStatsGui
 
 class PClient(Interface):
-    def initInterface(self,parent,peer):
-        self.parent=parent
+    def initInterface(self,peer,ip,port):
         self.peer=peer
+        self.ip=ip
+        self.port=port
         self.output={}
         self.output['comp']='NullOutput'
         self.output['kwargs']=None
+        self.sGui=None
+        self.statStartTime=0
         if self.proxy:
             self.interface=ProxyInterface(self,_parent=self)
             self.interface.setProxy(self.proxy)
@@ -37,6 +42,12 @@ class PClient(Interface):
             self.interface=Interface(_parent=self)
             url="http://"+peer[0]+':'+str(peer[1])+"/XMLRPC"
             self.interface.setUrl(url)
+
+    def getIP(self):
+        return self.ip
+
+    def getPort(self):
+        return self.port
 
     def sendStartProducing(self,id,type):
         self.interface.startProducing(id,type)
@@ -100,3 +111,21 @@ class PClient(Interface):
 
     def getStats(self,sid,ip,port,func):
         self.interface.getStats(func,sid,ip,port)
+
+    def showStatistics(self):
+        if not self.sGui:
+            self.sGui=clientStatsGui(_parent=self)
+        else:
+            self.sGui.ui_show()
+
+    def getStatValue(self,stat,maxV,func):
+        if not self.statStartTime:
+            self.getStatStartTime()
+        self.interface.getStatValue(stat,maxV,self,func)
+
+    def getStatStartTime(self):
+        self.interface.getStatStartTime(self.setStatStartTime)
+
+    def setStatStartTime(self,t):
+        self.statStartTime=t
+        print 'timeeeeeeeee:',t

@@ -397,3 +397,25 @@ class xmlrpcControl(Interface,xmlrpc.XMLRPC):
         f.close()
         return dumps(b)
 
+    def xmlrpc_getVizirStatistics(self):
+        ret=[]
+        for s in self.root.__stats__:
+            if 'db' in s:
+                ret=s.getAvailableStats()
+        return dumps(ret)
+
+    def xmlrpc_getVizirStatValue(self,stat,maxV):
+        d=[]
+        for s in self.root.__stats__:
+            if 'db' in s:
+                d=s.getVizirStatValue(stat,maxV)
+        return d
+
+    def xmlrpc_getVizirStatStartTime(self):
+        ret=0
+        for s in self.root.__stats__:
+            if 'db' in s:
+                ret=s.getStartTime()
+        print 'timeeeeeeeeeeEE:',ret
+        return ret
+

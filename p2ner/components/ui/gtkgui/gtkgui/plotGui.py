@@ -183,7 +183,7 @@ class PlotGui(UI):
 
         self.builder.connect_signals(self)
         self.ui=self.builder.get_object('ui')
-        # self.ui.connect('delete-event',self.on_ui_destroy)
+        self.ui.connect('delete-event',self.on_ui_destroy)
         self.table=self.builder.get_object('table1')
 
         self.loopingCall=task.LoopingCall(self.updatePlots)

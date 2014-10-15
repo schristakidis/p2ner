@@ -22,6 +22,7 @@ import os
 import time
 from collections import deque
 from db import DB as database
+from cPickle import dumps
 
 class DBStats(Stats):
     def initStats(self, *args, **kwargs):
@@ -134,7 +135,13 @@ class DBStats(Stats):
 
 
     def dumpKeys(self):
-        ret = self.statkeys.copy()
+        ret={}
+        for comp in self.statkeys.keys():
+            ret[comp]={}
+            for sid in self.statkeys[comp].keys():
+                ret[comp][sid]={}
+                for s in self.statkeys[comp][sid]:
+                    ret[comp][sid][s]=[]
         return ret
 
     def cleanUp(self):
@@ -142,6 +149,7 @@ class DBStats(Stats):
 
     def getAvailableStats(self):
         return self.dumpKeys()
+
 
 
     def subscribe(self,caller,func,keys):
@@ -182,3 +190,17 @@ class DBStats(Stats):
             for k in v['stats']:
                 ret[k]=stats[k]
             v['func'](ret)
+
+    def getVizirStatValue(self,stat,maxV):
+        expr='WHERE time > '+str(maxV)+' AND comp IS "'+stat[0]+'" AND sid IS '+str(stat[1])+' AND name IS "'+stat[2]+'"'
+        d=self.db.getRecords(expr)
+        d.addCallback(self.dumpStatValues)
+        return d
+
+    def dumpStatValues(self,v):
+        return dumps(v.values()[0])
+
+    def getStartTime(self):
+        if not self.startTime:
+            return 0
+        return self.startTime/100.0

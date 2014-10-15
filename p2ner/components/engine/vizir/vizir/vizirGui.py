@@ -36,6 +36,8 @@ from client import PClient
 from util import getText,getChoice
 from pkg_resources import resource_string
 from p2ner.core.components import loadComponent
+from stats.vizirStats import vizirStats
+from stats.vizirStatsGui import vizirStatsGui
 
 
 OFF=0
@@ -55,6 +57,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         self.vizInterface = loadComponent('plugin', 'VizXMLInterface')(_parent=self)
         self.vizPlot= loadComponent('plugin', 'OverlayViz')()
         self.logger=loadComponent('plugin','VizirLoggerGui')(_parent=self,testbed=testbed)
+        self.statsController=vizirStats(_parent=self)
+        self.statsGui=None
         # self.plotter=loadComponent('plugin','VizirPlotter')(_parent=self)
         self.constructGui()
 
@@ -162,7 +166,7 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             id=-1
         bw='%.2f'%(bw/1024)
         peer=(ip,rpcport)
-        o=PClient(self,peer,_parent=self)
+        o=PClient(peer,ip,port,_parent=self)
         self.treemodel.append((ip,port,bw,on,type,rpcport,id,o))
         return True
 
@@ -396,6 +400,9 @@ class vizirGui(UI,xmlrpc.XMLRPC):
     def getRunningClients(self,id):
         return [m for m in self.treemodel if m[3]==ON and m[4]=='client' and m[6]==id]
 
+    def getRunningPeerObjects(self,sid):
+        return [m[7] for m in self.getRunningClients(sid)]
+
 
     def popupMenu(self, event,iter,right=True):
         menu = gtk.Menu()
@@ -430,7 +437,8 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             outputsItem.set_submenu(outputMenu)
             menu.append(outputsItem)
 
-            menuitems = {"Set UploadBW" : self._setUploadBW}
+            menuitems = {"Set UploadBW" : self._setUploadBW,
+                         "Get Statistics" : self._getStatistics}
 
 
         for i in menuitems.keys():
@@ -546,7 +554,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
             cl[7].stopSwapping(stop,id)
 
     def getStats(self,widget):
-        self.plotter.toggle()
+        if not self.statsGui:
+            self.statsGui=vizirStatsGui(_parent=self)
+        else:
+            self.statsGui.ui_show()
         return
 
     def removePeer(self,ip,port):
@@ -564,6 +575,10 @@ class vizirGui(UI,xmlrpc.XMLRPC):
         if it:
             self.treemodel.remove(it)
 
+    def _getStatistics(self, args, iters):
+        for iterator in iters:
+            c = self.treemodel.get_value(iterator, 7)
+            c.showStatistics()
 
 def startVizirGui():
     from twisted.internet import reactor

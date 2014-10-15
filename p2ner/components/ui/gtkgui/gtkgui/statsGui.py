@@ -38,17 +38,20 @@ class statsGui(UI):
         self.statinGraph=False
         self.liveMode=True
         self.localdb=None
+        self.remote=self.parent.remote
+        self.plots={}
+        self.pid=0
+        self.showing=True
 
-        if not self.parent.remote:
+        if not self.remote:
             for s in self.root.__stats__:
                 if 'db' in s:
                     self.statCollector=s
 
         self.getStatKeys()
+        self.constructUI()
 
-        self.plots={}
-        self.pid=0
-        self.showing=True
+    def constructUI(self):
 
         path = os.path.realpath(os.path.dirname(sys.argv[0]))
         self.builder = gtk.Builder()
@@ -61,40 +64,8 @@ class statsGui(UI):
         self.ui.connect('delete-event', self.on_delete_event)
 
         ######## MENU
-        menuBar=gtk.MenuBar()
+        self.constructMenu()
 
-        fileMenu=gtk.Menu()
-        menu_item=gtk.MenuItem('Load')
-        menu_item.connect('activate',self.on_loadButton_clicked)
-        menu_item.show()
-
-        fileMenu.append(menu_item)
-
-
-        menu_item=gtk.MenuItem('Load Template')
-        # menu_item.connect('select',self.on_loadTButton_clicked)
-        menu_item.show()
-
-        subMenu=gtk.Menu()
-        menu_item.set_submenu(subMenu)
-        subMenu.show()
-
-        subMenu.connect('show',self.on_loadTButton_clicked)
-        fileMenu.append(menu_item)
-
-        menu_item=gtk.MenuItem('Save Template')
-        menu_item.connect('activate',self.on_saveTButton_clicked)
-        menu_item.show()
-
-        fileMenu.append(menu_item)
-
-        root_menu=gtk.MenuItem('File')
-        root_menu.show()
-        root_menu.set_submenu(fileMenu)
-        menuBar.append(root_menu)
-        menuBar.show()
-
-        self.builder.get_object('vbox1').pack_start(menuBar,False,False)
         #component
         self.componentTreeview = self.builder.get_object("compTreeview")
         model=self.componentTreeview.get_model()
@@ -150,13 +121,52 @@ class statsGui(UI):
         self.subBox=gtk.VBox()#self.builder.get_object('subBox')
         scrolSub.add_with_viewport(self.subBox)
         self.subBox.show()
-        self.initStats()
         self.ui.show()
-        if self.parent.remote:
+        if self.remote:
             self.builder.get_object('refreshButton').set_sensitive(False)
 
+        self.initStats()
+
+
+    def constructMenu(self):
+        menuBar=gtk.MenuBar()
+
+        fileMenu=gtk.Menu()
+        menu_item=gtk.MenuItem('Load')
+        menu_item.connect('activate',self.on_loadButton_clicked)
+        menu_item.show()
+
+        fileMenu.append(menu_item)
+
+
+        menu_item=gtk.MenuItem('Load Template')
+        # menu_item.connect('select',self.on_loadTButton_clicked)
+        menu_item.show()
+
+        subMenu=gtk.Menu()
+        menu_item.set_submenu(subMenu)
+        subMenu.show()
+
+        subMenu.connect('show',self.on_loadTButton_clicked)
+        fileMenu.append(menu_item)
+
+        menu_item=gtk.MenuItem('Save Template')
+        menu_item.connect('activate',self.on_saveTButton_clicked)
+        menu_item.show()
+
+        fileMenu.append(menu_item)
+
+        root_menu=gtk.MenuItem('File')
+        root_menu.show()
+        root_menu.set_submenu(fileMenu)
+        menuBar.append(root_menu)
+        menuBar.show()
+
+        self.builder.get_object('vbox1').pack_start(menuBar,False,False)
+
+
     def getStatKeys(self):
-        if not self.parent.remote:
+        if not self.remote:
             self.statKeys=self.statCollector.getAvailableStats()
         else:
             self.statKeys=[]
@@ -266,7 +276,7 @@ class statsGui(UI):
         combo.append_text('customX')
         combo.append_text('lpb')
         combo.append_text('time')
-        combo.set_active(0)
+        combo.set_active(2)
         combo.get_children()[0].set_editable(False)
         combo.show()
         h.pack_start(combo,True,True)
@@ -388,7 +398,7 @@ class statsGui(UI):
         if self.makingNewGraph:
             print "you can't load file while making new Graph"
             return
-        if self.parent.remote:
+        if self.remote:
             self.browseRemote()
         else:
             self.browseLocal()

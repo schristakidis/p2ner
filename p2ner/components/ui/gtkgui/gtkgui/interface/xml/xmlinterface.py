@@ -230,3 +230,15 @@ class Interface(Interface):
     def copyStatFile(self,filename):
         d=self.proxy.callRemote("copyStatFile",filename)
         return d
+
+    def getVizirStatistics(self,func):
+        d=self.proxy.callRemote("getVizirStatistics")
+        d.addCallback(func)
+
+    def getStatValue(self,stat,maxV,peer,func):
+        d=self.proxy.callRemote("getVizirStatValue",stat,maxV)
+        d.addCallback(func,peer,stat)
+
+    def getStatStartTime(self,func):
+        d=self.proxy.callRemote("getVizirStatStartTime")
+        d.addCallback(func)
