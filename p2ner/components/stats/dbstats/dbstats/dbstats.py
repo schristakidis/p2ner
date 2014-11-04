@@ -198,4 +198,8 @@ class DBStats(Stats):
         return d
 
     def dumpStatValues(self,v):
-        return dumps(v.values()[0])
+        try:
+            ret=v.values()[0]
+        except:
+            ret=[]
+        return dumps(ret)
