@@ -28,6 +28,7 @@ from superintersubclient import SuperInterOverlay
 from baseintersubclient import BaseInterOverlay
 from time import time
 from cPickle import dumps
+from p2ner.core.statsFunctions import counter, setLPB,setValue
 
 class OverlayManager(Overlay):
 
@@ -56,6 +57,8 @@ class OverlayManager(Overlay):
 
         self.loopingCall=task.LoopingCall(self.checkAlive)
         self.loopingCall.start(1)
+        self.statLoopingCall=task.LoopingCall(self.updateStats)
+        self.statLoopingCall.start(1)
 
         self.capacity=self.trafficPipe.callSimple('getReportedCap')
         if self.capacity:
@@ -142,6 +145,8 @@ class OverlayManager(Overlay):
         except:
             pass
 
+        self.loopingCall.stop()
+        self.statLoopingCall.stop()
 
         self.stopDefer.callback(True)
 
@@ -201,5 +206,17 @@ class OverlayManager(Overlay):
         return ret
 
 
+
+    ############### stats ####################33
+    def updateStats(self):
+        en=self.getEnergy()
+        setValue(self,"peerEnergy",en)
+
+    def getEnergy(self):
+        en=0
+        for p in self.getNeighbours():
+            if len(p.lastRtt):
+                en +=sum(p.lastRtt)/len(p.lastRtt)
+        return en
 
 
