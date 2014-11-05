@@ -223,11 +223,12 @@ class vizirStats(Plugin):
                 allStats[s]={}
                 t = None
                 for p,val in peer.items():
-                    v=val[-1]
-                    if not t:
-                        t=v[i]
-                        allStats[s][t]=[]
-                    allStats[s][t].append(v[0])
+                    if val:
+                        v=val[-1]
+                        if not t:
+                            t=v[i]
+                            allStats[s][t]=[]
+                        allStats[s][t].append(v[0])
 
 
 
