@@ -104,6 +104,7 @@ class SubOverlay(Overlay):
         self.loopingCalls=[]
         self.loopingCalls.append(self.loopingCall)
         self.loopingCalls.append(self.pingLoopingCall)
+        self.loopingCalls.append(self.statsLoopingCall)
         #needed for vizir stats
         self.tempSatelites=0
         self.tempSwaps=0
@@ -1375,6 +1376,6 @@ class SubOverlay(Overlay):
     ############### STATS #################
     def updateStats(self):
         en=self.getEnergy()
-        n=lef(self.getNeighbours())
+        n=len(self.getNeighbours())
         setValue(self,str(self.overlayType)+'energy',en)
         setValue(self,str(self.overlayType)+'numNeighs',n)
