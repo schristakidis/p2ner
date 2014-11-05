@@ -211,6 +211,7 @@ class OverlayManager(Overlay):
     def updateStats(self):
         en=self.getEnergy()
         setValue(self,"peerEnergy",en)
+        setValue(self,'peerNeigh',len(self.getNeighbours()))
 
     def getEnergy(self):
         en=0

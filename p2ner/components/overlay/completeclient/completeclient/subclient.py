@@ -98,6 +98,9 @@ class SubOverlay(Overlay):
         self.pingLoopingCall=task.LoopingCall(self.sendPing)
         self.pingLoopingCall.start(1)
 
+        self.statsLoopingCall=task.LoopingCall(self.updateStats)
+        self.statsLoopingCall.start(1)
+
         self.loopingCalls=[]
         self.loopingCalls.append(self.loopingCall)
         self.loopingCalls.append(self.pingLoopingCall)
@@ -1368,3 +1371,10 @@ class SubOverlay(Overlay):
         self.log.error("%s DIED"%peer)
         self.removeNeighbour(peer)
 
+
+    ############### STATS #################
+    def updateStats(self):
+        en=self.getEnergy()
+        n=lef(self.getNeighbours())
+        setValue(self,str(self.overlayType)+'energy',en)
+        setValue(self,str(self.overlayType)+'numNeighs',n)

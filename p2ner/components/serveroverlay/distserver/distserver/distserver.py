@@ -21,7 +21,7 @@ from messages.startstopserver import ServerStartedMessage, ServerStoppedMessage,
 from messages.messageobjects import PeerListMessage, StreamMessage,PeerListProducerMessage,SuggestNewPeerMessage,SuggestMessage,ReturnPeerStatus
 from messages.startstopclient import ClientStoppedMessage,ClientDied
 from p2ner.core.components import loadComponent
-from random import choice,shuffle
+from random import choice,shuffle,uniform
 
 class DistServer(Overlay):
 
@@ -57,6 +57,11 @@ class DistServer(Overlay):
     def returnPeerStatus(self,peer,bw):
         status=bw>self.superThres
         # status=choice([True,False])
+        status=uniform(0,100)
+        if status<10:
+            status=True
+        else:
+            status=False
         print peer,' is a Super Peer ',status
         ReturnPeerStatus.send(self.stream.id,status,peer,self.controlPipe)
 
