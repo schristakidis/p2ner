@@ -56,12 +56,6 @@ class DistServer(Overlay):
 
     def returnPeerStatus(self,peer,bw):
         status=bw>self.superThres
-        # status=choice([True,False])
-        status=uniform(0,100)
-        if status<10:
-            status=True
-        else:
-            status=False
         print peer,' is a Super Peer ',status
         ReturnPeerStatus.send(self.stream.id,status,peer,self.controlPipe)
 
