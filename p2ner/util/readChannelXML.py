@@ -41,10 +41,10 @@ def readChannels(file):
         loc=str(loc)
         proto,fields=loc.split('//')
         fields=fields.split(',')
-        proto=proto+'// '
+        proto=proto+'//'
         loc=['--dvb-'+f for f in fields]
         loc=" ".join(loc)
-        channels[name]['location']=proto+loc
+        channels[name]['location']=proto+loc[6:]
         channels[name]['program']=int(prog)
         print channels[name]['location']
 
