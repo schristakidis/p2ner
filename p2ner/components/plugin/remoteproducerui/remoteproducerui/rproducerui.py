@@ -92,6 +92,7 @@ class RemoteProducerUI(UI):
             else:
                 type='tv'
             self.treeview.set_sensitive(False)
+            self.gotSettings=False
             self.registerStream(type,stream)
 
 
